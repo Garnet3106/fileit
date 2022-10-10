@@ -1,6 +1,8 @@
 {
   "name": "fileit",
   "version": "0.1.0",
+  "main": "electron/main.js",
+	"homepage": "./",
   "private": true,
   "dependencies": {
     "@testing-library/jest-dom": "^5.16.5",
@@ -10,6 +12,8 @@
     "@types/node": "^16.11.64",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
+    "electron": "^21.1.0",
+    "electron-builder": "^23.6.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.1",
@@ -22,6 +26,15 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
+	"build": {
+		"appId": "work.gant.fileit",
+		"productName": "fileit",
+		"extends": null,
+		"files": [
+			"electron/**/*",
+			"build/**/*"
+		]
+	},
   "eslintConfig": {
     "extends": [
       "react-app",
