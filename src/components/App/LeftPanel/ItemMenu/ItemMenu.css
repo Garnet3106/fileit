@@ -1,0 +1,30 @@
+.item-menu-container {
+    height: 100%;
+}
+
+.item-menu-top {
+    border-bottom-width: 1px;
+    padding: 5px 0;
+}
+
+.item-menu-group {
+    border-bottom-width: 1px;
+    padding: 5px 0;
+}
+
+.item-menu-item {
+    align-items: center;
+    cursor: pointer;
+    display: flex;
+    height: 25px;
+    padding: 0 8px;
+}
+
+.item-menu-item-icon {
+    background-color: #aaa;
+    margin-right: 5px;
+}
+
+.item-menu-item-text {
+    color: var(--dark-font-color);
+}

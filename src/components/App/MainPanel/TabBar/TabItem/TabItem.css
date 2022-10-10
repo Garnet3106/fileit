@@ -1,0 +1,25 @@
+.tab-item-container {
+    align-items: center;
+    display: flex;
+    cursor: pointer;
+    flex-direction: row;
+    height: 100%;
+    margin-right: 3px;
+    padding: 0 5px;
+    width: calc(150px - (5px * 2));
+}
+
+.tab-item-container:last-of-type {
+    margin-right: 0;
+}
+
+.tab-item-icon {
+    background-size: contain;
+    height: 18px;
+    margin-right: 5px;
+    width: 18px;
+}
+
+.tab-item-title {
+    color: var(--font-color);
+}
