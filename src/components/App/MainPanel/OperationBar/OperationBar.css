@@ -22,7 +22,6 @@
     align-items: center;
     border-right: 2px solid #141416;
     color: var(--dark-font-color);
-    cursor: pointer;
     display: flex;
     height: 30px;
     transition: background-color 50ms, color 50ms;

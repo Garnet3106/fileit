@@ -1,7 +1,6 @@
 .tab-item-container {
     align-items: center;
     display: flex;
-    cursor: pointer;
     flex-direction: row;
     height: 100%;
     margin-right: 3px;

@@ -14,7 +14,6 @@
 
 .item-menu-item {
     align-items: center;
-    cursor: pointer;
     display: flex;
     height: 25px;
     padding: 0 8px;
