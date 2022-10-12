@@ -15,7 +15,7 @@ export const operationIconIds = {
 };
 
 export const variables = {
-    height: 70,
+    height: (30 * 2) + (3 * 3),
 };
 
 export default function OperationBar() {
