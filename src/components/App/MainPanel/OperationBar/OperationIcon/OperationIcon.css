@@ -9,6 +9,12 @@
     width: 30px;
 }
 
+.operation-icon-container-mini {
+    background-size: 70% 70%;
+    height: 22px;
+    width: 22px;
+}
+
 .operation-icon-container:active {
     background-color: #aaaaaa33;
 }

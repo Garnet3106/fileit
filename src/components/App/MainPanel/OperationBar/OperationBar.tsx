@@ -8,6 +8,10 @@ export const operationIconIds = {
         next: 'next',
         reload: 'reload',
     },
+    path: {
+        copy: 'copy',
+        edit: 'edit',
+    },
 };
 
 export const variables = {
@@ -43,6 +47,13 @@ export default function OperationBar() {
                         </div>
                         <div className="operation-bar-path-item">
                             Desktop
+                            <div style={{
+                                display: 'flex',
+                                marginLeft: 6,
+                            }}>
+                                <OperationIcon id={operationIconIds.path.copy} isMini={true} />
+                                <OperationIcon id={operationIconIds.path.edit} isMini={true} />
+                            </div>
                         </div>
                     </div>
                 </div>
