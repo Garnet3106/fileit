@@ -1,8 +1,10 @@
 .property-bar-item-container {
+    align-items: center;
     border-right: 1px solid var(--border-color1);
     color: var(--dark-font-color);
     display: flex;
     font-size: 90%;
+    justify-content: space-between;
     overflow-x: hidden;
     padding: 2px var(--property-item-horizontal-margin);
     white-space: nowrap;
@@ -11,4 +13,6 @@
 .property-bar-item-icon {
     background-image: url('../../../../../../../lib/img/down.svg');
     background-size: contain;
+    height: 10px;
+    width: 10px;
 }

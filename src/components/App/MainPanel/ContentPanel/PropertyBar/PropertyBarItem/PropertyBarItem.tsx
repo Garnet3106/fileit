@@ -14,10 +14,12 @@ export default function PropertyBarItem(props: PropertyBarItemProps) {
         },
     };
 
+    const icon = props.data.grabbable !== false ? <div className="property-bar-item-icon" /> : undefined;
+
     return (
         <div className="property-bar-item-container" style={styles.container}>
             {ItemPropertyKind.localizeName(props.data.kind)}
-            <div className="property-bar-item-icon" />
+            {icon}
         </div>
     );
 }
