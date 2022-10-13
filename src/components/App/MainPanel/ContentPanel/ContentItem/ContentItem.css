@@ -1,0 +1,28 @@
+.content-item-container {
+    align-items: center;
+    display: flex;
+    padding: calc(var(--property-item-horizontal-margin) / 2) 0;
+}
+
+.content-item-container:hover {
+    background-color: #ffffff33;
+    transition: background-color 50ms;
+}
+
+.content-item-property {
+    margin-left: calc(var(--property-item-horizontal-margin) * 2);
+}
+
+.content-item-icon {
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    height: var(--content-item-icon-size);
+    width: var(--content-item-icon-size);
+}
+
+.content-item-name {
+}
+
+.content-item-detail {
+}

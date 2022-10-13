@@ -1,10 +1,21 @@
+import { Item } from '../../../../item';
 import { variables as detailBarVariables } from '../DetailBar/DetailBar';
 import { variables as operationBarVariables } from '../OperationBar/OperationBar';
 import { variables as tabBarVariables } from '../TabBar/TabBar';
+import ContentItem from './ContentItem/ContentItem';
 import './ContentPanel.css';
 import PropertyBar, { ItemPropertyKind } from './PropertyBar/PropertyBar';
 
-export default function ContentPanel() {
+export const variables = {
+    propertyItemHorizontalMargin: 5,
+    contentItemIconSize: 18,
+};
+
+export type ContentPanelProps = {
+    items: Item[],
+};
+
+export default function ContentPanel(props: ContentPanelProps) {
     const styles = {
         container: {
             height: `calc(100% - ${tabBarVariables.height + operationBarVariables.height + detailBarVariables.height}px)`,
@@ -14,7 +25,8 @@ export default function ContentPanel() {
     const properties = [
         {
             kind: ItemPropertyKind.Icon,
-            width: 30,
+            width: variables.contentItemIconSize + (variables.propertyItemHorizontalMargin * 2),
+            grabbable: false,
         },
         {
             kind: ItemPropertyKind.Name,
@@ -30,9 +42,14 @@ export default function ContentPanel() {
         },
     ];
 
+    const items = props.items.map((eachItem) => <ContentItem item={eachItem} />);
+
     return (
         <div className="content-panel-container" style={styles.container}>
             <PropertyBar items={properties} />
+            <div className="content-panel-items">
+                {items}
+            </div>
         </div>
     );
 }

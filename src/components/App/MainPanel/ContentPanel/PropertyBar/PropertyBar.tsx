@@ -11,6 +11,7 @@ export enum ItemPropertyKind {
 export type PropertyBarItemData = {
     kind: ItemPropertyKind,
     width: number,
+    grabbable?: boolean,
 };
 
 export type PropertyBarProps = {

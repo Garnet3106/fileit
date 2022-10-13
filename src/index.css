@@ -4,8 +4,10 @@
     --panel1-color: #131314eb;
     --panel2-color: #2e2f30eb;
     --selected-tab-color: #131314eb;
-    --unselected-tab-color: #33333aeb;
+    --unselected-tab-color: #4a4a50eb;
     --border-color1: #666666eb;
+    --property-item-horizontal-margin: 5px;
+    --content-item-icon-size: 18px;
 }
 
 body {
