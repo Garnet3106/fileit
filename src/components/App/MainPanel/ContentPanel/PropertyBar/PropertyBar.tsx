@@ -19,9 +19,7 @@ export type PropertyBarProps = {
 };
 
 export default function PropertyBar(props: PropertyBarProps) {
-    const items = props.items.map((eachItem) => (
-        <PropertyBarItem data={eachItem} />
-    ));
+    const items = props.items.map((eachItem, index) => <PropertyBarItem data={eachItem} key={index} />);
 
     return (
         <div className="property-bar-container">
