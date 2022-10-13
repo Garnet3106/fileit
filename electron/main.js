@@ -1,16 +1,20 @@
-const { BrowserWindow, app } = require("electron");
-const path = require("path");
+const { BrowserWindow, app } = require('electron');
+const path = require('path');
 
 const createWindow = () => {
     const mainWindow = new BrowserWindow({
-        width: 800,
         height: 600,
+        width: 800,
+        minHeight: 250,
+        minWidth: 400,
+        titleBarStyle: 'hidden',
         webPreferences: {
-            preload: path.resolve(__dirname, "preload.js"),
+            preload: path.resolve(__dirname, 'preload.js'),
         },
     });
 
-    mainWindow.loadFile("build/index.html");
+    mainWindow.setMenuBarVisibility(false);
+    mainWindow.loadFile('build/index.html');
 };
 
 app.whenReady().then(createWindow);
