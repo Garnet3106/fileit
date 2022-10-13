@@ -18,10 +18,9 @@
 }
 
 .operation-bar-path-item {
-    background-color: #4b4f5daa;
+    background-color: var(--unselected-tab-color);
     align-items: center;
     border-right: 2px solid #141416;
-    color: var(--dark-font-color);
     display: flex;
     height: 30px;
     transition: background-color 50ms, color 50ms;
@@ -29,15 +28,11 @@
 }
 
 .operation-bar-path-item:active {
-    background-color: #4b4f5d77;
+    background-color: #4b4f5daa;
 }
 
 .operation-bar-path-item:first-of-type {
     border-radius: 5px 0 0 5px;
-}
-
-.operation-bar-path-item:hover {
-    color: var(--font-color);
 }
 
 .operation-bar-path-item:last-of-type {

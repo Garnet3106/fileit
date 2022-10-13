@@ -24,11 +24,11 @@ export let preferences: Preferences = {
         theme: ColorTheme.Dark,
         background: {
             app: '',
-            panel1: '#131314b2',
-            panel2: '#36373bb2',
+            panel1: '#131314eb',
+            panel2: '#1f2022eb',
         },
-        border1: '#666666b2',
-        border2: '#36373bb2',
+        border1: '#666666eb',
+        border2: '#1f2022eb',
         font: '',
     },
 };

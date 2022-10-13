@@ -1,8 +1,10 @@
 :root {
     --font-color: #ffffff;
     --dark-font-color: #999999;
-    --selected-tab-color: #aaaaaaaa;
-    --unselected-tab-color: #aaaaaa33;
+    --panel1-color: #131314eb;
+    --panel2-color: #1f2022eb;
+    --selected-tab-color: #131314eb;
+    --unselected-tab-color: #33333aeb;
 }
 
 body {
