@@ -25,7 +25,7 @@ export let preferences: Preferences = {
         background: {
             app: '',
             panel1: '#131314eb',
-            panel2: '#1f2022eb',
+            panel2: '#2e2f30eb',
         },
         border1: '#666666eb',
         border2: '#1f2022eb',

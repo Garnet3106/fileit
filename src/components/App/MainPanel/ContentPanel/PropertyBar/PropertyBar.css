@@ -1,0 +1,4 @@
+.property-bar-container {
+    background-color: var(--panel2-color);
+    display: flex;
+}

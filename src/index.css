@@ -2,9 +2,10 @@
     --font-color: #ffffff;
     --dark-font-color: #999999;
     --panel1-color: #131314eb;
-    --panel2-color: #1f2022eb;
+    --panel2-color: #2e2f30eb;
     --selected-tab-color: #131314eb;
     --unselected-tab-color: #33333aeb;
+    --border-color1: #666666eb;
 }
 
 body {

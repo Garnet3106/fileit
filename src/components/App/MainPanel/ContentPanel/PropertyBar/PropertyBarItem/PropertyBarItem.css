@@ -1,0 +1,10 @@
+.property-bar-item-container {
+    border-right: 1px solid var(--border-color1);
+    color: var(--dark-font-color);
+    cursor: grab;
+    display: flex;
+    font-size: 90%;
+    overflow-x: hidden;
+    padding: 2px 5px;
+    white-space: nowrap;
+}
