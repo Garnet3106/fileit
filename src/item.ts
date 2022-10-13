@@ -1,5 +1,7 @@
 /* Item */
 
+import { ItemPropertyKind } from "./property";
+
 export enum ItemKind {
     File,
     Folder,
@@ -37,6 +39,26 @@ export class Item {
         return this.item;
     }
 
+    public getIdentifier(): string {
+        return this.item.id.toString();
+    }
+
+    public getPropertyValue(kind: ItemPropertyKind): string {
+        switch (kind) {
+            case ItemPropertyKind.Icon:
+            return 'unimplemented';
+
+            case ItemPropertyKind.Name:
+            return this.getIdentifier();
+
+            case ItemPropertyKind.Size:
+            return this.isFile() ? `${(this.item as FileItem).size}b` : '';
+
+            case ItemPropertyKind.LastModified:
+            const date = this.item.lastModified;
+            return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDay()}`;
+        }
+    }
 }
 
 export type ByteSize = number;

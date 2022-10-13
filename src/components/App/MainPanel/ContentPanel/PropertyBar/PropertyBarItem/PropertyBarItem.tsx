@@ -10,7 +10,7 @@ export default function PropertyBarItem(props: PropertyBarItemProps) {
     const styles = {
         container: {
             cursor: props.data.grabbable === false ? undefined : 'grab',
-            width: props.data.width,
+            width: props.data.width - 1,
         },
     };
 

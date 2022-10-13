@@ -10,10 +10,11 @@
 }
 
 .content-item-property {
-    margin-left: calc(var(--property-item-horizontal-margin) * 2);
+    color: var(--dark-font-color);
+    margin-left: calc((var(--property-item-horizontal-margin) * 2) + 1px);
 }
 
-.content-item-icon {
+.content-item-property-icon {
     background-size: contain;
     background-position: center;
     background-repeat: no-repeat;
@@ -21,8 +22,6 @@
     width: var(--content-item-icon-size);
 }
 
-.content-item-name {
-}
-
-.content-item-detail {
+.content-item-property-name {
+    color: var(--font-color);
 }

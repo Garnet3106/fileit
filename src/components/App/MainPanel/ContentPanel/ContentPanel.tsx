@@ -42,7 +42,7 @@ export default function ContentPanel(props: ContentPanelProps) {
         },
     ];
 
-    const items = props.items.map((eachItem, index) => <ContentItem item={eachItem} key={index} />);
+    const items = props.items.map((eachItem, index) => <ContentItem item={eachItem} properties={properties} key={index} />);
 
     return (
         <div className="content-panel-container" style={styles.container}>

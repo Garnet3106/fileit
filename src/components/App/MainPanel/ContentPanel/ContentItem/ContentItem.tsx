@@ -1,8 +1,11 @@
 import { Item } from '../../../../../item';
+import { ItemPropertyKind } from '../../../../../property';
+import { PropertyBarItemData } from '../PropertyBar/PropertyBar';
 import './ContentItem.css';
 
 export type ContentItemProps = {
     item: Item,
+    properties: PropertyBarItemData[],
 };
 
 export default function ContentItem(props: ContentItemProps) {
@@ -12,16 +15,27 @@ export default function ContentItem(props: ContentItemProps) {
         },
     };
 
-    const id = props.item.getItem().id.toString();
+    const properties = props.properties.map((eachProperty, index) => {
+        const value = props.item.getPropertyValue(eachProperty.kind);
+        switch (eachProperty.kind) {
+            case ItemPropertyKind.Icon:
+            return <div className="content-item-property content-item-property-icon" style={styles.icon} key={index} />;
+
+            case ItemPropertyKind.Name:
+            return <div className="content-item-property content-item-property-name" style={{
+                width: `${eachProperty.width}px`,
+            }} key={index}>{value}</div>;
+
+            default:
+            return <div className="content-item-property" style={{
+                width: `${eachProperty.width}px`,
+            }} key={index}>{value}</div>;
+        }
+    });
 
     return (
         <div className="content-item-container">
-            <div className="content-item-property content-item-icon" style={styles.icon} />
-            <div className="content-item-property content-item-name">
-                {id}
-            </div>
-            <div className="content-item-detail">
-            </div>
+            {properties}
         </div>
     );
 }
