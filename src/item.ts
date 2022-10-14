@@ -1,6 +1,7 @@
-/* Item */
-
+import Fs from "./fs";
 import { ItemPropertyKind } from "./property";
+
+/* Item */
 
 export enum ItemKind {
     File,
@@ -58,6 +59,14 @@ export class Item {
             const date = this.item.lastModified;
             return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDay()}`;
         }
+    }
+
+    public getFullPath(): string {
+        return 'unimplemented';
+    }
+
+    public read(): Promise<string> {
+        return Fs.readFile(this.getFullPath());
     }
 }
 

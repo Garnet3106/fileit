@@ -10,6 +10,8 @@ const createWindow = () => {
         titleBarStyle: 'hidden',
         webPreferences: {
             preload: path.resolve(__dirname, 'preload.js'),
+            nodeIntegration: true,
+            contextIsolation: false,
         },
     });
 
