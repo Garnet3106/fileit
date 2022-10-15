@@ -1,3 +1,4 @@
 .left-panel-container {
+    overflow-x: hidden;
     height: 100%;
 }

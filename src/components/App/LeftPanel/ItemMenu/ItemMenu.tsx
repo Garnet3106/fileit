@@ -17,7 +17,7 @@ export default function ItemMenu() {
         },
         itemIcon: {
             height: variables.itemIconSize,
-            width: variables.itemIconSize,
+            minWidth: variables.itemIconSize,
         },
     };
 
