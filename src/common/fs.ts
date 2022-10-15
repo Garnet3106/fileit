@@ -17,6 +17,15 @@ namespace Fs {
         }
     }
 
+    export function getChildren(path: string): Promise<string> {
+        return getFsPromises(
+            (fs) => fs.readdir(path, {
+                encoding: encoding,
+            }),
+            (fs) => fs.getChildren(path),
+        );
+    }
+
     export function readFile(path: string): Promise<string> {
         return getFsPromises(
             (fs) => fs.readFile(path, {

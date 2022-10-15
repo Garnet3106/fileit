@@ -10,6 +10,7 @@ namespace FakeFs {
 
     export type Directory = {
         kind: ItemKind.Directory,
+        children: string[],
     };
 
     export type File = {
@@ -22,15 +23,47 @@ namespace FakeFs {
     } = {
         '': {
             kind: ItemKind.Directory,
+            children: [
+                'C:'
+            ],
         },
         'C:': {
             kind: ItemKind.Directory,
+            children: [
+                'main.ches',
+                'main.rs',
+                'main.js',
+            ],
         },
         'C:/main.ches': {
             kind: ItemKind.File,
             content: 'println("hello")',
         },
+        'C:/main.rs': {
+            kind: ItemKind.File,
+            content: 'println!("hello");',
+        },
+        'C:/main.js': {
+            kind: ItemKind.File,
+            content: 'console.log(\'hello\');',
+        },
     };
+
+    export function getChildren(path: string): Promise<string[]> {
+        return new Promise((resolve, reject) => {
+            const target = items[path];
+
+            if (target === undefined) {
+                reject(Fs.ErrorKind.NoSuchFileOrDirectory);
+            }
+
+            if (target.kind !== ItemKind.Directory) {
+                reject(Fs.ErrorKind.NotADirectory);
+            }
+
+            resolve((target as Directory).children);
+        });
+    }
 
     export function readFile(path: string): Promise<string> {
         return new Promise((resolve, reject) => {
