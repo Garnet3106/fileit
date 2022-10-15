@@ -1,12 +1,19 @@
 .tab-bar-container {
     display: flex;
     flex-direction: row;
+    overflow-x: hidden;
     width: 100%;
 }
 
 .tab-bar-items {
     display: flex;
     flex-direction: row;
+    overflow-x: scroll;
+    scrollbar-width: 0;
+}
+
+.tab-bar-items::-webkit-scrollbar {
+    display: none;
 }
 
 .tab-bar-operations {

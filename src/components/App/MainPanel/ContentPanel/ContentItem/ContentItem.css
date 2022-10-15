@@ -19,7 +19,7 @@
     background-position: center;
     background-repeat: no-repeat;
     height: var(--content-item-icon-size);
-    width: var(--content-item-icon-size);
+    min-width: var(--content-item-icon-size);
 }
 
 .content-item-property-name {

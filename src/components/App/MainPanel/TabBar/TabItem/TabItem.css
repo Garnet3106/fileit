@@ -5,7 +5,7 @@
     height: 100%;
     margin-right: 3px;
     padding: 0 5px;
-    width: calc(150px - (5px * 2));
+    min-width: calc(150px - (5px * 2));
 }
 
 .tab-item-container:last-of-type {
