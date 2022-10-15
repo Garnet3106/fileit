@@ -1,7 +1,16 @@
 const { BrowserWindow, app } = require('electron');
+const electronReload = require('electron-reload');
+const isDev = require('electron-is-dev');
+
 const path = require('path');
 
 const createWindow = () => {
+    if (isDev) {
+        electronReload(path.resolve(__dirname, '../build'), {
+            electron: path.join(__dirname, '../node_modules/.bin/electron'),
+        });
+    }
+
     const mainWindow = new BrowserWindow({
         height: 600,
         width: 800,
@@ -16,7 +25,7 @@ const createWindow = () => {
     });
 
     mainWindow.setMenuBarVisibility(false);
-    mainWindow.loadFile('build/index.html');
+    mainWindow.loadURL('https://localhost:3000');
 };
 
 app.whenReady().then(createWindow);

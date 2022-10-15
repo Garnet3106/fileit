@@ -24,7 +24,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "electron:dev": "concurrently \"yarn start\" \"wait-on http://localhost:3000 && tsc -p . -w\" \"wait-on http://localhost:3000 && tsc -p . && electron .\""
   },
   "build": {
     "appId": "work.gant.fileit",
@@ -52,5 +53,11 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "concurrently": "^7.4.0",
+    "electron-is-dev": "^2.0.0",
+    "electron-reload": "^2.0.0-alpha.1",
+    "wait-on": "^6.0.1"
   }
 }
