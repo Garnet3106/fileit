@@ -70,6 +70,11 @@ export class Item {
     }
 }
 
+export type ItemStats = {
+    isFile: boolean,
+    isFolder: boolean,
+};
+
 export type ByteSize = number;
 
 /* File Item */
@@ -92,7 +97,7 @@ export class FileItemIdentifier {
 };
 
 export type FileItem = {
-    id: FileItemIdentifier;
+    id: FileItemIdentifier,
     size: ByteSize,
     lastModified: Date,
 };

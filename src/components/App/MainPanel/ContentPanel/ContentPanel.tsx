@@ -15,6 +15,10 @@ export const variables = {
 
 export let setDisplayDirPath: (path: string) => void = () => console.error('Item setter is not initialized yet.');
 
+setTimeout(() => {
+    setDisplayDirPath('');
+}, 1000);
+
 export default function ContentPanel() {
     const [items, setItems] = useState<Item[]>([]);
     const [dirPath, setDirPath] = useState<string | null>(null);
@@ -23,15 +27,7 @@ export default function ContentPanel() {
         setDirPath(path);
 
         Fs.getChildren(path)
-            .then((paths) => {
-                const newItems = paths.map((eachPath) => Item.file({
-                    id: new FileItemIdentifier(eachPath, '?'),
-                    size: 1000,
-                    lastModified: new Date(),
-                }));
-
-                setItems(newItems);
-            })
+            .then(setItems)
             .catch(alert)
     };
 

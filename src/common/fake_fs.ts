@@ -1,4 +1,5 @@
 import Fs from "./fs";
+import { ItemStats } from "./item";
 
 namespace FakeFs {
     export enum ItemKind {
@@ -48,6 +49,20 @@ namespace FakeFs {
             content: 'console.log(\'hello\');',
         },
     };
+
+    export function getStats(path: string): ItemStats | undefined {
+        const target = items[path];
+
+        if (target === undefined) {
+            console.error(Fs.ErrorKind.NoSuchFileOrDirectory);
+            return undefined;
+        }
+
+        return {
+            isFile: target.kind === ItemKind.File,
+            isFolder: target.kind === ItemKind.Directory,
+        };
+    }
 
     export function getChildren(path: string): Promise<string[]> {
         return new Promise((resolve, reject) => {
