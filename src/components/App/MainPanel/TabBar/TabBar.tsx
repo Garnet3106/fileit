@@ -1,7 +1,7 @@
 import NativeWindow from '../../../../common/nativewindow';
 import { preferences } from '../../../../common/preferences';
 import './TabBar.css';
-import TabItem, { TabItemIcon } from './TabItem/TabItem';
+import TabBarItem, { TabBarItemIcon } from './TabBarItem/TabBarItem';
 
 export const variables = {
     height: 30,
@@ -21,8 +21,8 @@ export default function TabBar() {
     return (
         <div className="tab-bar-container" style={styles.container}>
             <div className="tab-bar-items" style={styles.items}>
-                <TabItem selected={true} title="Folder1" icon={TabItemIcon.Folder} />
-                <TabItem selected={false} title="Folder2" icon={TabItemIcon.CompressedFolder} />
+                <TabBarItem selected={true} title="Folder1" icon={TabBarItemIcon.Folder} />
+                <TabBarItem selected={false} title="Folder2" icon={TabBarItemIcon.CompressedFolder} />
             </div>
             <div className="tab-bar-operations">
                 <div className="tab-bar-operation-icon tab-bar-operation-icon-minimize" onClick={NativeWindow.minimize} />
