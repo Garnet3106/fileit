@@ -25,7 +25,8 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "electron:dev": "concurrently \"yarn start\" \"wait-on http://localhost:3000 && tsc -p . -w\" \"wait-on http://localhost:3000 && tsc -p . && electron .\""
+    "electron:dev": "concurrently \"npm start\" \"wait-on http://localhost:3000 && tsc -p . -w\" \"wait-on http://localhost:3000 && tsc -p . && electron .\"",
+    "electron:build": "npm run build && electron ."
   },
   "build": {
     "appId": "work.gant.fileit",
