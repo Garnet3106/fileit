@@ -28,3 +28,11 @@
 .tab-bar-operation-icon:active {
     opacity: .7;
 }
+
+.tab-bar-operation-icon-minimize {
+    background-image: url('../../../../../lib/img/window/minimize.svg');
+}
+
+.tab-bar-operation-icon-close {
+    background-image: url('../../../../../lib/img/window/close.svg');
+}

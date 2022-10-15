@@ -24,12 +24,8 @@ export default function TabBar() {
                 <TabItem selected={false} title="Folder2" icon={TabItemIcon.CompressedFolder} />
             </div>
             <div className="tab-bar-operations">
-                <div className="tab-bar-operation-icon" style={{
-                    backgroundImage: `url(../../../../../../lib/img/icons/dark/window/minimize.svg)`,
-                }} />
-                <div className="tab-bar-operation-icon" style={{
-                    backgroundImage: `url(../../../../../../lib/img/icons/dark/window/close.svg)`,
-                }} />
+                <div className="tab-bar-operation-icon tab-bar-operation-icon-minimize" />
+                <div className="tab-bar-operation-icon tab-bar-operation-icon-close" />
             </div>
         </div>
     );
