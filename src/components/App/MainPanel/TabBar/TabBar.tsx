@@ -1,3 +1,4 @@
+import NativeWindow from '../../../../common/nativewindow';
 import { preferences } from '../../../../common/preferences';
 import './TabBar.css';
 import TabItem, { TabItemIcon } from './TabItem/TabItem';
@@ -24,8 +25,8 @@ export default function TabBar() {
                 <TabItem selected={false} title="Folder2" icon={TabItemIcon.CompressedFolder} />
             </div>
             <div className="tab-bar-operations">
-                <div className="tab-bar-operation-icon tab-bar-operation-icon-minimize" />
-                <div className="tab-bar-operation-icon tab-bar-operation-icon-close" />
+                <div className="tab-bar-operation-icon tab-bar-operation-icon-minimize" onClick={NativeWindow.minimize} />
+                <div className="tab-bar-operation-icon tab-bar-operation-icon-close" onClick={NativeWindow.close} />
             </div>
         </div>
     );

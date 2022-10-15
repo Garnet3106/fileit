@@ -1,8 +1,8 @@
-const { BrowserWindow, app } = require('electron');
+const { BrowserWindow, app, ipcMain } = require('electron');
 const electronReload = require('electron-reload');
 const isDev = require('electron-is-dev');
-
 const path = require('path');
+let mainWindow = null;
 
 const createWindow = () => {
     if (isDev) {
@@ -11,7 +11,7 @@ const createWindow = () => {
         });
     }
 
-    const mainWindow = new BrowserWindow({
+    mainWindow = new BrowserWindow({
         height: 600,
         width: 800,
         minHeight: 250,
@@ -28,5 +28,7 @@ const createWindow = () => {
     mainWindow.loadFile(path.resolve(__dirname, '../build/index.html'));
 };
 
-app.whenReady().then(createWindow);
+ipcMain.on('close-window', () => mainWindow?.close());
+ipcMain.on('minimize-window', () => mainWindow?.minimize());
 app.once('window-all-closed', () => app.quit());
+app.whenReady().then(createWindow);
