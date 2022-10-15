@@ -25,10 +25,10 @@
 .tab-bar-operation-icon {
     background-position: center;
     background-repeat: no-repeat;
-    background-size: 55% 55%;
-    cursor: pointer;
+    background-size: 45% 45%;
     height: var(--tab-bar-height);
     opacity: .5;
+    transition: opacity 50ms;
     width: var(--tab-bar-height);
 }
 
