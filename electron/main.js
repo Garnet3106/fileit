@@ -25,7 +25,7 @@ const createWindow = () => {
     });
 
     mainWindow.setMenuBarVisibility(false);
-    mainWindow.loadURL('https://localhost:3000');
+    mainWindow.loadFile(path.resolve(__dirname, '../build/index.html'));
 };
 
 app.whenReady().then(createWindow);
