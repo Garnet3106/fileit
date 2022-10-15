@@ -1,4 +1,4 @@
-import { preferences } from '../../../../preferences';
+import { preferences } from '../../../../common/preferences';
 import './OperationBar.css';
 import OperationIcon from './OperationIcon/OperationIcon';
 

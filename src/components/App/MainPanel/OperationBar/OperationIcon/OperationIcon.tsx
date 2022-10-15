@@ -1,4 +1,4 @@
-import { preferences } from '../../../../../preferences';
+import { preferences } from '../../../../../common/preferences';
 import './OperationIcon.css';
 
 export type OperationIconProps = {

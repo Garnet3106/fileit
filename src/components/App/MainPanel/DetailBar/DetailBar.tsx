@@ -1,4 +1,4 @@
-import { preferences } from '../../../../preferences';
+import { preferences } from '../../../../common/preferences';
 import './DetailBar.css';
 
 export const variables = {

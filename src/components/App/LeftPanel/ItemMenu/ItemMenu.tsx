@@ -1,4 +1,4 @@
-import { preferences } from '../../../../preferences';
+import { preferences } from '../../../../common/preferences';
 import { variables as tabBarVariables } from '../../MainPanel/TabBar/TabBar';
 import './ItemMenu.css';
 

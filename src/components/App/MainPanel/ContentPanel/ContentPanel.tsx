@@ -1,4 +1,4 @@
-import { Item } from '../../../../item';
+import { Item } from '../../../../common/item';
 import { variables as detailBarVariables } from '../DetailBar/DetailBar';
 import { variables as operationBarVariables } from '../OperationBar/OperationBar';
 import { variables as tabBarVariables } from '../TabBar/TabBar';

@@ -1,4 +1,4 @@
-import { preferences } from '../../../../preferences';
+import { preferences } from '../../../../common/preferences';
 import './TabBar.css';
 import TabItem, { TabItemIcon } from './TabItem/TabItem';
 

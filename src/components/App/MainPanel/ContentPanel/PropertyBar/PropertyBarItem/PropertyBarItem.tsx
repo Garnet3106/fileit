@@ -1,4 +1,4 @@
-import { ItemPropertyKind } from '../../../../../../property';
+import { ItemPropertyKind } from '../../../../../../common/property';
 import { PropertyBarItemData } from '../PropertyBar';
 import './PropertyBarItem.css';
 

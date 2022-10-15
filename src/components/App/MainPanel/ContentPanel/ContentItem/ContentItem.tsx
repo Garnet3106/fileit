@@ -1,5 +1,5 @@
-import { Item } from '../../../../../item';
-import { ItemPropertyKind } from '../../../../../property';
+import { Item } from '../../../../../common/item';
+import { ItemPropertyKind } from '../../../../../common/property';
 import { PropertyBarItemData } from '../PropertyBar/PropertyBar';
 import './ContentItem.css';
 

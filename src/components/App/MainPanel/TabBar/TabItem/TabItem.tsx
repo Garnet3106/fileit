@@ -1,4 +1,4 @@
-import { ColorTheme, preferences } from '../../../../../preferences';
+import { ColorTheme, preferences } from '../../../../../common/preferences';
 import './TabItem.css';
 
 export enum TabItemIcon {

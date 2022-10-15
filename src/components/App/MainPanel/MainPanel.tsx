@@ -1,11 +1,11 @@
-import { preferences } from '../../../preferences';
+import { preferences } from '../../../common/preferences';
 import { variables as leftPanelVariables } from '../LeftPanel/LeftPanel';
 import ContentPanel from './ContentPanel/ContentPanel';
 import DetailBar from './DetailBar/DetailBar';
 import OperationBar from './OperationBar/OperationBar';
 import TabBar from './TabBar/TabBar';
 import './MainPanel.css';
-import { FileItemIdentifier, Item } from '../../../item';
+import { FileItemIdentifier, Item } from '../../../common/item';
 
 export const variables = {
     width: `calc(100vw - ${leftPanelVariables.width + 1}px)`,

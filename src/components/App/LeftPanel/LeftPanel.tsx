@@ -1,4 +1,4 @@
-import { preferences } from '../../../preferences';
+import { preferences } from '../../../common/preferences';
 import ItemMenu from './ItemMenu/ItemMenu';
 import './LeftPanel.css';
 
