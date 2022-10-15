@@ -24,8 +24,14 @@ export default function TabBarItem(props: TabBarItemProps) {
 
     return (
         <div className="tab-bar-item-container" style={styles.container}>
-            <div className="tab-bar-item-icon" style={styles.icon} />
-            {props.title}
+            <div style={{
+                alignItems: 'center',
+                display: 'flex',
+            }}>
+                <div className="tab-bar-item-icon" style={styles.icon} />
+                {props.title}
+            </div>
+            <div className="tab-bar-item-close" />
         </div>
     );
 }
