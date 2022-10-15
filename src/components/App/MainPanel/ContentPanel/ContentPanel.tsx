@@ -1,4 +1,6 @@
-import { Item } from '../../../../common/item';
+import { Dispatch, SetStateAction, useState } from 'react';
+import Fs from '../../../../common/fs';
+import { FileItemIdentifier, Item } from '../../../../common/item';
 import { variables as detailBarVariables } from '../DetailBar/DetailBar';
 import { variables as operationBarVariables } from '../OperationBar/OperationBar';
 import { variables as tabBarVariables } from '../TabBar/TabBar';
@@ -11,11 +13,28 @@ export const variables = {
     contentItemIconSize: 18,
 };
 
-export type ContentPanelProps = {
-    items: Item[],
-};
+export let setDisplayDirPath: (path: string) => void = () => console.error('Item setter is not initialized yet.');
 
-export default function ContentPanel(props: ContentPanelProps) {
+export default function ContentPanel() {
+    const [items, setItems] = useState<Item[]>([]);
+    const [dirPath, setDirPath] = useState<string | null>(null);
+
+    setDisplayDirPath = (path: string) => {
+        setDirPath(path);
+
+        Fs.getChildren(path)
+            .then((paths) => {
+                const newItems = paths.map((eachPath) => Item.file({
+                    id: new FileItemIdentifier(eachPath, '?'),
+                    size: 1000,
+                    lastModified: new Date(),
+                }));
+
+                setItems(newItems);
+            })
+            .catch(alert)
+    };
+
     const styles = {
         container: {
             height: `calc(100% - ${tabBarVariables.height + operationBarVariables.height + detailBarVariables.height}px)`,
@@ -42,13 +61,13 @@ export default function ContentPanel(props: ContentPanelProps) {
         },
     ];
 
-    const items = props.items.map((eachItem, index) => <ContentItem item={eachItem} properties={properties} key={index} />);
+    const itemElems = items.map((eachItem, index) => <ContentItem item={eachItem} properties={properties} key={index} />);
 
     return (
         <div className="content-panel-container" style={styles.container}>
             <PropertyBar items={properties} />
             <div className="content-panel-items">
-                {items}
+                {itemElems}
             </div>
         </div>
     );
