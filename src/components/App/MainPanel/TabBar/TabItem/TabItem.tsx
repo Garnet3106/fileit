@@ -25,9 +25,7 @@ export default function TabItem(props: TabItemProps) {
     return (
         <div className="tab-item-container" style={styles.container}>
             <div className="tab-item-icon" style={styles.icon} />
-            <div className="tab-item-title">
-                {props.title}
-            </div>
+            {props.title}
         </div>
     );
 }
