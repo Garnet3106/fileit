@@ -1,4 +1,4 @@
-import Fs from "./node/dev/fs";
+import Fs from "./fs";
 import { ItemPropertyKind } from "./property";
 
 /* Item */

@@ -1,4 +1,4 @@
-function getElectron() {
+function getElectron(): any {
     return window.require('electron');
 }
 
