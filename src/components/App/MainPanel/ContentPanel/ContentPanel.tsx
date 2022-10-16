@@ -1,6 +1,6 @@
-import { Dispatch, SetStateAction, useState } from 'react';
+import { useState } from 'react';
 import Fs from '../../../../common/fs';
-import { FileItemIdentifier, Item } from '../../../../common/item';
+import { Item } from '../../../../common/item';
 import { variables as detailBarVariables } from '../DetailBar/DetailBar';
 import { variables as operationBarVariables } from '../OperationBar/OperationBar';
 import { variables as tabBarVariables } from '../TabBar/TabBar';
@@ -16,7 +16,7 @@ export const variables = {
 export let setDisplayDirPath: (path: string) => void = () => console.error('Item setter is not initialized yet.');
 
 setTimeout(() => {
-    setDisplayDirPath('');
+    setDisplayDirPath('C:');
 }, 1000);
 
 export default function ContentPanel() {

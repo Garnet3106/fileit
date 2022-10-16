@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import UUIDClass from 'uuidjs';
 import NativeWindow from '../../../../common/nativewindow';
 import { preferences } from '../../../../common/preferences';
 import { Tab, TabIcon } from '../../../../common/tab';
+import { generateUuid } from '../../../../common/utils';
 import './TabBar.css';
 import TabBarItem from './TabBarItem/TabBarItem';
 
@@ -53,7 +53,7 @@ export default function TabBar() {
 
     function openTab(title: string, icon: TabIcon) {
         const newTab = {
-            id: UUIDClass.genV4().hexString,
+            id: generateUuid(),
             icon: icon,
             title: title,
         };

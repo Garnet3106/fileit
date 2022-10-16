@@ -1,4 +1,3 @@
-import Fs from "./fs";
 import { ItemPropertyKind } from "./property";
 
 /* Item */
@@ -9,31 +8,18 @@ export enum ItemKind {
 }
 
 export class Item {
-    private readonly kind: ItemKind;
     private readonly item: FileItem | FolderItem;
 
-    private constructor(
-        kind: ItemKind,
-        item: FileItem | FolderItem,
-    ) {
-        this.kind = kind;
+    public constructor(item: FileItem | FolderItem) {
         this.item = item;
     }
 
-    public static file(file: FileItem): Item {
-        return new Item(ItemKind.File, file);
-    }
-
-    public static folder(folder: FolderItem): Item {
-        return new Item(ItemKind.Folder, folder);
-    }
-
     public isFile(): boolean {
-        return this.kind === ItemKind.File;
+        return this.item.kind === ItemKind.File;
     }
 
     public isFolder(): boolean {
-        return this.kind === ItemKind.Folder;
+        return this.item.kind === ItemKind.Folder;
     }
 
     public getItem(): FileItem | FolderItem {
@@ -53,10 +39,11 @@ export class Item {
             return this.getIdentifier();
 
             case ItemPropertyKind.Size:
-            return this.isFile() ? `${(this.item as FileItem).size}b` : '';
+            const size = (this.item as FileItem).stats.size;
+            return this.isFile() ? `${size !== undefined ? size : '-'}b` : '';
 
             case ItemPropertyKind.LastModified:
-            const date = this.item.lastModified;
+            const date = this.item.stats.lastModified;
             return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDay()}`;
         }
     }
@@ -64,18 +51,10 @@ export class Item {
     public getFullPath(): string {
         return 'unimplemented';
     }
-
-    public read(): Promise<string> {
-        return Fs.readFile(this.getFullPath());
-    }
 }
 
-export type ItemStats = {
-    isFile: boolean,
-    isFolder: boolean,
-};
-
 export type ByteSize = number;
+export type ItemStats = FileItemStats | FolderItemStats;
 
 /* File Item */
 
@@ -91,22 +70,46 @@ export class FileItemIdentifier {
         this.extension = extension;
     }
 
+    public static from(id: string): FileItemIdentifier {
+        const tokens = id.split('.');
+        const extension = tokens[tokens.length - 1];
+        const name = id.substring(0, extension.length - 1);
+        return new FileItemIdentifier(name, extension);
+    }
+
     public toString(): string {
         return `${this.name}.${this.extension}`;
     }
 };
 
-export type FileItem = {
-    id: FileItemIdentifier,
-    size: ByteSize,
+export type FileItemStats = {
+    kind: ItemKind,
+    size?: ByteSize,
+    created: Date,
+    lastAccessed: Date,
     lastModified: Date,
+};
+
+export type FileItem = {
+    kind: ItemKind.File,
+    id: FileItemIdentifier,
+    stats: FileItemStats,
 };
 
 /* Folder Item */
 
 export type FolderItemIdentifier = string;
 
-export type FolderItem = {
-    id: FolderItemIdentifier,
+export type FolderItemStats = {
+    kind: ItemKind,
+    created: Date,
+    lastAccessed: Date,
     lastModified: Date,
+};
+
+export type FolderItem = {
+    kind: ItemKind.Folder,
+    id: FolderItemIdentifier,
+    stats: FolderItemStats,
+    children: string[],
 };

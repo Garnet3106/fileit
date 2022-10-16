@@ -1,95 +1,201 @@
-import FakeFs from "./fake_fs";
-import { FileItemIdentifier, Item, ItemStats } from "./item";
+import { FileItem, FileItemIdentifier, FileItemStats, FolderItem, FolderItemStats, Item, ItemKind, ItemStats } from "./item";
 
-namespace Fs {
-    export enum ErrorKind {
-        NoSuchFileOrDirectory = 'no such file or directory',
-        NotADirectory = 'not a directory',
-        NotAFile = 'not a file',
+export enum FsErrorKind {
+    NoSuchFileOrDirectory = 'no such file or directory',
+    NotADirectory = 'not a directory',
+    NotAFile = 'not a file',
+    CannotReadItemStats = 'cannot read item stats',
+}
+
+export const fsEncoding = 'utf-8';
+
+export interface IFs {
+    getStats(path: string): ItemStats | undefined;
+
+    getChildren(path: string): Promise<Item[]>;
+}
+
+export default class Fs {
+    private static isProdEnv: boolean = process.env.NODE_ENV === 'production';
+
+    private static fs(): IFs {
+        return Fs.isProdEnv ? new NativeFs() : new FakeFs();
     }
 
-    export const encoding = 'utf-8';
-
-    function getFs(onProdEnv: (fs: any) => any, onDevEnv: (fs: any) => any): any {
-        if (process.env.NODE_ENV === 'production') {
-            return onProdEnv(window.require('fs'));
-        } else {
-            return onDevEnv(FakeFs);
-        }
+    public static getStats(path: string): ItemStats | undefined {
+        return Fs.fs().getStats(path);
     }
 
-    function getFsPromises(onProdEnv: (fs: any) => any, onDevEnv: (fs: any) => any): any {
-        if (process.env.NODE_ENV === 'production') {
-            return onProdEnv(window.require('fs').promises);
-        } else {
-            return onDevEnv(FakeFs);
-        }
+    public static getChildren(path: string): Promise<Item[]> {
+        return Fs.fs().getChildren(path);
+    }
+};
+
+export class NativeFs implements IFs {
+    private static fs(): any {
+        return window.require('fs');
     }
 
-    export function getStats(path: string): ItemStats {
-        return getFs(
-            (fs) => {
-                let result = {};
+    private static fsPromises(): any {
+        return window.require('fs').promises;
+    }
 
-                fs.statSync(path, (e: any, stats: any) => {
-                    result = {
-                        isFile: stats.isFile(),
-                        isFolder: stats.isDirectory(),
-                    };
+    public getStats(path: string): ItemStats | undefined {
+        const stats = NativeFs.fs().statSync(path);
+
+        return stats.isFile() ? {
+            kind: ItemKind.File,
+            size: stats.size !== 0 ? stats.size : undefined,
+            created: new Date(stats.birthtimeMs),
+            lastAccessed: new Date(stats.atimeMs),
+            lastModified: new Date(stats.mtimeMs),
+        } : {
+            kind: ItemKind.Folder,
+            created: new Date(stats.birthtimeMs),
+            lastAccessed: new Date(stats.atimeMs),
+            lastModified: new Date(stats.mtimeMs),
+        };
+    }
+
+    public getChildren(path: string): Promise<Item[]> {
+        return new Promise((resolve, reject) => NativeFs.fsPromises().readdir(path, {
+            encoding: fsEncoding,
+        })
+            .then((childNames: string[]) => {
+                const children: Item[] = [];
+
+                childNames.forEach((eachName) => {
+                    const absPath = `${path}${path.length !== 0 ? '/' : ''}${eachName}`;
+                    const stats = this.getStats(absPath);
+
+                    if (stats === undefined) {
+                        reject(FsErrorKind.CannotReadItemStats);
+                        return;
+                    }
+
+                    const childItem = stats.kind === ItemKind.Folder ? {
+                        kind: ItemKind.File,
+                        id: FileItemIdentifier.from(eachName),
+                        stats: stats as FileItemStats,
+                    } as FileItem : {
+                        kind: ItemKind.Folder,
+                        id: eachName,
+                        stats: stats as FolderItemStats,
+                        children: NativeFs.fs().readdir(absPath, {
+                            encoding: fsEncoding,
+                        }) as string[],
+                    } as FolderItem;
+
+                    children.push(new Item(childItem));
                 });
 
-                return result;
-            },
-            (fs) => fs.getStats(path),
-        );
-    }
-
-    export function getChildren(path: string): Promise<Item[]> {
-        const intoItems = (childNames: string[]): Item[] => {
-            return childNames.map((eachName) => {
-                const absPath = `${path}${path.length !== 0 ? '/' : ''}${eachName}`;
-
-                if (Fs.getStats(absPath).isFile) {
-                    return Item.file({
-                        id: new FileItemIdentifier(eachName, ''),
-                        size: 1000,
-                        lastModified: new Date(),
-                    });
-                } else {
-                    return Item.folder({
-                        id: eachName,
-                        lastModified: new Date(),
-                    });
-                }
-            });
-        };
-
-        return getFsPromises(
-            (fs) => new Promise((resolve) => {
-                fs.readdir(path, {
-                    encoding: encoding,
-                })
-                    .then((childNames: string[]) => {
-                        resolve(intoItems(childNames))
-                    });
-            }),
-            (fs) => new Promise((resolve) => {
-                fs.getChildren(path)
-                    .then((childNames: string[]) => {
-                        resolve(intoItems(childNames))
-                    });
-            }),
-        );
-    }
-
-    export function readFile(path: string): Promise<string> {
-        return getFsPromises(
-            (fs) => fs.readFile(path, {
-                encoding: encoding,
-            }),
-            (fs) => fs.readFile(path),
-        );
+                resolve(children);
+            }));
     }
 }
 
-export default Fs;
+export class FakeFs implements IFs {
+    private static items: {
+        [index: string]: Item,
+    } = {
+        '': new Item({
+            kind: ItemKind.Folder,
+            id: '',
+            stats: {
+                kind: ItemKind.Folder,
+                created: new Date(),
+                lastAccessed: new Date(),
+                lastModified: new Date(),
+            },
+            children: [
+                'C:'
+            ],
+        }),
+        'C:': new Item({
+            kind: ItemKind.Folder,
+            id: 'C:',
+            stats: {
+                kind: ItemKind.Folder,
+                created: new Date(),
+                lastAccessed: new Date(),
+                lastModified: new Date(),
+            },
+            children: [
+                'main.ches',
+                'main.rs',
+                'main.js',
+            ],
+        }),
+        'C:/main.ches': new Item({
+            kind: ItemKind.File,
+            id: new FileItemIdentifier('main', 'ches'),
+            stats: {
+                kind: ItemKind.File,
+                size: 1024,
+                created: new Date(),
+                lastAccessed: new Date(),
+                lastModified: new Date(),
+            },
+        }),
+        'C:/main.rs': new Item({
+            kind: ItemKind.File,
+            id: new FileItemIdentifier('main', 'rs'),
+            stats: {
+                kind: ItemKind.File,
+                size: 1024,
+                created: new Date(),
+                lastAccessed: new Date(),
+                lastModified: new Date(),
+            },
+        }),
+        'C:/main.js': new Item({
+            kind: ItemKind.File,
+            id: new FileItemIdentifier('main', 'js'),
+            stats: {
+                kind: ItemKind.File,
+                size: 1024,
+                created: new Date(),
+                lastAccessed: new Date(),
+                lastModified: new Date(),
+            },
+        }),
+    };
+
+    public static getItem(path: string): Item | undefined {
+        return FakeFs.items[path];
+    }
+
+    public getStats(path: string): ItemStats | undefined {
+        const target = FakeFs.getItem(path);
+
+        if (target === undefined) {
+            console.error(FsErrorKind.NoSuchFileOrDirectory);
+            return;
+        }
+
+        return target.getItem().stats;
+    }
+
+    public getChildren(path: string): Promise<Item[]> {
+        return new Promise((resolve, reject) => {
+            const target = FakeFs.getItem(path);
+
+            if (target === undefined) {
+                reject(FsErrorKind.NoSuchFileOrDirectory);
+                return;
+            }
+
+            if (!target.isFolder()) {
+                reject(FsErrorKind.NotADirectory);
+                return;
+            }
+
+            const children = (target.getItem() as FolderItem).children.map((eachName) => {
+                const absPath = `${path}${path.length !== 0 ? '/' : ''}${eachName}`;
+                return FakeFs.getItem(absPath)!;
+            });
+
+            resolve(children);
+        });
+    }
+}
