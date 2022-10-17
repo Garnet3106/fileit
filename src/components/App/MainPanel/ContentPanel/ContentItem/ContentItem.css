@@ -12,6 +12,7 @@
 .content-item-property {
     color: var(--dark-font-color);
     margin-left: calc((var(--property-item-horizontal-margin) * 2) + 1px);
+    overflow-x: hidden;
 }
 
 .content-item-property-icon {

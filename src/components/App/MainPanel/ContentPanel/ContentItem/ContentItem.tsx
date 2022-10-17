@@ -23,11 +23,13 @@ export default function ContentItem(props: ContentItemProps) {
 
             case ItemPropertyKind.Name:
             return <div className="content-item-property content-item-property-name" style={{
+                maxWidth: `${eachProperty.width}px`,
                 minWidth: `${eachProperty.width}px`,
             }} key={index}>{value}</div>;
 
             default:
             return <div className="content-item-property" style={{
+                maxWidth: `${eachProperty.width}px`,
                 minWidth: `${eachProperty.width}px`,
             }} key={index}>{value}</div>;
         }
