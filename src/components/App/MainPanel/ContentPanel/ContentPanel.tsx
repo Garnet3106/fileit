@@ -16,7 +16,7 @@ export const variables = {
 export let setDisplayDirPath: (path: string) => void = () => console.error('Item setter is not initialized yet.');
 
 setTimeout(() => {
-    setDisplayDirPath('C:');
+    setDisplayDirPath('C:/');
 }, 1000);
 
 export default function ContentPanel() {

@@ -49,7 +49,9 @@ export class Item {
     }
 
     public getFullPath(): string {
-        return 'unimplemented';
+        const parentPath = this.item.parents.join('/');
+        const separator = parentPath.length !== 0 ? '/' : '';
+        return `${parentPath}${separator}${this.item.id.toString()}`;
     }
 }
 
@@ -92,6 +94,7 @@ export type FileItemStats = {
 
 export type FileItem = {
     kind: ItemKind.File,
+    parents: string[],
     id: FileItemIdentifier,
     stats: FileItemStats,
 };
@@ -109,6 +112,7 @@ export type FolderItemStats = {
 
 export type FolderItem = {
     kind: ItemKind.Folder,
+    parents: string[],
     id: FolderItemIdentifier,
     stats: FolderItemStats,
     children: string[],

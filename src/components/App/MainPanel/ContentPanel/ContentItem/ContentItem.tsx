@@ -1,5 +1,6 @@
 import { Item } from '../../../../../common/item';
 import { ItemPropertyKind } from '../../../../../common/property';
+import { setDisplayDirPath } from '../ContentPanel';
 import { PropertyBarItemData } from '../PropertyBar/PropertyBar';
 import './ContentItem.css';
 
@@ -36,8 +37,16 @@ export default function ContentItem(props: ContentItemProps) {
     });
 
     return (
-        <div className="content-item-container">
+        <div className="content-item-container" onDoubleClick={onDoubleClick}>
             {properties}
         </div>
     );
+
+    function onDoubleClick() {
+        if (props.item.isFolder()) {
+            setDisplayDirPath(props.item.getFullPath());
+        } else {
+            //
+        }
+    }
 }

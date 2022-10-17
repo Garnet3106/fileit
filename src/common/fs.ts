@@ -65,7 +65,7 @@ export class NativeFs implements IFs {
     }
 
     public getChildren(path: string): Promise<Item[]> {
-        return new Promise((resolve, reject) => NativeFs.fsPromises().readdir(`${path}/`, {
+        return new Promise((resolve) => NativeFs.fsPromises().readdir(`${path}/`, {
             encoding: fsEncoding,
         })
             .then((childNames: string[]) => {
@@ -82,10 +82,12 @@ export class NativeFs implements IFs {
 
                     const childItem = stats.kind === ItemKind.Folder ? {
                         kind: ItemKind.File,
+                        parents: path.split('/'),
                         id: FileItemIdentifier.from(eachName),
                         stats: stats as FileItemStats,
                     } as FileItem : {
                         kind: ItemKind.Folder,
+                        parents: path.split('/'),
                         id: eachName,
                         stats: stats as FolderItemStats,
                         children: (() => {
@@ -113,6 +115,7 @@ export class FakeFs implements IFs {
     } = {
         '': new Item({
             kind: ItemKind.Folder,
+            parents: [],
             id: '',
             stats: {
                 kind: ItemKind.Folder,
@@ -126,6 +129,7 @@ export class FakeFs implements IFs {
         }),
         'C:': new Item({
             kind: ItemKind.Folder,
+            parents: [''],
             id: 'C:',
             stats: {
                 kind: ItemKind.Folder,
@@ -141,6 +145,7 @@ export class FakeFs implements IFs {
         }),
         'C:/main.ches': new Item({
             kind: ItemKind.File,
+            parents: ['C:'],
             id: new FileItemIdentifier('main', 'ches'),
             stats: {
                 kind: ItemKind.File,
@@ -152,6 +157,7 @@ export class FakeFs implements IFs {
         }),
         'C:/main.rs': new Item({
             kind: ItemKind.File,
+            parents: ['C:'],
             id: new FileItemIdentifier('main', 'rs'),
             stats: {
                 kind: ItemKind.File,
@@ -163,6 +169,7 @@ export class FakeFs implements IFs {
         }),
         'C:/main.js': new Item({
             kind: ItemKind.File,
+            parents: ['C:'],
             id: new FileItemIdentifier('main', 'js'),
             stats: {
                 kind: ItemKind.File,
