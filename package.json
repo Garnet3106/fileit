@@ -4,23 +4,6 @@
   "main": "electron/main.js",
   "homepage": "./",
   "private": true,
-  "dependencies": {
-    "@testing-library/jest-dom": "^5.16.5",
-    "@testing-library/react": "^13.4.0",
-    "@testing-library/user-event": "^13.5.0",
-    "@types/jest": "^27.5.2",
-    "@types/node": "^18.8.5",
-    "@types/react": "^18.0.21",
-    "@types/react-dom": "^18.0.6",
-    "electron": "^21.1.0",
-    "electron-builder": "^23.6.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-scripts": "5.0.1",
-    "typescript": "^4.8.4",
-    "uuidjs": "^4.2.12",
-    "web-vitals": "^2.1.4"
-  },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
@@ -28,7 +11,31 @@
     "eject": "react-scripts eject",
     "electron:run": "electron .",
     "electron:dev": "concurrently \"npm start\" \"wait-on http://localhost:3000 && tsc -p . -w\" \"wait-on http://localhost:3000 && tsc -p . && electron .\"",
-    "electron:build": "npm run build && electron ."
+    "electron:build": "npm run build && electron .",
+    "electron:pack": "npm run build && electron-packager . --overwrite"
+  },
+  "dependencies": {
+    "electron-is-dev": "^2.0.0",
+    "electron-reload": "^2.0.0-alpha.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-scripts": "5.0.1",
+    "uuidjs": "^4.2.12",
+    "web-vitals": "^2.1.4"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^5.16.5",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^13.5.0",
+    "@types/jest": "^27.5.2",
+    "@types/node": "^18.8.5",
+    "@types/react": "^18.0.21",
+    "@types/react-dom": "^18.0.6",
+    "concurrently": "^7.4.0",
+    "electron": "^21.1.0",
+    "electron-packager": "^16.0.0",
+    "typescript": "^4.8.4",
+    "wait-on": "^6.0.1"
   },
   "build": {
     "appId": "work.gant.fileit",
@@ -56,11 +63,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "devDependencies": {
-    "concurrently": "^7.4.0",
-    "electron-is-dev": "^2.0.0",
-    "electron-reload": "^2.0.0-alpha.1",
-    "wait-on": "^6.0.1"
   }
 }

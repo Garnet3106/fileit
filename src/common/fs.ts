@@ -41,7 +41,14 @@ export class NativeFs implements IFs {
     }
 
     public getStats(path: string): ItemStats | undefined {
-        const stats = NativeFs.fs().statSync(path);
+        let stats: any;
+
+        try {
+            stats = NativeFs.fs().statSync(path);
+        } catch (e) {
+            console.error(e);
+            return;
+        }
 
         return stats.isFile() ? {
             kind: ItemKind.File,
@@ -58,7 +65,7 @@ export class NativeFs implements IFs {
     }
 
     public getChildren(path: string): Promise<Item[]> {
-        return new Promise((resolve, reject) => NativeFs.fsPromises().readdir(path, {
+        return new Promise((resolve, reject) => NativeFs.fsPromises().readdir(`${path}/`, {
             encoding: fsEncoding,
         })
             .then((childNames: string[]) => {
@@ -69,7 +76,7 @@ export class NativeFs implements IFs {
                     const stats = this.getStats(absPath);
 
                     if (stats === undefined) {
-                        reject(FsErrorKind.CannotReadItemStats);
+                        console.error(FsErrorKind.CannotReadItemStats);
                         return;
                     }
 
@@ -81,9 +88,15 @@ export class NativeFs implements IFs {
                         kind: ItemKind.Folder,
                         id: eachName,
                         stats: stats as FolderItemStats,
-                        children: NativeFs.fs().readdir(absPath, {
-                            encoding: fsEncoding,
-                        }) as string[],
+                        children: (() => {
+                            try {
+                                return NativeFs.fs().readdirSync(absPath, {
+                                    encoding: fsEncoding,
+                                }) as string[];
+                            } catch (e) {
+                                console.error(e);
+                            }
+                        })(),
                     } as FolderItem;
 
                     children.push(new Item(childItem));
