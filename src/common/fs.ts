@@ -33,11 +33,11 @@ export default class Fs {
 
 export class NativeFs implements IFs {
     private static fs(): any {
-        return window.require('fs');
+        return process.env.NODE_ENV === 'test' ? require('fs') : window.require('fs');
     }
 
     private static fsPromises(): any {
-        return window.require('fs').promises;
+        return this.fs().promises;
     }
 
     public getStats(path: string): ItemStats | undefined {
@@ -80,7 +80,7 @@ export class NativeFs implements IFs {
                         return;
                     }
 
-                    const childItem = stats.kind === ItemKind.Folder ? {
+                    const childItem = stats.kind === ItemKind.File ? {
                         kind: ItemKind.File,
                         parents: path.split('/'),
                         id: FileItemIdentifier.from(eachName),

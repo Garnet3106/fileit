@@ -75,7 +75,7 @@ export class FileItemIdentifier {
     public static from(id: string): FileItemIdentifier {
         const tokens = id.split('.');
         const extension = tokens[tokens.length - 1];
-        const name = id.substring(0, extension.length - 1);
+        const name = id.substring(0, id.length - extension.length - 1);
         return new FileItemIdentifier(name, extension);
     }
 
