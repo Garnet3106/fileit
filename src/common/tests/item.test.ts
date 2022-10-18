@@ -1,5 +1,15 @@
 import { FileItemIdentifier, ItemPath, ItemPathErrorKind } from "../item";
 
+/* Parent Path */
+
+test('create empty parent path', () => {
+    expect((new ItemPath([], '', true))['parents']).toEqual([]);
+});
+
+test('create parent path with formatting', () => {
+    expect((new ItemPath(['', 'C:/', 'parent1/parent2'], '', true))['parents']).toEqual(['C:', 'parent1', 'parent2']);
+});
+
 /* Full Path */
 
 test('get full root path without parent', () => {
@@ -24,6 +34,10 @@ test('get full directory path without parent', () => {
 
 test('get full directory path with parents', () => {
     expect((new ItemPath(['C:', 'parent1', 'parent2'], 'dir', true)).getFullPath()).toEqual('C:/parent1/parent2/dir/');
+});
+
+test('get full file path with parents', () => {
+    expect((new ItemPath(['C:', 'parent1', 'parent2'], new FileItemIdentifier('file', 'txt'), false)).getFullPath()).toEqual('C:/parent1/parent2/file.txt');
 });
 
 /* File Identifier */

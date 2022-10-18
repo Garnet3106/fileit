@@ -16,7 +16,7 @@ export class ItemPath {
         id: ItemIdentifier,
         isFolder: boolean,
     ) {
-        this.parents = parents;
+        this.parents = parents.join('/').split(/[\/\\]/g).filter((eachParent) => eachParent.length !== 0);
         this.id = id;
         this.isFolder = isFolder;
     }
@@ -35,7 +35,7 @@ export class ItemPath {
         const begin = hasDriveLetter || (this.parents.length === 0 && this.getIdentifier().length === 0 && this.isFolder) ? '' : '/';
         const dirSeparator = this.isFolder ? '/' : '';
 
-        return begin + parentPath + this.id.toString() + dirSeparator;
+        return begin + parentPath + this.getIdentifier() + dirSeparator;
     }
 }
 
