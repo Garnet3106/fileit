@@ -1,7 +1,35 @@
-import { FileItemIdentifier } from "../item";
+import { FileItemIdentifier, ItemPath, ItemPathErrorKind } from "../item";
 
-test('generate empty file identifier', () => {
-    expect(FileItemIdentifier.from('')).toEqual(new FileItemIdentifier('', ''));
+/* Full Path */
+
+test('get full root path without parent', () => {
+    expect((new ItemPath([], '', true)).getFullPath()).toEqual('/');
+});
+
+test('get full drive path without parent', () => {
+    expect((new ItemPath([], 'C:', true)).getFullPath()).toEqual('C:/');
+});
+
+test('get full directory path with drive parent', () => {
+    expect((new ItemPath(['C:'], 'dir', true)).getFullPath()).toEqual('C:/dir/');
+});
+
+test('get full file path without parent', () => {
+    expect((new ItemPath([], new FileItemIdentifier('file', 'txt'), false)).getFullPath()).toEqual('/file.txt');
+});
+
+test('get full directory path without parent', () => {
+    expect((new ItemPath([], 'dir', true)).getFullPath()).toEqual('/dir/');
+});
+
+test('get full directory path with parents', () => {
+    expect((new ItemPath(['C:', 'parent1', 'parent2'], 'dir', true)).getFullPath()).toEqual('C:/parent1/parent2/dir/');
+});
+
+/* File Identifier */
+
+test('[failure] generate empty file identifier', () => {
+    expect(() => FileItemIdentifier.from('')).toThrow(ItemPathErrorKind.EmptyFileItemIdentifier);
 });
 
 test('generate normal file identifier', () => {

@@ -1,4 +1,4 @@
-import { FileItem, FileItemIdentifier, FileItemStats, FolderItem, FolderItemStats, Item, ItemKind, ItemStats } from "./item";
+import { FileItem, FileItemIdentifier, FileItemStats, FolderItem, FolderItemStats, Item, ItemKind, ItemPath, ItemStats } from "./item";
 
 export enum FsErrorKind {
     NoSuchFileOrDirectory = 'no such file or directory',
@@ -82,13 +82,11 @@ export class NativeFs implements IFs {
 
                     const childItem = stats.kind === ItemKind.File ? {
                         kind: ItemKind.File,
-                        parents: path.split('/'),
-                        id: FileItemIdentifier.from(eachName),
+                        path: new ItemPath(path.split('/'), FileItemIdentifier.from(eachName), false),
                         stats: stats as FileItemStats,
                     } as FileItem : {
                         kind: ItemKind.Folder,
-                        parents: path.split('/'),
-                        id: eachName,
+                        path: new ItemPath(path.split('/'), eachName, true),
                         stats: stats as FolderItemStats,
                     } as FolderItem;
 
@@ -114,8 +112,7 @@ export class FakeFs implements IFs {
     } = {
         '': {
             kind: ItemKind.Folder,
-            parents: [],
-            id: '',
+            path: new ItemPath([], '', true),
             stats: {
                 kind: ItemKind.Folder,
                 created: new Date(),
@@ -128,8 +125,7 @@ export class FakeFs implements IFs {
         },
         'C:': {
             kind: ItemKind.Folder,
-            parents: [''],
-            id: 'C:',
+            path: new ItemPath([], 'C:', true),
             stats: {
                 kind: ItemKind.Folder,
                 created: new Date(),
@@ -144,8 +140,7 @@ export class FakeFs implements IFs {
         },
         'C:/main.ches': {
             kind: ItemKind.File,
-            parents: ['C:'],
-            id: new FileItemIdentifier('main', 'ches'),
+            path: new ItemPath(['C:'], new FileItemIdentifier('main', 'ches'), false),
             stats: {
                 kind: ItemKind.File,
                 size: 1024,
@@ -156,8 +151,7 @@ export class FakeFs implements IFs {
         },
         'C:/main.rs': {
             kind: ItemKind.File,
-            parents: ['C:'],
-            id: new FileItemIdentifier('main', 'rs'),
+            path: new ItemPath(['C:'], new FileItemIdentifier('main', 'rs'), false),
             stats: {
                 kind: ItemKind.File,
                 size: 1024,
@@ -168,8 +162,7 @@ export class FakeFs implements IFs {
         },
         'C:/main.js': {
             kind: ItemKind.File,
-            parents: ['C:'],
-            id: new FileItemIdentifier('main', 'js'),
+            path: new ItemPath(['C:'], new FileItemIdentifier('main', 'js'), false),
             stats: {
                 kind: ItemKind.File,
                 size: 1024,

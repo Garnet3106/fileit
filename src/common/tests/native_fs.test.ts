@@ -24,7 +24,7 @@ test('get directory children', async () => {
         ];
 
         const target = Object.entries(children).map(([_index, item]) => ({
-            id: item.getItem().id.toString(),
+            id: item.getIdentifier(),
             kind: item.getItem().kind,
         }));
 

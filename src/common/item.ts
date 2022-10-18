@@ -1,6 +1,47 @@
 import { ItemPropertyKind } from "./property";
 
+/* Path */
+
+export enum ItemPathErrorKind {
+    EmptyFileItemIdentifier = 'cannot set empty string as file item identifier',
+}
+
+export class ItemPath {
+    private parents: string[];
+    private id: ItemIdentifier;
+    private isFolder: boolean;
+
+    public constructor(
+        parents: string[],
+        id: ItemIdentifier,
+        isFolder: boolean,
+    ) {
+        this.parents = parents;
+        this.id = id;
+        this.isFolder = isFolder;
+    }
+
+    public getIdentifier(): string {
+        return this.id.toString();
+    }
+
+    public getFullPath(): string {
+        const parentPath = this.parents.map((eachParent) => eachParent + '/').join('');
+        const parentsStartWith = this.parents[0];
+        const hasDriveLetter =
+            (parentsStartWith !== undefined && parentsStartWith.endsWith(':')) ||
+            (this.parents.length === 0 && this.getIdentifier().endsWith(':') && this.isFolder);
+
+        const begin = hasDriveLetter || (this.parents.length === 0 && this.getIdentifier().length === 0 && this.isFolder) ? '' : '/';
+        const dirSeparator = this.isFolder ? '/' : '';
+
+        return begin + parentPath + this.id.toString() + dirSeparator;
+    }
+}
+
 /* Item */
+
+export type ItemIdentifier = FileItemIdentifier | FolderItemIdentifier;
 
 export enum ItemKind {
     File,
@@ -26,10 +67,6 @@ export class Item {
         return this.item;
     }
 
-    public getIdentifier(): string {
-        return this.item.id.toString();
-    }
-
     public getPropertyValue(kind: ItemPropertyKind): string {
         switch (kind) {
             case ItemPropertyKind.Icon:
@@ -48,10 +85,12 @@ export class Item {
         }
     }
 
+    public getIdentifier(): string {
+        return this.item.path.getIdentifier();
+    }
+
     public getFullPath(): string {
-        const parentPath = this.item.parents.join('/');
-        const separator = parentPath.length !== 0 ? '/' : '';
-        return `${parentPath}${separator}${this.item.id.toString()}`;
+        return this.item.path.getFullPath();
     }
 }
 
@@ -68,6 +107,10 @@ export class FileItemIdentifier {
         name: string,
         extension: string,
     ) {
+        if (name.length === 0 && extension.length === 0) {
+            throw ItemPathErrorKind.EmptyFileItemIdentifier;
+        }
+
         this.name = name;
         this.extension = extension;
     }
@@ -100,14 +143,13 @@ export type FileItemStats = {
 
 export type FileItem = {
     kind: ItemKind.File,
-    parents: string[],
-    id: FileItemIdentifier,
+    path: ItemPath,
     stats: FileItemStats,
 };
 
 /* Folder Item */
 
-export type FolderItemIdentifier = string;
+export type FolderItemIdentifier = string; 
 
 export type FolderItemStats = {
     kind: ItemKind,
@@ -118,7 +160,6 @@ export type FolderItemStats = {
 
 export type FolderItem = {
     kind: ItemKind.Folder,
-    parents: string[],
-    id: FolderItemIdentifier,
+    path: ItemPath,
     stats: FolderItemStats,
 };
