@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import NativeWindow from '../../../../common/nativewindow';
+import NativeWindow from '../../../../common/native_window';
 import { preferences } from '../../../../common/preferences';
 import { Tab, TabIcon } from '../../../../common/tab';
 import { generateUuid } from '../../../../common/utils';
