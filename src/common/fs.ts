@@ -90,15 +90,6 @@ export class NativeFs implements IFs {
                         parents: path.split('/'),
                         id: eachName,
                         stats: stats as FolderItemStats,
-                        children: (() => {
-                            try {
-                                return NativeFs.fs().readdirSync(absPath, {
-                                    encoding: fsEncoding,
-                                }) as string[];
-                            } catch (e) {
-                                console.error(e);
-                            }
-                        })(),
                     } as FolderItem;
 
                     children.push(new Item(childItem));
@@ -109,11 +100,19 @@ export class NativeFs implements IFs {
     }
 }
 
+export type FakeFileItem = FileItem;
+
+export type FakeFolderItem = FolderItem & {
+    children: string[],
+};
+
+export type FakeItem = FakeFileItem | FakeFolderItem;
+
 export class FakeFs implements IFs {
     private static items: {
-        [index: string]: Item,
+        [index: string]: FakeItem,
     } = {
-        '': new Item({
+        '': {
             kind: ItemKind.Folder,
             parents: [],
             id: '',
@@ -126,8 +125,8 @@ export class FakeFs implements IFs {
             children: [
                 'C:'
             ],
-        }),
-        'C:': new Item({
+        },
+        'C:': {
             kind: ItemKind.Folder,
             parents: [''],
             id: 'C:',
@@ -142,8 +141,8 @@ export class FakeFs implements IFs {
                 'main.rs',
                 'main.js',
             ],
-        }),
-        'C:/main.ches': new Item({
+        },
+        'C:/main.ches': {
             kind: ItemKind.File,
             parents: ['C:'],
             id: new FileItemIdentifier('main', 'ches'),
@@ -154,8 +153,8 @@ export class FakeFs implements IFs {
                 lastAccessed: new Date(),
                 lastModified: new Date(),
             },
-        }),
-        'C:/main.rs': new Item({
+        },
+        'C:/main.rs': {
             kind: ItemKind.File,
             parents: ['C:'],
             id: new FileItemIdentifier('main', 'rs'),
@@ -166,8 +165,8 @@ export class FakeFs implements IFs {
                 lastAccessed: new Date(),
                 lastModified: new Date(),
             },
-        }),
-        'C:/main.js': new Item({
+        },
+        'C:/main.js': {
             kind: ItemKind.File,
             parents: ['C:'],
             id: new FileItemIdentifier('main', 'js'),
@@ -178,10 +177,10 @@ export class FakeFs implements IFs {
                 lastAccessed: new Date(),
                 lastModified: new Date(),
             },
-        }),
+        },
     };
 
-    public static getItem(path: string): Item | undefined {
+    public static getItem(path: string): FakeItem | undefined {
         return FakeFs.items[path];
     }
 
@@ -193,7 +192,7 @@ export class FakeFs implements IFs {
             return;
         }
 
-        return target.getItem().stats;
+        return target.stats;
     }
 
     public getChildren(path: string): Promise<Item[]> {
@@ -205,14 +204,14 @@ export class FakeFs implements IFs {
                 return;
             }
 
-            if (!target.isFolder()) {
+            if (target.kind !== ItemKind.Folder) {
                 reject(FsErrorKind.NotADirectory);
                 return;
             }
 
-            const children = (target.getItem() as FolderItem).children.map((eachName) => {
+            const children = (target as FakeFolderItem).children.map((eachName) => {
                 const absPath = `${path}${path.length !== 0 ? '/' : ''}${eachName}`;
-                return FakeFs.getItem(absPath)!;
+                return new Item(FakeFs.getItem(absPath)!);
             });
 
             resolve(children);

@@ -121,5 +121,4 @@ export type FolderItem = {
     parents: string[],
     id: FolderItemIdentifier,
     stats: FolderItemStats,
-    children: string[],
 };
