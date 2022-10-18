@@ -7,7 +7,7 @@ function getNativeFullPath(path: string): string {
 
 const fs = new NativeFs();
 
-test('getChildren', async () => {
+test('get directory children', async () => {
         const children = await fs.getChildren(getNativeFullPath(''))
         const childrenToBe: {
             id: string,
