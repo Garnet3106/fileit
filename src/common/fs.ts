@@ -120,12 +120,24 @@ export class FakeFs implements IFs {
                 lastModified: new Date(),
             },
             children: [
-                'C:'
+                'desktop.ini',
+                'usr',
             ],
         },
-        'C:': {
+        'desktop.ini': {
+            kind: ItemKind.File,
+            path: new ItemPath([], new FileItemIdentifier('desktop', 'ini'), false),
+            stats: {
+                kind: ItemKind.File,
+                size: 1024,
+                created: new Date(),
+                lastAccessed: new Date(),
+                lastModified: new Date(),
+            },
+        },
+        'usr': {
             kind: ItemKind.Folder,
-            path: new ItemPath([], 'C:', true),
+            path: new ItemPath([], 'usr', true),
             stats: {
                 kind: ItemKind.Folder,
                 created: new Date(),
@@ -133,14 +145,13 @@ export class FakeFs implements IFs {
                 lastModified: new Date(),
             },
             children: [
-                'main.ches',
-                'main.rs',
-                'main.js',
+                'desktop.ini',
+                'win32.sys',
             ],
         },
-        'C:/main.ches': {
+        'usr/desktop.ini': {
             kind: ItemKind.File,
-            path: new ItemPath(['C:'], new FileItemIdentifier('main', 'ches'), false),
+            path: new ItemPath(['usr'], new FileItemIdentifier('main', 'rs'), false),
             stats: {
                 kind: ItemKind.File,
                 size: 1024,
@@ -149,20 +160,9 @@ export class FakeFs implements IFs {
                 lastModified: new Date(),
             },
         },
-        'C:/main.rs': {
+        'usr/win32.sys': {
             kind: ItemKind.File,
-            path: new ItemPath(['C:'], new FileItemIdentifier('main', 'rs'), false),
-            stats: {
-                kind: ItemKind.File,
-                size: 1024,
-                created: new Date(),
-                lastAccessed: new Date(),
-                lastModified: new Date(),
-            },
-        },
-        'C:/main.js': {
-            kind: ItemKind.File,
-            path: new ItemPath(['C:'], new FileItemIdentifier('main', 'js'), false),
+            path: new ItemPath(['usr'], new FileItemIdentifier('win32', 'sys'), false),
             stats: {
                 kind: ItemKind.File,
                 size: 1024,
