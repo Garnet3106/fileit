@@ -1,29 +1,29 @@
 import { FakeFs } from '../fs';
-import { ItemKind } from '../item';
+import { ItemKind, ItemPath } from '../item';
 
 const fs = new FakeFs();
 
-test('get directory children', async () => {
-        const children = await fs.getChildren('')
-        const childrenToBe: {
-            id: string,
-            kind: ItemKind,
-        }[] = [
-            {
-                id: 'desktop.ini',
-                kind: ItemKind.File,
-            },
-            {
-                id: 'usr',
-                kind: ItemKind.Folder,
-            },
-        ];
+test('fake fs: get directory children', async () => {
+    const children = await fs.getChildren(new ItemPath([], '', true));
 
-        const target = Object.entries(children).map(([_index, item]) => ({
-            id: item.getIdentifier(),
-            kind: item.getItem().kind,
-        }));
+    const childrenToBe: {
+        id: string,
+        kind: ItemKind,
+    }[] = [
+        {
+            id: 'desktop.ini',
+            kind: ItemKind.File,
+        },
+        {
+            id: 'usr',
+            kind: ItemKind.Folder,
+        },
+    ];
 
-        expect(target).toEqual(childrenToBe);
-    }
-);
+    const target = Object.entries(children).map(([_index, item]) => ({
+        id: item.getIdentifier(),
+        kind: item.getItem().kind,
+    }));
+
+    expect(target).toEqual(childrenToBe);
+});

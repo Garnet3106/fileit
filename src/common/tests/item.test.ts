@@ -1,5 +1,19 @@
 import { FileItemIdentifier, ItemPath, ItemPathErrorKind } from "../item";
 
+/* Append Path */
+
+test('append directory to root path', () => {
+    expect((new ItemPath([], '', true)).append('dir', true).getFullPath()).toEqual('/dir/');
+});
+
+test('append directory to child path', () => {
+    expect((new ItemPath(['C:'], 'parent', true)).append('dir', true).getFullPath()).toEqual('C:/parent/dir/');
+});
+
+test('[failure] append to file path', () => {
+    expect(() => (new ItemPath([], new FileItemIdentifier('file', 'txt'), false)).append('dir', true).getFullPath()).toThrow(ItemPathErrorKind.CannotAppendPathToFile);
+});
+
 /* Parent Path */
 
 test('create empty parent path', () => {

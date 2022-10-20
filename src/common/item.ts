@@ -4,6 +4,7 @@ import { ItemPropertyKind } from "./property";
 
 export enum ItemPathErrorKind {
     EmptyFileItemIdentifier = 'cannot set empty string as file item identifier',
+    CannotAppendPathToFile = 'cannot append path to file',
 }
 
 export class ItemPath {
@@ -19,6 +20,18 @@ export class ItemPath {
         this.parents = parents.join('/').split(/[\/\\]/g).filter((eachParent) => eachParent.length !== 0);
         this.id = id;
         this.isFolder = isFolder;
+    }
+
+    public append(
+        id: ItemIdentifier,
+        isFolder: boolean,
+    ): ItemPath {
+        if (!this.isFolder) {
+            throw ItemPathErrorKind.CannotAppendPathToFile;
+        }
+
+        const parents = this.parents.concat(this.id as FolderItemIdentifier);
+        return new ItemPath(parents, id, isFolder);
     }
 
     public getIdentifier(): string {
@@ -89,8 +102,12 @@ export class Item {
         return this.item.path.getIdentifier();
     }
 
+    public getPath(): ItemPath {
+        return this.item.path;
+    }
+
     public getFullPath(): string {
-        return this.item.path.getFullPath();
+        return this.getPath().getFullPath();
     }
 }
 

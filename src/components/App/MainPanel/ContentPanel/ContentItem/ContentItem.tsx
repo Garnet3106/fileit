@@ -44,7 +44,7 @@ export default function ContentItem(props: ContentItemProps) {
 
     function onDoubleClick() {
         if (props.item.isFolder()) {
-            setDisplayDirPath(props.item.getFullPath());
+            setDisplayDirPath(props.item.getPath());
         } else {
             //
         }

@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Fs from '../../../../common/fs';
-import { Item } from '../../../../common/item';
+import { Item, ItemPath } from '../../../../common/item';
 import { variables as detailBarVariables } from '../DetailBar/DetailBar';
 import { variables as operationBarVariables } from '../OperationBar/OperationBar';
 import { variables as tabBarVariables } from '../TabBar/TabBar';
@@ -13,23 +13,21 @@ export const variables = {
     contentItemIconSize: 18,
 };
 
-export let setDisplayDirPath: (path: string) => void = () => console.error('Item setter is not initialized yet.');
-
-setTimeout(() => {
-    setDisplayDirPath('C:/');
-}, 1000);
+export let setDisplayDirPath: (path: ItemPath) => void = () => console.error('Item setter is not initialized yet.');
 
 export default function ContentPanel() {
     const [items, setItems] = useState<Item[]>([]);
-    const [dirPath, setDirPath] = useState<string | null>(null);
+    const [dirPath, setDirPath] = useState<ItemPath | null>(null);
 
-    setDisplayDirPath = (path: string) => {
+    setDisplayDirPath = (path) => {
         setDirPath(path);
 
         Fs.getChildren(path)
             .then(setItems)
-            .catch(alert)
+            .catch(alert);
     };
+
+    useEffect(() => setDisplayDirPath(new ItemPath([], 'C:', true)), []);
 
     const styles = {
         container: {

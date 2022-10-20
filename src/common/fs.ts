@@ -1,3 +1,4 @@
+import { Dirent } from "fs";
 import { FileItem, FileItemIdentifier, FileItemStats, FolderItem, FolderItemStats, Item, ItemKind, ItemPath, ItemStats } from "./item";
 
 export enum FsErrorKind {
@@ -10,9 +11,9 @@ export enum FsErrorKind {
 export const fsEncoding = 'utf-8';
 
 export interface IFs {
-    getStats(path: string): ItemStats | undefined;
+    getStats(path: ItemPath): ItemStats | undefined;
 
-    getChildren(path: string): Promise<Item[]>;
+    getChildren(path: ItemPath): Promise<Item[]>;
 }
 
 export default class Fs {
@@ -22,11 +23,11 @@ export default class Fs {
         return Fs.isProdEnv ? new NativeFs() : new FakeFs();
     }
 
-    public static getStats(path: string): ItemStats | undefined {
+    public static getStats(path: ItemPath): ItemStats | undefined {
         return Fs.fs().getStats(path);
     }
 
-    public static getChildren(path: string): Promise<Item[]> {
+    public static getChildren(path: ItemPath): Promise<Item[]> {
         return Fs.fs().getChildren(path);
     }
 };
@@ -40,11 +41,11 @@ export class NativeFs implements IFs {
         return this.fs().promises;
     }
 
-    public getStats(path: string): ItemStats | undefined {
+    public getStats(path: ItemPath): ItemStats | undefined {
         let stats: any;
 
         try {
-            stats = NativeFs.fs().statSync(path);
+            stats = NativeFs.fs().statSync(path.getFullPath());
         } catch (e) {
             console.error(e);
             return;
@@ -64,15 +65,17 @@ export class NativeFs implements IFs {
         };
     }
 
-    public getChildren(path: string): Promise<Item[]> {
-        return new Promise((resolve) => NativeFs.fsPromises().readdir(`${path}/`, {
+    public getChildren(path: ItemPath): Promise<Item[]> {
+        return new Promise((resolve) => NativeFs.fsPromises().readdir(path.getFullPath(), {
             encoding: fsEncoding,
+            withFileTypes: true,
         })
-            .then((childNames: string[]) => {
+            .then((dirents: Dirent[]) => {
                 const children: Item[] = [];
 
-                childNames.forEach((eachName) => {
-                    const absPath = `${path}${path.length !== 0 ? '/' : ''}${eachName}`;
+                dirents.forEach((eachDirent) => {
+                    const isFolder = eachDirent.isDirectory();
+                    const absPath = path.append(eachDirent.name, isFolder);
                     const stats = this.getStats(absPath);
 
                     if (stats === undefined) {
@@ -80,13 +83,13 @@ export class NativeFs implements IFs {
                         return;
                     }
 
-                    const childItem = stats.kind === ItemKind.File ? {
+                    const childItem = !isFolder ? {
                         kind: ItemKind.File,
-                        path: new ItemPath([path], FileItemIdentifier.from(eachName), false),
+                        path: path.append(FileItemIdentifier.from(eachDirent.name), isFolder),
                         stats: stats as FileItemStats,
                     } as FileItem : {
                         kind: ItemKind.Folder,
-                        path: new ItemPath([path], eachName, true),
+                        path: path.append(eachDirent.name, isFolder),
                         stats: stats as FolderItemStats,
                     } as FolderItem;
 
@@ -101,7 +104,10 @@ export class NativeFs implements IFs {
 export type FakeFileItem = FileItem;
 
 export type FakeFolderItem = FolderItem & {
-    children: string[],
+    children: {
+        id: string,
+        isFolder: boolean,
+    }[],
 };
 
 export type FakeItem = FakeFileItem | FakeFolderItem;
@@ -110,7 +116,7 @@ export class FakeFs implements IFs {
     private static items: {
         [index: string]: FakeItem,
     } = {
-        '': {
+        '/': {
             kind: ItemKind.Folder,
             path: new ItemPath([], '', true),
             stats: {
@@ -120,11 +126,17 @@ export class FakeFs implements IFs {
                 lastModified: new Date(),
             },
             children: [
-                'desktop.ini',
-                'usr',
+                {
+                    id: 'desktop.ini',
+                    isFolder: false,
+                },
+                {
+                    id: 'usr',
+                    isFolder: true,
+                },
             ],
         },
-        'desktop.ini': {
+        '/desktop.ini': {
             kind: ItemKind.File,
             path: new ItemPath([], new FileItemIdentifier('desktop', 'ini'), false),
             stats: {
@@ -135,7 +147,7 @@ export class FakeFs implements IFs {
                 lastModified: new Date(),
             },
         },
-        'usr': {
+        '/usr/': {
             kind: ItemKind.Folder,
             path: new ItemPath([], 'usr', true),
             stats: {
@@ -145,11 +157,17 @@ export class FakeFs implements IFs {
                 lastModified: new Date(),
             },
             children: [
-                'desktop.ini',
-                'win32.sys',
+                {
+                    id: 'desktop.ini',
+                    isFolder: false,
+                },
+                {
+                    id: 'win32.sys',
+                    isFolder: false,
+                },
             ],
         },
-        'usr/desktop.ini': {
+        '/usr/desktop.ini': {
             kind: ItemKind.File,
             path: new ItemPath(['usr'], new FileItemIdentifier('main', 'rs'), false),
             stats: {
@@ -160,7 +178,7 @@ export class FakeFs implements IFs {
                 lastModified: new Date(),
             },
         },
-        'usr/win32.sys': {
+        '/usr/win32.sys': {
             kind: ItemKind.File,
             path: new ItemPath(['usr'], new FileItemIdentifier('win32', 'sys'), false),
             stats: {
@@ -173,11 +191,11 @@ export class FakeFs implements IFs {
         },
     };
 
-    public static getItem(path: string): FakeItem | undefined {
-        return FakeFs.items[path];
+    public static getItem(path: ItemPath): FakeItem | undefined {
+        return FakeFs.items[path.getFullPath()];
     }
 
-    public getStats(path: string): ItemStats | undefined {
+    public getStats(path: ItemPath): ItemStats | undefined {
         const target = FakeFs.getItem(path);
 
         if (target === undefined) {
@@ -188,7 +206,7 @@ export class FakeFs implements IFs {
         return target.stats;
     }
 
-    public getChildren(path: string): Promise<Item[]> {
+    public getChildren(path: ItemPath): Promise<Item[]> {
         return new Promise((resolve, reject) => {
             const target = FakeFs.getItem(path);
 
@@ -202,8 +220,8 @@ export class FakeFs implements IFs {
                 return;
             }
 
-            const children = (target as FakeFolderItem).children.map((eachName) => {
-                const absPath = `${path}${path.length !== 0 ? '/' : ''}${eachName}`;
+            const children = (target as FakeFolderItem).children.map((eachChild) => {
+                const absPath = path.append(eachChild.id, eachChild.isFolder);
                 return new Item(FakeFs.getItem(absPath)!);
             });
 

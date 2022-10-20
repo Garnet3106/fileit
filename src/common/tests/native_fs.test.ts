@@ -1,5 +1,5 @@
 import { NativeFs } from '../fs';
-import { ItemKind } from '../item';
+import { ItemKind, ItemPath } from '../item';
 
 function getNativeFullPath(path: string): string {
     return `${__dirname}/fs/${path}`;
@@ -7,27 +7,27 @@ function getNativeFullPath(path: string): string {
 
 const fs = new NativeFs();
 
-test('get directory children', async () => {
-        const children = await fs.getChildren(getNativeFullPath(''))
-        const childrenToBe: {
-            id: string,
-            kind: ItemKind,
-        }[] = [
-            {
-                id: 'desktop.ini',
-                kind: ItemKind.File,
-            },
-            {
-                id: 'usr',
-                kind: ItemKind.Folder,
-            },
-        ];
+test('native fs: get directory children', async () => {
+    const children = await fs.getChildren(new ItemPath([getNativeFullPath('')], '', true));
 
-        const target = Object.entries(children).map(([_index, item]) => ({
-            id: item.getIdentifier(),
-            kind: item.getItem().kind,
-        }));
+    const childrenToBe: {
+        id: string,
+        kind: ItemKind,
+    }[] = [
+        {
+            id: 'desktop.ini',
+            kind: ItemKind.File,
+        },
+        {
+            id: 'usr',
+            kind: ItemKind.Folder,
+        },
+    ];
 
-        expect(target).toEqual(childrenToBe);
-    }
-);
+    const target = Object.entries(children).map(([_index, item]) => ({
+        id: item.getIdentifier(),
+        kind: item.getItem().kind,
+    }));
+
+    expect(target).toEqual(childrenToBe);
+});
