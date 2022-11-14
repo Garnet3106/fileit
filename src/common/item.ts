@@ -34,6 +34,10 @@ export class ItemPath {
         return new ItemPath(parents, id, isFolder);
     }
 
+    public getParents(): string[] {
+        return this.parents;
+    }
+
     public getIdentifier(): string {
         return this.id.toString();
     }

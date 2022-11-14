@@ -17,11 +17,11 @@ test('[failure] append to file path', () => {
 /* Parent Path */
 
 test('create empty parent path', () => {
-    expect((new ItemPath([], '', true))['parents']).toEqual([]);
+    expect((new ItemPath([], '', true)).getParents()).toEqual([]);
 });
 
 test('create parent path with formatting', () => {
-    expect((new ItemPath(['', 'C:/', 'parent1/parent2'], '', true))['parents']).toEqual(['C:', 'parent1', 'parent2']);
+    expect((new ItemPath(['', 'C:/', 'parent1/parent2'], '', true)).getParents()).toEqual(['C:', 'parent1', 'parent2']);
 });
 
 /* Full Path */

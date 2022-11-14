@@ -1,6 +1,9 @@
 import { preferences } from '../../../../common/preferences';
+import { generateUuid } from '../../../../common/utils';
 import './OperationBar.css';
 import OperationIcon from './OperationIcon/OperationIcon';
+import { useSelector } from 'react-redux/es/exports';
+import { RootState } from '../../../../common/redux';
 
 export const operationIconIds = {
     window: {
@@ -26,6 +29,14 @@ export default function OperationBar() {
         },
     };
 
+    const path = useSelector((state: RootState) => state.path);
+    const fullDirPath = path?.getParents().concat([path.getIdentifier()]) ?? [];
+    const pathItems = fullDirPath.map((eachPath) => (
+        <div className="operation-bar-path-item" key={generateUuid()}>
+            {eachPath}
+        </div>
+    ));
+
     return (
         <div className="operation-bar-container" style={styles.container}>
             <div className="operation-bar-row">
@@ -36,7 +47,8 @@ export default function OperationBar() {
                 </div>
                 <div className="operation-bar-row-items">
                     <div className="operation-bar-path">
-                        <div className="operation-bar-path-item">
+                        {pathItems}
+                        {/* <div className="operation-bar-path-item">
                             C
                         </div>
                         <div className="operation-bar-path-item">
@@ -54,7 +66,7 @@ export default function OperationBar() {
                                 <OperationIcon id={operationIconIds.path.copy} isMini={true} />
                                 <OperationIcon id={operationIconIds.path.edit} isMini={true} />
                             </div>
-                        </div>
+                        </div> */}
                     </div>
                 </div>
             </div>

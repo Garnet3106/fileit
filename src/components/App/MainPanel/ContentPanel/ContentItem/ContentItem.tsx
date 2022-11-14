@@ -1,6 +1,7 @@
+import { useDispatch } from 'react-redux';
 import { Item } from '../../../../../common/item';
 import { ItemPropertyKind } from '../../../../../common/property';
-import { setDisplayDirPath } from '../ContentPanel';
+import { slices } from '../../../../../common/redux';
 import { PropertyBarItemData } from '../PropertyBar/PropertyBar';
 import './ContentItem.css';
 
@@ -10,6 +11,8 @@ export type ContentItemProps = {
 };
 
 export default function ContentItem(props: ContentItemProps) {
+    const dispatch = useDispatch();
+
     const styles = {
         icon: {
             backgroundImage: `url('../../../../../../lib/img/icons/dark/${props.item.isFile() ? 'file' : 'folder'}.svg')`,
@@ -44,9 +47,9 @@ export default function ContentItem(props: ContentItemProps) {
 
     function onDoubleClick() {
         if (props.item.isFolder()) {
-            setDisplayDirPath(props.item.getPath());
+            dispatch(slices.path.actions.update(props.item.getPath()));
         } else {
-            //
+            // unimplemented
         }
     }
 }

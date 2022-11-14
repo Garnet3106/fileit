@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import Fs from '../../../../common/fs';
 import { Item, ItemPath } from '../../../../common/item';
 import { variables as detailBarVariables } from '../DetailBar/DetailBar';
 import { variables as operationBarVariables } from '../OperationBar/OperationBar';
@@ -7,27 +6,29 @@ import { variables as tabBarVariables } from '../TabBar/TabBar';
 import ContentItem from './ContentItem/ContentItem';
 import './ContentPanel.css';
 import PropertyBar, { ItemPropertyKind } from './PropertyBar/PropertyBar';
+import { useDispatch } from 'react-redux';
+import { slices, store } from '../../../../common/redux';
+import Fs from '../../../../common/fs';
 
 export const variables = {
     propertyItemHorizontalMargin: 5,
     contentItemIconSize: 18,
 };
 
-export let setDisplayDirPath: (path: ItemPath) => void = () => console.error('Item setter is not initialized yet.');
-
 export default function ContentPanel() {
     const [items, setItems] = useState<Item[]>([]);
-    const [dirPath, setDirPath] = useState<ItemPath | null>(null);
+    const dispatch = useDispatch();
 
-    setDisplayDirPath = (path) => {
-        setDirPath(path);
+    useEffect(() => {
+        dispatch(slices.path.actions.update(new ItemPath([], '', true)));
+    }, []);
 
-        Fs.getChildren(path)
+    store.subscribe(() => {
+        const state = store.getState();
+        Fs.getChildren(state.path)
             .then(setItems)
             .catch(alert);
-    };
-
-    useEffect(() => setDisplayDirPath(new ItemPath([], 'C:', true)), []);
+    });
 
     const styles = {
         container: {
