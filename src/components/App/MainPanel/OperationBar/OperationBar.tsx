@@ -33,8 +33,9 @@ export default function OperationBar() {
     // const itemId = path.getIdentifier().length !== 0 ? path.getIdentifier() : '/';
     let fullDirPath = path?.getHierarchy() ?? [];
 
-    if (path !== null && path.getDriveLetter() !== undefined) {
-        fullDirPath = [path.getDriveLetter() as string].concat(fullDirPath);
+    if (path !== null) {
+        const first = path.getDriveLetter() !== undefined ? path.getDriveLetter() + ':' : '/';
+        fullDirPath = [first].concat(fullDirPath);
     }
 
     const pathItems = fullDirPath.map((eachPath) => (
