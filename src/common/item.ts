@@ -7,18 +7,20 @@ export enum ItemPathErrorKind {
     CannotAppendPathToFile = 'cannot append path to file',
 }
 
+export type DriveLetter = string | undefined;
+
 export class ItemPath {
-    private parents: string[];
-    private id: ItemIdentifier;
+    private driveLetter: DriveLetter;
+    private hierarchy: string[];
     private isFolder: boolean;
 
     public constructor(
-        parents: string[],
-        id: ItemIdentifier,
+        driveLetter: DriveLetter,
+        hierarchy: string[],
         isFolder: boolean,
     ) {
-        this.parents = parents.join('/').split(/[\/\\]/g).filter((eachParent) => eachParent.length !== 0);
-        this.id = id;
+        this.driveLetter = driveLetter;
+        this.hierarchy = hierarchy;
         this.isFolder = isFolder;
     }
 
@@ -30,30 +32,51 @@ export class ItemPath {
             throw ItemPathErrorKind.CannotAppendPathToFile;
         }
 
-        const parents = this.parents.concat(this.id as FolderItemIdentifier);
-        return new ItemPath(parents, id, isFolder);
+        // test: toString()
+        const path = this.hierarchy.concat(id.toString());
+        return new ItemPath(this.driveLetter, path, isFolder);
     }
 
-    public getParents(): string[] {
-        return this.parents;
+    public getDriveLetter(): DriveLetter {
+        return this.driveLetter;
     }
 
-    public getIdentifier(): string {
-        return this.id.toString();
+    public getHierarchy(): string[] {
+        // const root = getPlatform() === Platform.Win32 ? [] : ['/'];
+        // const parents = this.dirtyPath.join('/').split(/[\/\\]/g).filter((eachParent) => eachParent.length !== 0);
+        // return root.concat(parents).join('/');
+        return this.hierarchy;
     }
 
     public getFullPath(): string {
-        const parentPath = this.parents.map((eachParent) => eachParent + '/').join('');
-        const parentsStartWith = this.parents[0];
-        const hasDriveLetter =
-            (parentsStartWith !== undefined && parentsStartWith.endsWith(':')) ||
-            (this.parents.length === 0 && this.getIdentifier().endsWith(':') && this.isFolder);
-
-        const begin = hasDriveLetter || (this.parents.length === 0 && this.getIdentifier().length === 0 && this.isFolder) ? '' : '/';
-        const dirSeparator = this.isFolder ? '/' : '';
-
-        return begin + parentPath + this.getIdentifier() + dirSeparator;
+        const prefix = this.driveLetter !== undefined ? this.driveLetter + ':' : '';
+        const dirSuffix = this.isFolder && this.hierarchy.length !== 0 ? '/' : '';
+        return `${prefix}/${this.hierarchy.join('/')}${dirSuffix}`;
     }
+
+    public getIdentifier(): ItemIdentifier | null {
+        const id = this.hierarchy.at(this.hierarchy.length - 1);
+
+        if (id === undefined) {
+            return null;
+        }
+
+        return this.isFolder ? id as FolderItemIdentifier : FileItemIdentifier.from(id);
+    }
+
+    // public getFullPath(): string {
+        // const parents = this.getParents();
+        // const parentPath = parents.map((eachParent) => eachParent + '/').join('');
+        // const parentsStartWith = parents[0];
+        // const hasDriveLetter =
+        //     (parentsStartWith !== undefined && parentsStartWith.endsWith(':')) ||
+        //     (parents.length === 0 && this.getIdentifier().endsWith(':') && this.isFolder);
+
+        // const begin = hasDriveLetter || (parents.length === 0 && this.getIdentifier().length === 0 && this.isFolder) ? '' : '/';
+        // const dirSeparator = this.isFolder ? '/' : '';
+
+        // return begin + parentPath + this.getIdentifier() + dirSeparator;
+    // }
 }
 
 /* Item */
@@ -90,7 +113,8 @@ export class Item {
             return 'unimplemented';
 
             case ItemPropertyKind.Name:
-            return this.getIdentifier();
+            const id = this.getIdentifier();
+            return id !== null ? id.toString() : '';
 
             case ItemPropertyKind.Size:
             const size = (this.item as FileItem).stats.size;
@@ -102,12 +126,20 @@ export class Item {
         }
     }
 
-    public getIdentifier(): string {
+    public getIdentifier(): ItemIdentifier | null {
         return this.item.path.getIdentifier();
     }
 
     public getPath(): ItemPath {
         return this.item.path;
+    }
+
+    public getDriveLetter(): DriveLetter {
+        return this.getPath().getDriveLetter();
+    }
+
+    public getHierarchy(): string[] {
+        return this.getPath().getHierarchy();
     }
 
     public getFullPath(): string {

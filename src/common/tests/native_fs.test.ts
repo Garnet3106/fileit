@@ -1,21 +1,24 @@
 import { NativeFs } from '../fs';
-import { ItemKind, ItemPath } from '../item';
+import { FileItemIdentifier, ItemIdentifier, ItemKind, ItemPath } from '../item';
 
-function getNativeFullPath(path: string): string {
-    return `${__dirname}/fs/${path}`;
-}
+// fix
+// function getNativeItemPath(path: string = ''): ItemPath {
+//     const hierarchy = `${__dirname}/fs/${path}`.split(/[\/\\]/g);
+// }
 
 const fs = new NativeFs();
 
 test('native fs: get directory children', async () => {
-    const children = await fs.getChildren(new ItemPath([getNativeFullPath('')], '', true));
+    const children = await fs.getChildren(new ItemPath('C', [
+        'Users', 'Garnet3106', 'Desktop', 'Media', 'Docs', 'Repos', 'fileit', 'src', 'common', 'tests', 'fs',
+    ], true));
 
     const childrenToBe: {
-        id: string,
+        id: ItemIdentifier,
         kind: ItemKind,
     }[] = [
         {
-            id: 'desktop.ini',
+            id: FileItemIdentifier.from('desktop.ini'),
             kind: ItemKind.File,
         },
         {

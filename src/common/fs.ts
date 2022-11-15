@@ -118,7 +118,7 @@ export class FakeFs implements IFs {
     } = {
         '/': {
             kind: ItemKind.Folder,
-            path: new ItemPath([], '', true),
+            path: new ItemPath(undefined, [], true),
             stats: {
                 kind: ItemKind.Folder,
                 created: new Date(),
@@ -138,7 +138,7 @@ export class FakeFs implements IFs {
         },
         '/desktop.ini': {
             kind: ItemKind.File,
-            path: new ItemPath([], new FileItemIdentifier('desktop', 'ini'), false),
+            path: new ItemPath(undefined, ['desktop.ini'], false),
             stats: {
                 kind: ItemKind.File,
                 size: 1024,
@@ -149,7 +149,7 @@ export class FakeFs implements IFs {
         },
         '/usr/': {
             kind: ItemKind.Folder,
-            path: new ItemPath([], 'usr', true),
+            path: new ItemPath(undefined, ['usr'], true),
             stats: {
                 kind: ItemKind.Folder,
                 created: new Date(),
@@ -169,7 +169,7 @@ export class FakeFs implements IFs {
         },
         '/usr/desktop.ini': {
             kind: ItemKind.File,
-            path: new ItemPath(['usr'], new FileItemIdentifier('main', 'rs'), false),
+            path: new ItemPath(undefined, ['usr', 'main.rs'], false),
             stats: {
                 kind: ItemKind.File,
                 size: 1024,
@@ -180,7 +180,7 @@ export class FakeFs implements IFs {
         },
         '/usr/win32.sys': {
             kind: ItemKind.File,
-            path: new ItemPath(['usr'], new FileItemIdentifier('win32', 'sys'), false),
+            path: new ItemPath(undefined, ['usr', 'win32.sys'], false),
             stats: {
                 kind: ItemKind.File,
                 size: 1024,

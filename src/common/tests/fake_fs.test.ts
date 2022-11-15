@@ -1,17 +1,17 @@
 import { FakeFs } from '../fs';
-import { ItemKind, ItemPath } from '../item';
+import { FileItemIdentifier, ItemIdentifier, ItemKind, ItemPath } from '../item';
 
 const fs = new FakeFs();
 
 test('fake fs: get directory children', async () => {
-    const children = await fs.getChildren(new ItemPath([], '', true));
+    const children = await fs.getChildren(new ItemPath(undefined, [], true));
 
     const childrenToBe: {
-        id: string,
+        id: ItemIdentifier,
         kind: ItemKind,
     }[] = [
         {
-            id: 'desktop.ini',
+            id: FileItemIdentifier.from('desktop.ini'),
             kind: ItemKind.File,
         },
         {

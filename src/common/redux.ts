@@ -1,14 +1,10 @@
 import { ItemPath } from "./item";
 import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-export type State = {
-    path: ItemPath,
-};
-
 export const slices = {
     path: createSlice({
         name: 'path',
-        initialState: new ItemPath([], '', true),
+        initialState: null as ItemPath | null,
         reducers: {
             update: (state, action: PayloadAction<ItemPath>) => state = action.payload,
         },

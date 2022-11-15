@@ -30,7 +30,13 @@ export default function OperationBar() {
     };
 
     const path = useSelector((state: RootState) => state.path);
-    const fullDirPath = path?.getParents().concat([path.getIdentifier()]) ?? [];
+    // const itemId = path.getIdentifier().length !== 0 ? path.getIdentifier() : '/';
+    let fullDirPath = path?.getHierarchy() ?? [];
+
+    if (path !== null && path.getDriveLetter() !== undefined) {
+        fullDirPath = [path.getDriveLetter() as string].concat(fullDirPath);
+    }
+
     const pathItems = fullDirPath.map((eachPath) => (
         <div className="operation-bar-path-item" key={generateUuid()}>
             {eachPath}

@@ -15,19 +15,24 @@ export const variables = {
     contentItemIconSize: 18,
 };
 
+export const initialPath = new ItemPath(undefined, [], true);
+
 export default function ContentPanel() {
     const [items, setItems] = useState<Item[]>([]);
     const dispatch = useDispatch();
 
     useEffect(() => {
-        dispatch(slices.path.actions.update(new ItemPath([], '', true)));
+        dispatch(slices.path.actions.update(initialPath));
     }, []);
 
     store.subscribe(() => {
         const state = store.getState();
-        Fs.getChildren(state.path)
-            .then(setItems)
-            .catch(alert);
+
+        if (state.path !== null) {
+            Fs.getChildren(state.path)
+                .then(setItems)
+                .catch(alert);
+        }
     });
 
     const styles = {
