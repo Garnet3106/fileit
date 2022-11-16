@@ -16,6 +16,12 @@
 
 .operation-bar-path {
     display: flex;
+    overflow-x: scroll;
+    scrollbar-width: none;
+}
+
+.operation-bar-path::-webkit-scrollbar {
+    display: none;
 }
 
 .operation-bar-path-item {
@@ -26,6 +32,7 @@
     height: 30px;
     transition: background-color 50ms, color 50ms;
     padding: 0 8px;
+    white-space: nowrap;
 }
 
 .operation-bar-path-item:active {

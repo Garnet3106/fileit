@@ -4,6 +4,7 @@ import './OperationBar.css';
 import OperationIcon from './OperationIcon/OperationIcon';
 import { useDispatch, useSelector } from 'react-redux/es/exports';
 import { RootState, slices } from '../../../../common/redux';
+import { variables as leftPanelVariables } from '../../LeftPanel/LeftPanel';
 
 export const operationIconIds = {
     window: {
@@ -63,7 +64,9 @@ export default function OperationBar() {
                     <OperationIcon id={operationIconIds.window.next} />
                     <OperationIcon id={operationIconIds.window.reload} />
                 </div>
-                <div className="operation-bar-row-items">
+                <div className="operation-bar-row-items" style={{
+                    width: `calc(100vw - ${leftPanelVariables.width + (90 + (3 * 2)) + (3 * 2)}px)`,
+                }}>
                     <div className="operation-bar-path">
                         {pathItems}
                         {/* <div className="operation-bar-path-item">
