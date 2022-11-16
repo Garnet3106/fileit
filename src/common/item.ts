@@ -5,6 +5,7 @@ import { ItemPropertyKind } from "./property";
 export enum ItemPathErrorKind {
     EmptyFileItemIdentifier = 'cannot set empty string as file item identifier',
     CannotAppendPathToFile = 'cannot append path to file',
+    ParentCountIsOutOfBounds = 'parent count is out of bounds',
 }
 
 export type DriveLetter = string | undefined;
@@ -42,10 +43,21 @@ export class ItemPath {
     }
 
     public getHierarchy(): string[] {
-        // const root = getPlatform() === Platform.Win32 ? [] : ['/'];
-        // const parents = this.dirtyPath.join('/').split(/[\/\\]/g).filter((eachParent) => eachParent.length !== 0);
-        // return root.concat(parents).join('/');
         return this.hierarchy;
+    }
+
+    // todo: add to tests
+    public getParent(count: number = 1): ItemPath | undefined {
+        if (!this.isFolder) {
+            count += 1;
+        }
+
+        if (count < 0 || count > this.hierarchy.length) {
+            throw ItemPathErrorKind.ParentCountIsOutOfBounds;
+        }
+
+        const newHierarchy = this.hierarchy.concat().splice(0, this.hierarchy.length - count);
+        return new ItemPath(this.driveLetter, newHierarchy, true);
     }
 
     public getFullPath(): string {
@@ -63,20 +75,6 @@ export class ItemPath {
 
         return this.isFolder ? id as FolderItemIdentifier : FileItemIdentifier.from(id);
     }
-
-    // public getFullPath(): string {
-        // const parents = this.getParents();
-        // const parentPath = parents.map((eachParent) => eachParent + '/').join('');
-        // const parentsStartWith = parents[0];
-        // const hasDriveLetter =
-        //     (parentsStartWith !== undefined && parentsStartWith.endsWith(':')) ||
-        //     (parents.length === 0 && this.getIdentifier().endsWith(':') && this.isFolder);
-
-        // const begin = hasDriveLetter || (parents.length === 0 && this.getIdentifier().length === 0 && this.isFolder) ? '' : '/';
-        // const dirSeparator = this.isFolder ? '/' : '';
-
-        // return begin + parentPath + this.getIdentifier() + dirSeparator;
-    // }
 }
 
 /* Item */

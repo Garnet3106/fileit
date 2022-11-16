@@ -2,8 +2,8 @@ import { preferences } from '../../../../common/preferences';
 import { generateUuid } from '../../../../common/utils';
 import './OperationBar.css';
 import OperationIcon from './OperationIcon/OperationIcon';
-import { useSelector } from 'react-redux/es/exports';
-import { RootState } from '../../../../common/redux';
+import { useDispatch, useSelector } from 'react-redux/es/exports';
+import { RootState, slices } from '../../../../common/redux';
 
 export const operationIconIds = {
     window: {
@@ -29,8 +29,9 @@ export default function OperationBar() {
         },
     };
 
+    const dispatch = useDispatch();
+
     const path = useSelector((state: RootState) => state.path);
-    // const itemId = path.getIdentifier().length !== 0 ? path.getIdentifier() : '/';
     let fullDirPath = path?.getHierarchy() ?? [];
 
     if (path !== null) {
@@ -38,8 +39,18 @@ export default function OperationBar() {
         fullDirPath = [first].concat(fullDirPath);
     }
 
-    const pathItems = fullDirPath.map((eachPath) => (
-        <div className="operation-bar-path-item" key={generateUuid()}>
+    const pathItems = fullDirPath.map((eachPath, index) => (
+        <div
+            className="operation-bar-path-item"
+            onClick={() => {
+                const parent = path?.getParent(fullDirPath.length - index - 1);
+
+                if (parent !== undefined) {
+                    dispatch(slices.path.actions.update(parent));
+                }
+            }}
+            key={generateUuid()}
+        >
             {eachPath}
         </div>
     ));

@@ -12,15 +12,3 @@ export enum Platform {
     Linux,
     Unknown,
 }
-
-let fakePlatform: Platform | null = null;
-
-export function fakePlatformInContext(platform: Platform, callback: () => void) {
-    fakePlatform = platform;
-    callback();
-    fakePlatform = null;
-}
-
-export function getPlatform(): Platform {
-    return Platform.Darwin;
-}

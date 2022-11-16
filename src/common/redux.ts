@@ -6,7 +6,7 @@ export const slices = {
         name: 'path',
         initialState: null as ItemPath | null,
         reducers: {
-            update: (state, action: PayloadAction<ItemPath>) => state = action.payload,
+            update: (state, action: PayloadAction<ItemPath>) => action.payload,
         },
     }),
 };
