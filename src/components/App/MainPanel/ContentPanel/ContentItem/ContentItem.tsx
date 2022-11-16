@@ -47,7 +47,7 @@ export default function ContentItem(props: ContentItemProps) {
 
     function onDoubleClick() {
         if (props.item.isFolder()) {
-            dispatch(slices.path.actions.update(props.item.getPath()));
+            dispatch(slices.currentFolderPath.actions.update(props.item.getPath()));
         } else {
             // unimplemented
         }

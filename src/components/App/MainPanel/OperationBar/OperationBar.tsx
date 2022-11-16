@@ -31,11 +31,11 @@ export default function OperationBar() {
 
     const dispatch = useDispatch();
 
-    const path = useSelector((state: RootState) => state.path);
-    let fullDirPath = path?.getHierarchy() ?? [];
+    const currentFolderPath = useSelector((state: RootState) => state.currentFolderPath);
+    let fullDirPath = currentFolderPath?.getHierarchy() ?? [];
 
-    if (path !== null) {
-        const first = path.getDriveLetter() !== undefined ? path.getDriveLetter() + ':' : '/';
+    if (currentFolderPath !== null) {
+        const first = currentFolderPath.getDriveLetter() !== undefined ? currentFolderPath.getDriveLetter() + ':' : '/';
         fullDirPath = [first].concat(fullDirPath);
     }
 
@@ -43,10 +43,10 @@ export default function OperationBar() {
         <div
             className="operation-bar-path-item"
             onClick={() => {
-                const parent = path?.getParent(fullDirPath.length - index - 1);
+                const parent = currentFolderPath?.getParent(fullDirPath.length - index - 1);
 
                 if (parent !== undefined) {
-                    dispatch(slices.path.actions.update(parent));
+                    dispatch(slices.currentFolderPath.actions.update(parent));
                 }
             }}
             key={generateUuid()}

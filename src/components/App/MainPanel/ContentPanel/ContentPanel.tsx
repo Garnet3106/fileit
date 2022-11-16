@@ -22,14 +22,14 @@ export default function ContentPanel() {
     const dispatch = useDispatch();
 
     useEffect(() => {
-        dispatch(slices.path.actions.update(initialPath));
+        dispatch(slices.currentFolderPath.actions.update(initialPath));
     }, []);
 
     store.subscribe(() => {
         const state = store.getState();
 
-        if (state.path !== null) {
-            Fs.getChildren(state.path)
+        if (state.currentFolderPath !== null) {
+            Fs.getChildren(state.currentFolderPath)
                 .then(setItems)
                 .catch(alert);
         }
