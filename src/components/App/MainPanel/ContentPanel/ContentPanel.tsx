@@ -26,15 +26,7 @@ export default function ContentPanel() {
         dispatch(slices.currentFolderPath.actions.update(initialPath));
     }, []);
 
-    store.subscribe(() => {
-        const state = store.getState();
-
-        if (state.currentFolderPath !== null) {
-            Fs.getChildren(state.currentFolderPath)
-                .then(setItems)
-                .catch(alert);
-        }
-    });
+    store.subscribe(reloadItems);
 
     const styles = {
         container: {
@@ -74,4 +66,16 @@ export default function ContentPanel() {
             </div>
         </div>
     );
+
+    function reloadItems() {
+        const state = store.getState();
+
+        if (state.currentFolderPath !== null) {
+            Fs.getChildren(state.currentFolderPath)
+                .then(setItems)
+                .catch(alert);
+
+            Fs.watch(state.currentFolderPath, reloadItems);
+        }
+    }
 }

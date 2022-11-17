@@ -67,10 +67,10 @@ export default function ContentItem(props: ContentItemProps) {
         const actions = slices.selectedItemPaths.actions;
         let updateAction;
 
-        if (props.isSelected) {
-            updateAction = actions.remove(path);
+        if (isCtrlKeyDown.current) {
+            updateAction = props.isSelected ? actions.remove(path) : actions.add(path);
         } else {
-            updateAction = isCtrlKeyDown.current ? actions.add(path) : actions.update([path]);
+            updateAction = actions.update([path]);
         }
 
         dispatch(updateAction);

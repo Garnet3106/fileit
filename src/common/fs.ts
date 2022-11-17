@@ -18,6 +18,8 @@ export interface IFs {
     getChildren(path: ItemPath): Promise<Item[]>;
 
     duplicate(path: ItemPath): Promise<void>;
+
+    watch(path: ItemPath, callback: () => void): void;
 }
 
 export default class Fs {
@@ -37,6 +39,10 @@ export default class Fs {
 
     public static duplicate(path: ItemPath): Promise<void> {
         return Fs.fs().duplicate(path);
+    }
+
+    public static watch(path: ItemPath, callback: () => void) {
+        return Fs.fs().watch(path, callback);
     }
 };
 
@@ -107,6 +113,10 @@ export class NativeFs implements IFs {
             alert('unimplemented');
             resolve();
         });
+    }
+
+    public watch(path: ItemPath, callback: () => void) {
+        alert('unimplemented');
     }
 }
 
@@ -200,6 +210,9 @@ export class FakeFs implements IFs {
         },
     };
 
+    private static watcherPath: ItemPath;
+    private static watcherCallback: () => void;
+
     public static getItem(path: ItemPath): FakeItem | undefined {
         return FakeFs.items[path.getFullPath()];
     }
@@ -288,7 +301,19 @@ export class FakeFs implements IFs {
                 isFolder: isOriginalFolder,
             });
             FakeFs.items[targetFullPath] = target;
+            this.dispatchWatcher(originalParent);
             resolve();
         });
+    }
+
+    private dispatchWatcher(parentPath: ItemPath) {
+        if (FakeFs.watcherPath.isEqual(parentPath)) {
+            FakeFs.watcherCallback();
+        }
+    }
+
+    public watch(path: ItemPath, callback: () => void) {
+        FakeFs.watcherPath = path;
+        FakeFs.watcherCallback = callback;
     }
 }
