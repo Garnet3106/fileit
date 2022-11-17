@@ -25,6 +25,10 @@ export class ItemPath {
         this.isFolder = isFolder;
     }
 
+    public isEqual(path: ItemPath): boolean {
+        return this.getFullPath() === path.getFullPath();
+    }
+
     public append(
         id: ItemIdentifier,
         isFolder: boolean,

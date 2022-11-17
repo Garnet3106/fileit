@@ -65,6 +65,7 @@ export default function OperationBar() {
                     <OperationIcon id={operationIconIds.window.reload} />
                 </div>
                 <div className="operation-bar-row-items" style={{
+                    // fix
                     width: `calc(100vw - ${leftPanelVariables.width + (90 + (3 * 2)) + (3 * 2)}px)`,
                 }}>
                     <div className="operation-bar-path">

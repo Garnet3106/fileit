@@ -6,8 +6,8 @@ import { variables as tabBarVariables } from '../TabBar/TabBar';
 import ContentItem from './ContentItem/ContentItem';
 import './ContentPanel.css';
 import PropertyBar, { ItemPropertyKind } from './PropertyBar/PropertyBar';
-import { useDispatch } from 'react-redux';
-import { slices, store } from '../../../../common/redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState, slices, store } from '../../../../common/redux';
 import Fs from '../../../../common/fs';
 
 export const variables = {
@@ -20,6 +20,7 @@ export const initialPath = new ItemPath(undefined, [], true);
 export default function ContentPanel() {
     const [items, setItems] = useState<Item[]>([]);
     const dispatch = useDispatch();
+    const selectedItemPaths = useSelector((state: RootState) => state.selectedItemPaths);
 
     useEffect(() => {
         dispatch(slices.currentFolderPath.actions.update(initialPath));
@@ -61,7 +62,9 @@ export default function ContentPanel() {
         },
     ];
 
-    const itemElems = items.map((eachItem, index) => <ContentItem item={eachItem} properties={properties} key={index} />);
+    const itemElems = items.map((eachItem, index) => (
+        <ContentItem item={eachItem} properties={properties} isSelected={selectedItemPaths.some((v) => v.isEqual(eachItem.getPath()))} key={index} />
+    ));
 
     return (
         <div className="content-panel-container" style={styles.container}>

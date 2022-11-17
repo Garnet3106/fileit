@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { useDispatch } from 'react-redux';
 import { Item } from '../../../../../common/item';
 import { ItemPropertyKind } from '../../../../../common/property';
@@ -8,16 +9,28 @@ import './ContentItem.css';
 export type ContentItemProps = {
     item: Item,
     properties: PropertyBarItemData[],
+    isSelected: boolean,
 };
 
 export default function ContentItem(props: ContentItemProps) {
-    const dispatch = useDispatch();
-
     const styles = {
         icon: {
             backgroundImage: `url('../../../../../../lib/img/icons/dark/${props.item.isFile() ? 'file' : 'folder'}.svg')`,
         },
     };
+
+    const dispatch = useDispatch();
+    const isCtrlKeyDown = useRef(false);
+
+    useEffect(() => {
+        document.addEventListener('keyup', onKeyUpOrDown);
+        document.addEventListener('keydown', onKeyUpOrDown);
+
+        return () => {
+            document.removeEventListener('keyup', onKeyUpOrDown);
+            document.removeEventListener('keydown', onKeyUpOrDown);
+        };
+    }, [onKeyUpOrDown]);
 
     const properties = props.properties.map((eachProperty, index) => {
         const value = props.item.getPropertyValue(eachProperty.kind);
@@ -40,10 +53,28 @@ export default function ContentItem(props: ContentItemProps) {
     });
 
     return (
-        <div className="content-item-container" onDoubleClick={onDoubleClick}>
+        <div className={`content-item-container ${props.isSelected ? 'content-item-container-selected' : ''}`} onClick={onClick} onDoubleClick={onDoubleClick}>
             {properties}
         </div>
     );
+
+    function onKeyUpOrDown(event: KeyboardEvent) {
+        isCtrlKeyDown.current = event.ctrlKey;
+    }
+
+    function onClick() {
+        const path = props.item.getPath();
+        const actions = slices.selectedItemPaths.actions;
+        let updateAction;
+
+        if (props.isSelected) {
+            updateAction = actions.remove(path);
+        } else {
+            updateAction = isCtrlKeyDown.current ? actions.add(path) : actions.update([path]);
+        }
+
+        dispatch(updateAction);
+    }
 
     function onDoubleClick() {
         if (props.item.isFolder()) {
