@@ -13,7 +13,7 @@ export type DriveLetter = string | undefined;
 export class ItemPath {
     private driveLetter: DriveLetter;
     private hierarchy: string[];
-    private isFolder: boolean;
+    private _isFolder: boolean;
 
     public constructor(
         driveLetter: DriveLetter,
@@ -22,18 +22,26 @@ export class ItemPath {
     ) {
         this.driveLetter = driveLetter;
         this.hierarchy = hierarchy;
-        this.isFolder = isFolder;
+        this._isFolder = isFolder;
     }
 
     public isEqual(path: ItemPath): boolean {
         return this.getFullPath() === path.getFullPath();
     }
 
+    public isRoot(): boolean {
+        return this.hierarchy.length === 0;
+    }
+
+    public isFolder(): boolean {
+        return this._isFolder;
+    }
+
     public append(
         id: ItemIdentifier,
         isFolder: boolean,
     ): ItemPath {
-        if (!this.isFolder) {
+        if (!this._isFolder) {
             throw ItemPathErrorKind.CannotAppendPathToFile;
         }
 
@@ -51,11 +59,7 @@ export class ItemPath {
     }
 
     // todo: add to tests
-    public getParent(count: number = 1): ItemPath | undefined {
-        if (!this.isFolder) {
-            count += 1;
-        }
-
+    public getParent(count: number = 1): ItemPath {
         if (count < 0 || count > this.hierarchy.length) {
             throw ItemPathErrorKind.ParentCountIsOutOfBounds;
         }
@@ -66,18 +70,13 @@ export class ItemPath {
 
     public getFullPath(): string {
         const prefix = this.driveLetter !== undefined ? this.driveLetter + ':' : '';
-        const dirSuffix = this.isFolder && this.hierarchy.length !== 0 ? '/' : '';
+        const dirSuffix = this._isFolder && this.hierarchy.length !== 0 ? '/' : '';
         return `${prefix}/${this.hierarchy.join('/')}${dirSuffix}`;
     }
 
-    public getIdentifier(): ItemIdentifier | null {
-        const id = this.hierarchy.at(this.hierarchy.length - 1);
-
-        if (id === undefined) {
-            return null;
-        }
-
-        return this.isFolder ? id as FolderItemIdentifier : FileItemIdentifier.from(id);
+    public getIdentifier(): ItemIdentifier {
+        const id = this.hierarchy.at(this.hierarchy.length - 1) ?? '/';
+        return this._isFolder ? id as FolderItemIdentifier : FileItemIdentifier.from(id);
     }
 }
 
@@ -88,6 +87,12 @@ export type ItemIdentifier = FileItemIdentifier | FolderItemIdentifier;
 export enum ItemKind {
     File,
     Folder,
+}
+
+export namespace ItemKind {
+    export function from(isFolder: boolean): ItemKind {
+        return isFolder ? ItemKind.Folder : ItemKind.File;
+    }
 }
 
 export class Item {
@@ -128,12 +133,16 @@ export class Item {
         }
     }
 
-    public getIdentifier(): ItemIdentifier | null {
+    public getIdentifier(): ItemIdentifier {
         return this.item.path.getIdentifier();
     }
 
     public getPath(): ItemPath {
         return this.item.path;
+    }
+
+    public isRoot(): boolean {
+        return this.getPath().isRoot();
     }
 
     public getDriveLetter(): DriveLetter {

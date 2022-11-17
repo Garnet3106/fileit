@@ -6,14 +6,18 @@ export enum FsErrorKind {
     NotADirectory = 'not a directory',
     NotAFile = 'not a file',
     CannotReadItemStats = 'cannot read item stats',
+    CannotDuplicateRootFolder = 'cannot duplicate root folder',
 }
 
 export const fsEncoding = 'utf-8';
+export const duplicateItemSuffix = '_copy';
 
 export interface IFs {
-    getStats(path: ItemPath): ItemStats | undefined;
+    getStats(path: ItemPath): ItemStats;
 
     getChildren(path: ItemPath): Promise<Item[]>;
+
+    duplicate(path: ItemPath): Promise<void>;
 }
 
 export default class Fs {
@@ -23,12 +27,16 @@ export default class Fs {
         return Fs.isProdEnv ? new NativeFs() : new FakeFs();
     }
 
-    public static getStats(path: ItemPath): ItemStats | undefined {
+    public static getStats(path: ItemPath): ItemStats {
         return Fs.fs().getStats(path);
     }
 
     public static getChildren(path: ItemPath): Promise<Item[]> {
         return Fs.fs().getChildren(path);
+    }
+
+    public static duplicate(path: ItemPath): Promise<void> {
+        return Fs.fs().duplicate(path);
     }
 };
 
@@ -41,14 +49,13 @@ export class NativeFs implements IFs {
         return this.fs().promises;
     }
 
-    public getStats(path: ItemPath): ItemStats | undefined {
+    public getStats(path: ItemPath): ItemStats {
         let stats: any;
 
         try {
             stats = NativeFs.fs().statSync(path.getFullPath());
         } catch (e) {
-            console.error(e);
-            return;
+            throw FsErrorKind.CannotReadItemStats;
         }
 
         return stats.isFile() ? {
@@ -78,11 +85,6 @@ export class NativeFs implements IFs {
                     const absPath = path.append(eachDirent.name, isFolder);
                     const stats = this.getStats(absPath);
 
-                    if (stats === undefined) {
-                        console.error(FsErrorKind.CannotReadItemStats);
-                        return;
-                    }
-
                     const childItem = !isFolder ? {
                         kind: ItemKind.File,
                         path: path.append(FileItemIdentifier.from(eachDirent.name), isFolder),
@@ -98,6 +100,13 @@ export class NativeFs implements IFs {
 
                 resolve(children);
             }));
+    }
+
+    public duplicate(path: ItemPath): Promise<void> {
+        return new Promise((resolve) => {
+            alert('unimplemented');
+            resolve();
+        });
     }
 }
 
@@ -195,29 +204,26 @@ export class FakeFs implements IFs {
         return FakeFs.items[path.getFullPath()];
     }
 
-    public getStats(path: ItemPath): ItemStats | undefined {
+    public getStats(path: ItemPath): ItemStats {
         const target = FakeFs.getItem(path);
 
         if (target === undefined) {
-            console.error(FsErrorKind.NoSuchFileOrDirectory);
-            return;
+            throw FsErrorKind.NoSuchFileOrDirectory;
         }
 
         return target.stats;
     }
 
     public getChildren(path: ItemPath): Promise<Item[]> {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             const target = FakeFs.getItem(path);
 
             if (target === undefined) {
-                reject(FsErrorKind.NoSuchFileOrDirectory);
-                return;
+                throw FsErrorKind.NoSuchFileOrDirectory;
             }
 
             if (target.kind !== ItemKind.Folder) {
-                reject(FsErrorKind.NotADirectory);
-                return;
+                throw FsErrorKind.NotADirectory;
             }
 
             const children = (target as FakeFolderItem).children.map((eachChild) => {
@@ -226,6 +232,63 @@ export class FakeFs implements IFs {
             });
 
             resolve(children);
+        });
+    }
+
+    public duplicate(path: ItemPath): Promise<void> {
+        return new Promise((resolve) => {
+            if (path.isRoot()) {
+                throw FsErrorKind.CannotDuplicateRootFolder;
+            }
+
+            const isOriginalFolder = path.isFolder();
+            const originalStats = this.getStats(path);
+
+            if (originalStats === undefined) {
+                throw FsErrorKind.CannotReadItemStats;
+            }
+
+            const stats: ItemStats = isOriginalFolder ? {
+                kind: originalStats.kind,
+                created: new Date(),
+                lastAccessed: new Date(),
+                lastModified: new Date(),
+            } : {
+                kind: originalStats.kind,
+                size: (originalStats as FileItemStats).size,
+                created: new Date(),
+                lastAccessed: new Date(),
+                lastModified: new Date(),
+            };
+
+            const originalParent = path.getParent();
+            const parentChildren = (FakeFs.items[originalParent.getFullPath()] as FakeFolderItem).children;
+            let targetId = path.getIdentifier().toString() + duplicateItemSuffix;
+
+            while (parentChildren.some((v) => v.id === targetId)) {
+                targetId += duplicateItemSuffix;
+            }
+
+            const targetPath = originalParent.append(targetId, isOriginalFolder);
+            const targetFullPath = targetPath.getFullPath();
+            const target: FakeItem = isOriginalFolder ? {
+                kind: ItemKind.Folder,
+                path: targetPath,
+                stats: stats,
+                // fix
+                children: [],
+            } : {
+                kind: ItemKind.File,
+                path: targetPath,
+                stats: stats,
+            };
+
+            parentChildren.push({
+                id: targetId,
+                isFolder: isOriginalFolder,
+            });
+            FakeFs.items[targetFullPath] = target;
+            resolve();
         });
     }
 }

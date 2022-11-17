@@ -5,6 +5,8 @@ import OperationIcon from './OperationIcon/OperationIcon';
 import { useDispatch, useSelector } from 'react-redux/es/exports';
 import { RootState, slices } from '../../../../common/redux';
 import { variables as leftPanelVariables } from '../../LeftPanel/LeftPanel';
+import { ItemPath } from '../../../../common/item';
+import Fs from '../../../../common/fs';
 
 export const operationIconIds = {
     window: {
@@ -15,6 +17,9 @@ export const operationIconIds = {
     path: {
         copy: 'copy',
         edit: 'edit',
+    },
+    item: {
+        copy: 'copy',
     },
 };
 
@@ -33,6 +38,8 @@ export default function OperationBar() {
     const dispatch = useDispatch();
 
     const currentFolderPath = useSelector((state: RootState) => state.currentFolderPath);
+    const selectedItemPaths = useSelector((state: RootState) => state.selectedItemPaths);
+
     let fullDirPath = currentFolderPath?.getHierarchy() ?? [];
 
     if (currentFolderPath !== null) {
@@ -94,9 +101,17 @@ export default function OperationBar() {
             </div>
             <div className="operation-bar-row">
                 <div className="operation-bar-row-items">
-                    <OperationIcon id={operationIconIds.window.prev} />
+                    <OperationIcon id={operationIconIds.item.copy} onClick={() => {
+                        iterateSelectedPaths((path) => {
+                            Fs.duplicate(path);
+                        });
+                    }} />
                 </div>
             </div>
         </div>
     );
+
+    function iterateSelectedPaths(callback: (path: ItemPath, index: number) => void) {
+        selectedItemPaths.forEach(callback);
+    }
 }
