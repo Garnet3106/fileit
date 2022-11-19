@@ -83,6 +83,6 @@ export default function ContentPanel() {
             .then(setItems)
             .catch(console.error);
 
-        Fs.watch(folderPath, () => reloadItems);
+        Fs.watch(folderPath, () => reloadItems(folderPath));
     }
 }
