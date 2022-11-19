@@ -5,6 +5,7 @@ export enum FsErrorKind {
     NoSuchFileOrDirectory = 'no such file or directory',
     NotADirectory = 'not a directory',
     NotAFile = 'not a file',
+    BusyOrLocked = 'busy or locked',
     CannotReadItemStats = 'cannot read item stats',
     CannotDuplicateRootFolder = 'cannot duplicate root folder',
 }
@@ -13,7 +14,9 @@ export const fsEncoding = 'utf-8';
 export const duplicateItemSuffix = '_copy';
 
 export interface IFs {
-    getStats(path: ItemPath): ItemStats;
+    exists(path: ItemPath): boolean;
+
+    getStats(path: ItemPath): Promise<ItemStats>;
 
     getChildren(path: ItemPath): Promise<Item[]>;
 
@@ -29,7 +32,11 @@ export default class Fs {
         return Fs.isProdEnv ? new NativeFs() : new FakeFs();
     }
 
-    public static getStats(path: ItemPath): ItemStats {
+    public static exists(path: ItemPath): boolean {
+        return Fs.fs().exists(path);
+    }
+
+    public static getStats(path: ItemPath): Promise<ItemStats> {
         return Fs.fs().getStats(path);
     }
 
@@ -47,76 +54,119 @@ export default class Fs {
 };
 
 export class NativeFs implements IFs {
-    private static fs(): any {
+    private static fsSync(): any {
         return process.env.NODE_ENV === 'test' ? require('fs') : window.require('fs');
     }
 
     private static fsPromises(): any {
-        return this.fs().promises;
+        return this.fsSync().promises;
     }
 
-    public getStats(path: ItemPath): ItemStats {
-        let stats: any;
+    public exists(path: ItemPath): boolean {
+        return NativeFs.fsSync().existsSync(path.getFullPath());
+    }
 
-        try {
-            stats = NativeFs.fs().statSync(path.getFullPath());
-        } catch (e) {
-            throw FsErrorKind.CannotReadItemStats;
-        }
+    public getStats(path: ItemPath): Promise<ItemStats> {
+        return new Promise((resolve, reject) => {
+            NativeFs.fsPromises().stat(path.getFullPath())
+                .then((stats: any) => {
+                    const result = stats.isFile() ? {
+                        kind: ItemKind.File,
+                        size: stats.size !== 0 ? stats.size : undefined,
+                        created: new Date(stats.birthtimeMs),
+                        lastAccessed: new Date(stats.atimeMs),
+                        lastModified: new Date(stats.mtimeMs),
+                    } : {
+                        kind: ItemKind.Folder,
+                        created: new Date(stats.birthtimeMs),
+                        lastAccessed: new Date(stats.atimeMs),
+                        lastModified: new Date(stats.mtimeMs),
+                    };
 
-        return stats.isFile() ? {
-            kind: ItemKind.File,
-            size: stats.size !== 0 ? stats.size : undefined,
-            created: new Date(stats.birthtimeMs),
-            lastAccessed: new Date(stats.atimeMs),
-            lastModified: new Date(stats.mtimeMs),
-        } : {
-            kind: ItemKind.Folder,
-            created: new Date(stats.birthtimeMs),
-            lastAccessed: new Date(stats.atimeMs),
-            lastModified: new Date(stats.mtimeMs),
-        };
+                    resolve(result);
+                })
+                .catch((e: any) => {
+                    console.error(e);
+                    reject(FsErrorKind.CannotReadItemStats);
+                });
+        });
     }
 
     public getChildren(path: ItemPath): Promise<Item[]> {
-        return new Promise((resolve) => NativeFs.fsPromises().readdir(path.getFullPath(), {
-            encoding: fsEncoding,
-            withFileTypes: true,
-        })
-            .then((dirents: Dirent[]) => {
-                const children: Item[] = [];
+        return new Promise((resolve) => {
+            const options = {
+                encoding: fsEncoding,
+                withFileTypes: true,
+            };
 
-                dirents.forEach((eachDirent) => {
-                    const isFolder = eachDirent.isDirectory();
-                    const absPath = path.append(eachDirent.name, isFolder);
-                    const stats = this.getStats(absPath);
+            NativeFs.fsPromises().readdir(path.getFullPath(), options)
+                .then((dirents: Dirent[]) => {
+                    const children: Item[] = [];
 
-                    const childItem = !isFolder ? {
-                        kind: ItemKind.File,
-                        path: path.append(FileItemIdentifier.from(eachDirent.name), isFolder),
-                        stats: stats as FileItemStats,
-                    } as FileItem : {
-                        kind: ItemKind.Folder,
-                        path: path.append(eachDirent.name, isFolder),
-                        stats: stats as FolderItemStats,
-                    } as FolderItem;
+                    const promises: Promise<void>[] = dirents.map((eachDirent) => new Promise(async (resolve) => {
+                        try {
+                            const isFolder = eachDirent.isDirectory();
+                            const childPath = path.append(eachDirent.name, isFolder);
+                            const stats = await this.getStats(childPath).catch(() => null);
 
-                    children.push(new Item(childItem));
+                            if (stats === null) {
+                                console.error(FsErrorKind.CannotReadItemStats);
+                                resolve();
+                                return;
+                            }
+
+                            const childItem = !isFolder ? {
+                                kind: ItemKind.File,
+                                path: path.append(FileItemIdentifier.from(eachDirent.name), isFolder),
+                                stats: stats as FileItemStats,
+                            } as FileItem : {
+                                kind: ItemKind.Folder,
+                                path: path.append(eachDirent.name, isFolder),
+                                stats: stats as FolderItemStats,
+                            } as FolderItem;
+
+                            children.push(new Item(childItem));
+                            resolve();
+                        } catch (e) {
+                            console.error(e);
+                        }
+                    }));
+
+                    Promise.all(promises).then(() => resolve(children));
                 });
-
-                resolve(children);
-            }));
+        });
     }
 
     public duplicate(path: ItemPath): Promise<void> {
-        return new Promise((resolve) => {
-            alert('unimplemented');
-            resolve();
+        return new Promise(async (resolve) => {
+            if (path.isRoot()) {
+                throw FsErrorKind.CannotDuplicateRootFolder;
+            }
+
+            let targetId = path.getIdentifier().toString() + duplicateItemSuffix;
+
+            while (this.exists(path.getParent().append(targetId, false))) {
+                targetId += duplicateItemSuffix;
+            }
+
+            const targetPath = path.getParent().append(targetId, path.isFolder());
+            const fsConstants = NativeFs.fsSync().constants;
+            const fsPromises = NativeFs.fsPromises();
+
+            if (!path.isFolder()) {
+                // fix
+                if (window.confirm(targetPath.getFullPath())) {
+                    fsPromises.copyFile(path.getFullPath(), targetPath.getFullPath(), fsConstants.COPYFILE_EXCL).then(resolve);
+                }
+            } else {
+                alert('unimplemented');
+                resolve();
+            }
         });
     }
 
     public watch(path: ItemPath, callback: () => void) {
-        alert('unimplemented');
+        // unimplemented
     }
 }
 
@@ -188,7 +238,7 @@ export class FakeFs implements IFs {
         },
         '/usr/desktop.ini': {
             kind: ItemKind.File,
-            path: new ItemPath(undefined, ['usr', 'main.rs'], false),
+            path: new ItemPath(undefined, ['usr', 'desktop.ini'], false),
             stats: {
                 kind: ItemKind.File,
                 size: 1024,
@@ -217,14 +267,21 @@ export class FakeFs implements IFs {
         return FakeFs.items[path.getFullPath()];
     }
 
-    public getStats(path: ItemPath): ItemStats {
-        const target = FakeFs.getItem(path);
+    public exists(path: ItemPath): boolean {
+        return FakeFs.getItem(path) !== undefined;
+    }
 
-        if (target === undefined) {
-            throw FsErrorKind.NoSuchFileOrDirectory;
-        }
+    public getStats(path: ItemPath): Promise<ItemStats> {
+        return new Promise((resolve, reject) => {
+            const target = FakeFs.getItem(path);
 
-        return target.stats;
+            if (target === undefined) {
+                reject(FsErrorKind.NoSuchFileOrDirectory);
+                return;
+            }
+
+            resolve(target.stats);
+        });
     }
 
     public getChildren(path: ItemPath): Promise<Item[]> {
@@ -249,16 +306,18 @@ export class FakeFs implements IFs {
     }
 
     public duplicate(path: ItemPath): Promise<void> {
-        return new Promise((resolve) => {
+        return new Promise(async (resolve, reject) => {
             if (path.isRoot()) {
-                throw FsErrorKind.CannotDuplicateRootFolder;
+                reject(FsErrorKind.CannotDuplicateRootFolder);
+                return;
             }
 
             const isOriginalFolder = path.isFolder();
-            const originalStats = this.getStats(path);
+            const originalStats = await this.getStats(path).catch(() => null);
 
-            if (originalStats === undefined) {
-                throw FsErrorKind.CannotReadItemStats;
+            if (originalStats === null) {
+                reject(FsErrorKind.CannotReadItemStats);
+                return;
             }
 
             const stats: ItemStats = isOriginalFolder ? {

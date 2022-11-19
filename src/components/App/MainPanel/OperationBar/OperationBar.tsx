@@ -103,7 +103,7 @@ export default function OperationBar() {
                 <div className="operation-bar-row-items">
                     <OperationIcon id={operationIconIds.item.copy} onClick={() => {
                         iterateSelectedPaths((path) => {
-                            Fs.duplicate(path);
+                            Fs.duplicate(path).catch(console.error);
                         });
                     }} />
                 </div>

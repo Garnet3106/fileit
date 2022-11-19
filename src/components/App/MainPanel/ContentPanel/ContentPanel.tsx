@@ -31,7 +31,6 @@ export default function ContentPanel() {
         const currentFolderPath = store.getState().currentFolderPath;
 
         if (currentFolderPath !== null && latestCurrentFolderPath.current?.isEqual(currentFolderPath) !== true) {
-            console.log('rel')
             reloadItems(currentFolderPath);
         }
 
