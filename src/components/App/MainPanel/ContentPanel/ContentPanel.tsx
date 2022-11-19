@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Item, ItemPath } from '../../../../common/item';
 import { variables as detailBarVariables } from '../DetailBar/DetailBar';
 import { variables as operationBarVariables } from '../OperationBar/OperationBar';
@@ -21,12 +21,22 @@ export default function ContentPanel() {
     const [items, setItems] = useState<Item[]>([]);
     const dispatch = useDispatch();
     const selectedItemPaths = useSelector((state: RootState) => state.selectedItemPaths);
+    const latestCurrentFolderPath = useRef(slices.currentFolderPath.getInitialState());
 
     useEffect(() => {
         dispatch(slices.currentFolderPath.actions.update(initialPath));
     }, []);
 
-    store.subscribe(reloadItems);
+    store.subscribe(() => {
+        const currentFolderPath = store.getState().currentFolderPath;
+
+        if (currentFolderPath !== null && latestCurrentFolderPath.current?.isEqual(currentFolderPath) !== true) {
+            console.log('rel')
+            reloadItems(currentFolderPath);
+        }
+
+        latestCurrentFolderPath.current = currentFolderPath;
+    });
 
     const styles = {
         container: {
@@ -67,15 +77,12 @@ export default function ContentPanel() {
         </div>
     );
 
-    function reloadItems() {
-        const state = store.getState();
+    // Do not modify store data in this function. It may cause infinite recursion.
+    function reloadItems(folderPath: ItemPath) {
+        Fs.getChildren(folderPath)
+            .then(setItems)
+            .catch(console.error);
 
-        if (state.currentFolderPath !== null) {
-            Fs.getChildren(state.currentFolderPath)
-                .then(setItems)
-                .catch(alert);
-
-            Fs.watch(state.currentFolderPath, reloadItems);
-        }
+        Fs.watch(folderPath, () => reloadItems);
     }
 }
