@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useDispatch } from 'react-redux';
-import { sendMessageByIpc } from '../../../../../common/ipc';
+import { ipcMessageSender } from '../../../../../common/ipc';
 import { Item } from '../../../../../common/item';
 import { ItemPropertyKind } from '../../../../../common/property';
 import { slices } from '../../../../../common/redux';
@@ -81,7 +81,7 @@ export default function ContentItem(props: ContentItemProps) {
         if (props.item.isFolder()) {
             dispatch(slices.currentFolderPath.actions.update(props.item.getPath()));
         } else {
-            sendMessageByIpc('run-file', props.item.getPath().getFullPath());
+            ipcMessageSender.fs.runFile(props.item.getFullPath());
         }
     }
 }

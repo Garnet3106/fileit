@@ -1,12 +1,12 @@
-import { sendMessageByIpc } from "./ipc";
+import { ipcMessageSender } from "./ipc";
 
 namespace NativeWindow {
     export function close() {
-        sendMessageByIpc('close-window');
+        ipcMessageSender.window.close();
     }
 
     export function minimize() {
-        sendMessageByIpc('minimize-window');
+        ipcMessageSender.window.minimize();
     }
 }
 

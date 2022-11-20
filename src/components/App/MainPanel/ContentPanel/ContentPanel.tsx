@@ -15,7 +15,7 @@ export const variables = {
     contentItemIconSize: 18,
 };
 
-export const initialPath = new ItemPath(undefined, [], true);
+export const initialPath = new ItemPath('C', [], true);
 
 export default function ContentPanel() {
     const [items, setItems] = useState<Item[]>([]);
