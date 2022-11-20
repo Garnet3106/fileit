@@ -3,7 +3,7 @@ import { generateUuid } from '../../../../common/utils';
 import './OperationBar.css';
 import OperationIcon from './OperationIcon/OperationIcon';
 import { useDispatch, useSelector } from 'react-redux/es/exports';
-import { RootState, slices } from '../../../../common/redux';
+import { RootState, slices, store } from '../../../../common/redux';
 import { variables as leftPanelVariables } from '../../LeftPanel/LeftPanel';
 import { ItemPath } from '../../../../common/item';
 import Fs from '../../../../common/fs';
@@ -47,6 +47,16 @@ export default function OperationBar() {
         fullDirPath = [first].concat(fullDirPath);
     }
 
+    const lastPathItemChild = (
+        <div style={{
+            display: 'flex',
+            marginLeft: 6,
+        }}>
+            <OperationIcon id={operationIconIds.path.copy} isMini={true} onClick={onClickPathCopyIcon} />
+            <OperationIcon id={operationIconIds.path.edit} isMini={true} onClick={onClickPathEditIcon} />
+        </div>
+    );
+
     const pathItems = fullDirPath.map((eachPath, index) => (
         <div
             className="operation-bar-path-item"
@@ -60,6 +70,7 @@ export default function OperationBar() {
             key={generateUuid()}
         >
             {eachPath}
+            {index === fullDirPath.length - 1 && lastPathItemChild}
         </div>
     ));
 
@@ -77,25 +88,6 @@ export default function OperationBar() {
                 }}>
                     <div className="operation-bar-path">
                         {pathItems}
-                        {/* <div className="operation-bar-path-item">
-                            C
-                        </div>
-                        <div className="operation-bar-path-item">
-                            Users
-                        </div>
-                        <div className="operation-bar-path-item">
-                            Garnet3106
-                        </div>
-                        <div className="operation-bar-path-item">
-                            Desktop
-                            <div style={{
-                                display: 'flex',
-                                marginLeft: 6,
-                            }}>
-                                <OperationIcon id={operationIconIds.path.copy} isMini={true} />
-                                <OperationIcon id={operationIconIds.path.edit} isMini={true} />
-                            </div>
-                        </div> */}
                     </div>
                 </div>
             </div>
@@ -113,5 +105,20 @@ export default function OperationBar() {
 
     function iterateSelectedPaths(callback: (path: ItemPath, index: number) => void) {
         selectedItemPaths.forEach(callback);
+    }
+
+    function onClickPathCopyIcon() {
+        const currentPath = store.getState().currentFolderPath;
+
+        if (currentPath !== null) {
+            navigator.clipboard.writeText(currentPath.getFullPath())
+                .catch(console.error);
+        } else {
+            console.error('Failed to copy the current path to the clipboard.');
+        }
+    }
+
+    function onClickPathEditIcon() {
+        // unimplemented
     }
 }
