@@ -1,4 +1,4 @@
-const { BrowserWindow, app, ipcMain } = require('electron');
+const { BrowserWindow, app, ipcMain, shell } = require('electron');
 const electronReload = require('electron-reload');
 const isDev = require('electron-is-dev');
 const path = require('path');
@@ -29,6 +29,11 @@ const createWindow = () => {
 };
 
 ipcMain.on('close-window', () => mainWindow?.close());
+
 ipcMain.on('minimize-window', () => mainWindow?.minimize());
+
+ipcMain.on('run-file', (_event, path) => shell.openPath(path).catch(console.error));
+
 app.once('window-all-closed', () => app.quit());
+
 app.whenReady().then(createWindow);
