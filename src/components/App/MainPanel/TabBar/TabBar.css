@@ -10,6 +10,7 @@
     flex-direction: row;
     overflow-x: scroll;
     scrollbar-width: 0;
+    -webkit-app-region: drag;
 }
 
 .tab-bar-items::-webkit-scrollbar {

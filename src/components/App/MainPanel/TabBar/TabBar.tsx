@@ -51,6 +51,7 @@ export default function TabBar() {
         return targetIndex !== -1 ? targetIndex : undefined;
     }
 
+    // fix: open(path: ItemPath)
     function openTab(title: string, icon: TabIcon) {
         const newTab = {
             id: generateUuid(),

@@ -29,11 +29,8 @@ const createWindow = () => {
 };
 
 ipcMain.on('close-window', () => mainWindow?.close());
-
 ipcMain.on('minimize-window', () => mainWindow?.minimize());
-
 ipcMain.on('run-file', (_event, path) => shell.openPath(path).catch(console.error));
-
 app.once('window-all-closed', () => app.quit());
 
 app.whenReady().then(createWindow);
