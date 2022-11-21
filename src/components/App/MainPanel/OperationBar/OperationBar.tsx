@@ -111,8 +111,15 @@ export default function OperationBar() {
         const currentPath = store.getState().currentFolderPath;
 
         if (currentPath !== null) {
-            navigator.clipboard.writeText(currentPath.getFullPath())
-                .catch(console.error);
+            navigator.clipboard.writeText(currentPath.getFullPath()).catch(console.error);
+
+            dispatch(slices.popups.actions.add({
+                uuid: generateUuid(),
+                data: {
+                    title: '操作ペイン',
+                    description: '作業フォルダのパスをコピーしました。',
+                },
+            }));
         } else {
             console.error('Failed to copy the current path to the clipboard.');
         }

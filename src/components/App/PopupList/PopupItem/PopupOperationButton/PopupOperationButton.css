@@ -1,0 +1,11 @@
+.popup-operation-button {
+    background-color: #344658;
+    cursor: pointer;
+    display: inline-block;
+    padding: 5px 10px;
+    margin-right: 10px;
+}
+
+.popup-operation-button:last-of-type {
+    margin-right: 0;
+}

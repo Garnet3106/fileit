@@ -1,5 +1,10 @@
+import { enableMapSet } from 'immer';
 import { ItemPath } from "./item";
 import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { PopupItemData } from "../components/App/PopupList/PopupItem/PopupItem";
+
+// fix
+enableMapSet();
 
 export const slices = {
     currentFolderPath: createSlice({
@@ -36,6 +41,34 @@ export const slices = {
             },
         },
     }),
+    popups: createSlice({
+        name: 'popups',
+        initialState: new Map<string, PopupItemData>(),
+        reducers: {
+            add: (state, action: PayloadAction<{
+                uuid: string,
+                data: PopupItemData,
+            }>) => {
+                if (state.has(action.payload.uuid)) {
+                    console.error('Popup ID is duplicate.');
+                    return state;
+                }
+
+                const newState = new Map(state);
+                newState.set(action.payload.uuid, action.payload.data);
+                return newState;
+            },
+            remove: (state, action: PayloadAction<string>) => {
+                if (!state.has(action.payload)) {
+                    return state;
+                }
+
+                const newState = new Map(state);
+                newState.delete(action.payload);
+                return newState;
+            },
+        },
+    }),
 };
 
 export type RootState = ReturnType<typeof store.getState>;
@@ -44,6 +77,7 @@ export const store = configureStore({
     reducer: {
         currentFolderPath: slices.currentFolderPath.reducer,
         selectedItemPaths: slices.selectedItemPaths.reducer,
+        popups: slices.popups.reducer,
     },
     middleware: (getDefaultMiddleware) => getDefaultMiddleware({
         serializableCheck: false,
