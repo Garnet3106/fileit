@@ -63,8 +63,8 @@ export default function ContentPanel() {
         },
     ];
 
-    const itemElems = items.map((eachItem, index) => (
-        <ContentItem item={eachItem} properties={properties} isSelected={selectedItemPaths.some((v) => v.isEqual(eachItem.getPath()))} key={index} />
+    const itemElems = items.map((eachItem) => (
+        <ContentItem item={eachItem} properties={properties} isSelected={selectedItemPaths.some((v) => v.isEqual(eachItem.getPath()))} key={eachItem.getFullPath()} />
     ));
 
     return (

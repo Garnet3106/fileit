@@ -35,6 +35,7 @@ export default function ContentItem(props: ContentItemProps) {
 
     const properties = props.properties.map((eachProperty, index) => {
         const value = props.item.getPropertyValue(eachProperty.kind);
+
         switch (eachProperty.kind) {
             case ItemPropertyKind.Icon:
             return <div className="content-item-property content-item-property-icon" style={styles.icon} key={index} />;
