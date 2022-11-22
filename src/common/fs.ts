@@ -2,12 +2,58 @@ import { Dirent } from "fs";
 import { FileItem, FileItemIdentifier, FileItemStats, FolderItem, FolderItemStats, Item, ItemKind, ItemPath, ItemStats } from "./item";
 
 export enum FsErrorKind {
-    NoSuchFileOrDirectory = 'no such file or directory',
-    NotADirectory = 'not a directory',
-    NotAFile = 'not a file',
-    BusyOrLocked = 'busy or locked',
-    CannotReadItemStats = 'cannot read item stats',
-    CannotDuplicateRootFolder = 'cannot duplicate root folder',
+    NotExists = 'Item not exists.',
+    AlreadyExists = 'Item already exists.',
+    NotADirectory = 'Item is not a directory.',
+    NotAFile = 'Item is not a file.',
+    BusyOrLocked = 'Item is busy or locked.',
+    CannotDuplicateTheRootFolder = 'Cannot duplicate the root folder.',
+    OperationNotPermitted = 'Operation not permitted.',
+}
+
+export namespace FsErrorKind {
+    const messagePairs: [string, FsErrorKind][] = [
+        ['EBUSY:', FsErrorKind.BusyOrLocked],
+        ['EEXIST:', FsErrorKind.AlreadyExists],
+        ['ENOENT:', FsErrorKind.NotExists],
+        ['EPERM:', FsErrorKind.OperationNotPermitted],
+    ];
+
+    export function from(message?: string): FsErrorKind | undefined {
+        if (message === undefined) {
+            return undefined;
+        }
+
+        let kind: FsErrorKind | undefined = undefined;
+
+        messagePairs.some(([startsWith, eachKind]) => {
+            const matches = message.startsWith(startsWith);
+
+            if (matches) {
+                kind = eachKind;
+            }
+
+            return matches;
+        });
+
+        return kind;
+    }
+}
+
+export class FsError extends Error {
+    public path?: ItemPath;
+
+    public constructor(kind: FsErrorKind, path?: ItemPath) {
+        super();
+        this.name = '';
+        this.message = kind;
+        this.path = path;
+    }
+
+    public static from(error: any, path?: ItemPath): Error {
+        const kind = FsErrorKind.from(error.message);
+        return kind !== undefined ? new FsError(kind, path) : error;
+    }
 }
 
 export const fsEncoding = 'utf-8';
@@ -85,10 +131,7 @@ export class NativeFs implements IFs {
 
                     resolve(result);
                 })
-                .catch((e: any) => {
-                    console.error(e);
-                    reject(FsErrorKind.CannotReadItemStats);
-                });
+                .catch((e: any) => reject(FsError.from(e, path)));
         });
     }
 
@@ -110,7 +153,7 @@ export class NativeFs implements IFs {
                             const stats = await this.getStats(childPath).catch(() => null);
 
                             if (stats === null) {
-                                console.error(FsErrorKind.CannotReadItemStats);
+                                console.error('An item ignored.');
                                 resolve();
                                 return;
                             }
@@ -138,9 +181,10 @@ export class NativeFs implements IFs {
     }
 
     public duplicate(path: ItemPath): Promise<void> {
-        return new Promise(async (resolve) => {
+        return new Promise(async (resolve, reject) => {
             if (path.isRoot()) {
-                throw FsErrorKind.CannotDuplicateRootFolder;
+                reject(new FsError(FsErrorKind.CannotDuplicateTheRootFolder, path));
+                return;
             }
 
             let targetId = path.getIdentifier().toString() + duplicateItemSuffix;
@@ -276,7 +320,7 @@ export class FakeFs implements IFs {
             const target = FakeFs.getItem(path);
 
             if (target === undefined) {
-                reject(FsErrorKind.NoSuchFileOrDirectory);
+                reject(new FsError(FsErrorKind.NotExists, path));
                 return;
             }
 
@@ -285,15 +329,17 @@ export class FakeFs implements IFs {
     }
 
     public getChildren(path: ItemPath): Promise<Item[]> {
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
             const target = FakeFs.getItem(path);
 
             if (target === undefined) {
-                throw FsErrorKind.NoSuchFileOrDirectory;
+                reject(new FsError(FsErrorKind.NotExists, path));
+                return;
             }
 
             if (target.kind !== ItemKind.Folder) {
-                throw FsErrorKind.NotADirectory;
+                reject(new FsError(FsErrorKind.NotADirectory, path));
+                return;
             }
 
             const children = (target as FakeFolderItem).children.map((eachChild) => {
@@ -308,15 +354,17 @@ export class FakeFs implements IFs {
     public duplicate(path: ItemPath): Promise<void> {
         return new Promise(async (resolve, reject) => {
             if (path.isRoot()) {
-                reject(FsErrorKind.CannotDuplicateRootFolder);
+                reject(new FsError(FsErrorKind.CannotDuplicateTheRootFolder, path));
                 return;
             }
 
             const isOriginalFolder = path.isFolder();
-            const originalStats = await this.getStats(path).catch(() => null);
+            const originalStats = await this.getStats(path).catch((e) => {
+                reject(e);
+                return null;
+            });
 
             if (originalStats === null) {
-                reject(FsErrorKind.CannotReadItemStats);
                 return;
             }
 

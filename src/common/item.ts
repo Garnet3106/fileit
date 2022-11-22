@@ -3,9 +3,20 @@ import { ItemPropertyKind } from "./property";
 /* Path */
 
 export enum ItemPathErrorKind {
-    EmptyFileItemIdentifier = 'cannot set empty string as file item identifier',
-    CannotAppendPathToFile = 'cannot append path to file',
-    ParentCountIsOutOfBounds = 'parent count is out of bounds',
+    EmptyFileIdentifier = 'Empty string specified as file identifier',
+    CannotAppendToFilePath = 'Cannot append to file path.',
+    HierarchyCountIsOutOfBounds = 'Hierarchy count is out of bounds.',
+}
+
+export class ItemPathError extends Error {
+    public path?: ItemPath;
+
+    public constructor(kind: ItemPathErrorKind, path?: ItemPath) {
+        super();
+        this.name = '';
+        this.message = kind;
+        this.path = path;
+    }
 }
 
 export type DriveLetter = string | undefined;
@@ -42,7 +53,7 @@ export class ItemPath {
         isFolder: boolean,
     ): ItemPath {
         if (!this._isFolder) {
-            throw ItemPathErrorKind.CannotAppendPathToFile;
+            throw new ItemPathError(ItemPathErrorKind.CannotAppendToFilePath, this);
         }
 
         // test: toString()
@@ -61,7 +72,7 @@ export class ItemPath {
     // todo: add to tests
     public getParent(count: number = 1): ItemPath {
         if (count < 0 || count > this.hierarchy.length) {
-            throw ItemPathErrorKind.ParentCountIsOutOfBounds;
+            throw new ItemPathError(ItemPathErrorKind.HierarchyCountIsOutOfBounds, this);
         }
 
         const newHierarchy = this.hierarchy.concat().splice(0, this.hierarchy.length - count);
@@ -172,7 +183,7 @@ export class FileItemIdentifier {
         extension: string,
     ) {
         if (name.length === 0 && extension.length === 0) {
-            throw ItemPathErrorKind.EmptyFileItemIdentifier;
+            throw new ItemPathError(ItemPathErrorKind.EmptyFileIdentifier);
         }
 
         this.name = name;
