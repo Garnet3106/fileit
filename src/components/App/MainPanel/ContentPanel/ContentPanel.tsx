@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Item, ItemPath } from '../../../../common/item';
+import { Item } from '../../../../common/fs/item';
 import { variables as detailBarVariables } from '../DetailBar/DetailBar';
 import { variables as operationBarVariables } from '../OperationBar/OperationBar';
 import { variables as tabBarVariables } from '../TabBar/TabBar';
@@ -8,7 +8,8 @@ import './ContentPanel.css';
 import PropertyBar, { ItemPropertyKind } from './PropertyBar/PropertyBar';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, slices, store } from '../../../../common/redux';
-import Fs from '../../../../common/fs';
+import Fs from '../../../../common/fs/fs';
+import { ItemPath } from '../../../../common/fs/path';
 
 export const variables = {
     propertyItemHorizontalMargin: 5,

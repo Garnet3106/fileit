@@ -5,8 +5,8 @@ import OperationIcon from './OperationIcon/OperationIcon';
 import { useDispatch, useSelector } from 'react-redux/es/exports';
 import { RootState, slices, store } from '../../../../common/redux';
 import { variables as leftPanelVariables } from '../../LeftPanel/LeftPanel';
-import { ItemPath } from '../../../../common/item';
-import Fs from '../../../../common/fs';
+import Fs from '../../../../common/fs/fs';
+import { ItemPath } from '../../../../common/fs/path';
 
 export const operationIconIds = {
     window: {

@@ -1,5 +1,6 @@
 import { Dirent } from "fs";
-import { FileItem, FileItemIdentifier, FileItemStats, FolderItem, FolderItemStats, Item, ItemKind, ItemPath, ItemStats } from "./item";
+import { FileItem, FileItemStats, FolderItem, FolderItemStats, Item, ItemKind, ItemStats } from "./item";
+import { FileItemIdentifier, ItemPath } from "./path";
 
 export enum FsErrorKind {
     NotExists = 'Item not exists.',

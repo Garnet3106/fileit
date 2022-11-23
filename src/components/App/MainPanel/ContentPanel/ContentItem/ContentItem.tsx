@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useDispatch } from 'react-redux';
 import { ipcMessageSender } from '../../../../../common/ipc';
-import { Item } from '../../../../../common/item';
+import { Item } from '../../../../../common/fs/item';
 import { ItemPropertyKind } from '../../../../../common/property';
 import { slices } from '../../../../../common/redux';
 import { PropertyBarItemData } from '../PropertyBar/PropertyBar';
