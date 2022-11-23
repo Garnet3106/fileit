@@ -7,6 +7,7 @@ import { RootState, slices, store } from '../../../../common/redux';
 import { variables as leftPanelVariables } from '../../LeftPanel/LeftPanel';
 import Fs from '../../../../common/fs/fs';
 import { ItemPath } from '../../../../common/fs/path';
+import { createRef, useEffect, useState } from 'react';
 
 export const operationIconIds = {
     window: {
@@ -28,10 +29,18 @@ export const variables = {
 };
 
 export default function OperationBar() {
+    const [showPathEditBar, setShowPathEditBar] = useState(false);
+
     const styles = {
         container: {
             backgroundColor: preferences.appearance.background.panel1,
             height: `${variables.height}px`,
+        },
+        operationBarPath: {
+            display: showPathEditBar ? 'none' : 'flex',
+        },
+        operationBarPathEdit: {
+            display: showPathEditBar ? 'block' : 'none',
         },
     };
 
@@ -39,6 +48,7 @@ export default function OperationBar() {
 
     const currentFolderPath = useSelector((state: RootState) => state.currentFolderPath);
     const selectedItemPaths = useSelector((state: RootState) => state.selectedItemPaths);
+    const [pathEditBarValue, setPathEditBarValue] = useState('');
 
     let fullDirPath = currentFolderPath?.getHierarchy() ?? [];
 
@@ -57,22 +67,19 @@ export default function OperationBar() {
         </div>
     );
 
-    const pathItems = fullDirPath.map((eachPath, index) => (
-        <div
-            className="operation-bar-path-item"
-            onClick={() => {
-                const parent = currentFolderPath?.getParent(fullDirPath.length - index - 1);
+    const pathEditBarRef = createRef<HTMLInputElement>();
 
-                if (parent !== undefined) {
-                    dispatch(slices.currentFolderPath.actions.update(parent));
-                }
-            }}
-            key={generateUuid()}
-        >
-            {eachPath}
-            {index === fullDirPath.length - 1 && lastPathItemChild}
-        </div>
-    ));
+    useEffect(() => {
+        pathEditBarRef.current?.focus();
+    });
+
+    useEffect(() => {
+        document.addEventListener('keydown', onKeyDown);
+
+        return () => {
+            document.removeEventListener('keydown', onKeyDown);
+        };
+    }, [onKeyDown]);
 
     return (
         <div className="operation-bar-container" style={styles.container}>
@@ -86,8 +93,33 @@ export default function OperationBar() {
                     // fix
                     width: `calc(100vw - ${leftPanelVariables.width + (90 + (3 * 2)) + (3 * 2)}px)`,
                 }}>
-                    <div className="operation-bar-path">
-                        {pathItems}
+                    <input
+                        className="operation-bar-path-edit"
+                        id="pathEditBar"
+                        style={styles.operationBarPathEdit}
+                        onChange={(e) => setPathEditBarValue(e.target.value)}
+                        value={pathEditBarValue}
+                        ref={pathEditBarRef}
+                    />
+                    <div className="operation-bar-path" style={styles.operationBarPath}>
+                        {
+                            fullDirPath.map((eachPath, index) => (
+                                <div
+                                    className="operation-bar-path-item"
+                                    onClick={() => {
+                                        const parent = currentFolderPath?.getParent(fullDirPath.length - index - 1);
+
+                                        if (parent !== undefined) {
+                                            dispatch(slices.currentFolderPath.actions.update(parent));
+                                        }
+                                    }}
+                                    key={generateUuid()}
+                                >
+                                    {eachPath}
+                                    {index === fullDirPath.length - 1 && lastPathItemChild}
+                                </div>
+                            ))
+                        }
                     </div>
                 </div>
             </div>
@@ -126,6 +158,37 @@ export default function OperationBar() {
     }
 
     function onClickPathEditIcon() {
-        // unimplemented
+        setShowPathEditBar(true);
+
+        if (currentFolderPath !== null) {
+            setPathEditBarValue(currentFolderPath.getFullPath());
+        }
+    }
+
+    function onKeyDown(event: KeyboardEvent) {
+        const target = event.target as HTMLElement;
+
+        if (target.id === pathEditBarRef.current?.id && showPathEditBar && event.key === 'Enter') {
+            confirmWorkingFolderPathOnEditBar();
+        }
+    }
+
+    function confirmWorkingFolderPathOnEditBar() {
+        setShowPathEditBar(false);
+
+        const path = ItemPath.from(pathEditBarValue, true);
+
+        console.log(path)
+        if (Fs.exists(path)) {
+            dispatch(slices.currentFolderPath.actions.update(path));
+        } else {
+            dispatch(slices.popups.actions.add({
+                uuid: generateUuid(),
+                data: {
+                    title: 'エラー',
+                    description: '指定されたパスが見つからないかフォルダではありません。',
+                },
+            }));
+        }
     }
 }

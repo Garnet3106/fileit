@@ -1,10 +1,11 @@
+import { MouseEvent } from 'react';
 import { preferences } from '../../../../../common/preferences';
 import './OperationIcon.css';
 
 export type OperationIconProps = {
     id: string,
     isMini?: boolean,
-    onClick?: () => void,
+    onClick?: (event: MouseEvent) => void,
 };
 
 export default function OperationIcon(props: OperationIconProps) {
@@ -18,6 +19,10 @@ export default function OperationIcon(props: OperationIconProps) {
     };
 
     return (
-        <div className={`operation-icon-container ${miniClassName}`} style={styles.container} onClick={props.onClick} />
+        <div
+            className={`operation-icon-container ${miniClassName}`}
+            style={styles.container}
+            onClick={props.onClick}
+        />
     );
 }

@@ -82,6 +82,15 @@ export class ItemPath {
         return this._isFolder;
     }
 
+    // todo: add tests
+    public static from(path: string, isFolder: boolean): ItemPath {
+        const matches = path.match(/^(?<driveLetter>[a-zA-Z]):(?<hierarchy>.*)/);
+        const primitiveHierarchy = matches !== null ? matches.groups!['hierarchy'] : path;
+        const hierarchy = primitiveHierarchy.split(/[\/\\]/g).filter((v) => v.length !== 0);
+        const driveLetter = matches !== null ? matches.groups!['driveLetter'].toUpperCase() : undefined;
+        return new ItemPath(driveLetter, hierarchy, isFolder);
+    }
+
     public append(
         id: ItemIdentifier,
         isFolder: boolean,
