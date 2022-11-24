@@ -139,6 +139,15 @@ export default function OperationBar() {
     );
 
     function iterateSelectedPaths(callback: (path: ItemPath, index: number) => void) {
+        if (selectedItemPaths.length === 0) {
+            dispatch(slices.popups.actions.add({
+                title: '操作ペイン',
+                description: 'アイテムを選択してください。',
+            }));
+
+            return;
+        }
+
         selectedItemPaths.forEach(callback);
     }
 
@@ -149,14 +158,11 @@ export default function OperationBar() {
             navigator.clipboard.writeText(currentPath.getFullPath()).catch(console.error);
 
             dispatch(slices.popups.actions.add({
-                uuid: generateUuid(),
-                data: {
-                    title: '操作ペイン',
-                    description: '作業フォルダのパスをコピーしました。',
-                },
+                title: '操作ペイン',
+                description: '作業フォルダのパスをコピーしました。',
             }));
         } else {
-            console.error('Failed to copy the current path to the clipboard.');
+            console.error('Failed to copy the working folder path to the clipboard due to it being null.');
         }
     }
 
@@ -200,22 +206,16 @@ export default function OperationBar() {
                     dispatch(slices.currentFolderPath.actions.update(path));
                 } else {
                     dispatch(slices.popups.actions.add({
-                        uuid: generateUuid(),
-                        data: {
-                            title: 'エラー',
-                            description: 'フォルダパスを指定してください。',
-                        },
+                        title: 'エラー',
+                        description: 'フォルダパスを指定してください。',
                     }));
                 }
             })
             .catch((e) => {
                 if (e.message === FsErrorKind.NotExists) {
                     dispatch(slices.popups.actions.add({
-                        uuid: generateUuid(),
-                        data: {
-                            title: 'エラー',
-                            description: '指定されたパスが見つかりません。',
-                        },
+                        title: 'エラー',
+                        description: '指定されたパスが見つかりません。',
                     }));
                 } else {
                     console.error(e);

@@ -2,6 +2,7 @@ import { enableMapSet } from 'immer';
 import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { PopupItemData } from "../components/App/PopupList/PopupItem/PopupItem";
 import { ItemPath } from './fs/path';
+import { generateUuid } from './utils';
 
 // fix
 enableMapSet();
@@ -45,17 +46,16 @@ export const slices = {
         name: 'popups',
         initialState: new Map<string, PopupItemData>(),
         reducers: {
-            add: (state, action: PayloadAction<{
-                uuid: string,
-                data: PopupItemData,
-            }>) => {
-                if (state.has(action.payload.uuid)) {
-                    console.error('Popup ID is duplicate.');
+            add: (state, action: PayloadAction<PopupItemData>) => {
+                const uuid = generateUuid();
+
+                if (state.has(uuid)) {
+                    console.error('Popup ID is unexpectedly duplicate.');
                     return state;
                 }
 
                 const newState = new Map(state);
-                newState.set(action.payload.uuid, action.payload.data);
+                newState.set(uuid, action.payload);
                 return newState;
             },
             remove: (state, action: PayloadAction<string>) => {
