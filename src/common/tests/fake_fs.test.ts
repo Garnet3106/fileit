@@ -1,5 +1,6 @@
-import { FakeFs } from '../fs';
-import { FileItemIdentifier, ItemIdentifier, ItemKind, ItemPath } from '../item';
+import { FakeFs } from '../fs/fs';
+import { ItemKind } from '../fs/item';
+import { FileItemIdentifier, ItemIdentifier, ItemPath } from '../fs/path';
 
 const fs = new FakeFs();
 

@@ -1,4 +1,4 @@
-import { FileItemIdentifier, ItemPath, ItemPathErrorKind } from "../item";
+import { FileItemIdentifier, ItemPath, ItemPathErrorKind } from "../fs/path";
 
 /* Append Path */
 
@@ -11,7 +11,7 @@ test('append directory to child path', () => {
 });
 
 test('[failure] append to file path', () => {
-    expect(() => (new ItemPath(undefined, ['file.txt'], false)).append('dir', true).getFullPath()).toThrow(ItemPathErrorKind.CannotAppendPathToFile);
+    expect(() => (new ItemPath(undefined, ['file.txt'], false)).append('dir', true).getFullPath()).toThrowError(ItemPathErrorKind.CannotAppendToFilePath);
 });
 
 /* Parent Path */
@@ -61,7 +61,7 @@ test('get full file path with parents', () => {
 /* File Identifier */
 
 test('[failure] generate empty file identifier', () => {
-    expect(() => FileItemIdentifier.from('')).toThrow(ItemPathErrorKind.EmptyFileItemIdentifier);
+    expect(() => FileItemIdentifier.from('')).toThrowError(ItemPathErrorKind.EmptyFileIdentifier);
 });
 
 test('generate normal file identifier', () => {
