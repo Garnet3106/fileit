@@ -5,9 +5,10 @@ import OperationIcon from './OperationIcon/OperationIcon';
 import { useDispatch, useSelector } from 'react-redux/es/exports';
 import { RootState, slices, store } from '../../../../common/redux';
 import { variables as leftPanelVariables } from '../../LeftPanel/LeftPanel';
-import Fs from '../../../../common/fs/fs';
+import Fs, { FsErrorKind } from '../../../../common/fs/fs';
 import { ItemPath } from '../../../../common/fs/path';
 import { createRef, useEffect, useState } from 'react';
+import { ItemKind } from '../../../../common/fs/item';
 
 export const operationIconIds = {
     window: {
@@ -178,17 +179,32 @@ export default function OperationBar() {
 
         const path = ItemPath.from(pathEditBarValue, true);
 
-        console.log(path)
-        if (Fs.exists(path)) {
-            dispatch(slices.currentFolderPath.actions.update(path));
-        } else {
-            dispatch(slices.popups.actions.add({
-                uuid: generateUuid(),
-                data: {
-                    title: 'エラー',
-                    description: '指定されたパスが見つからないかフォルダではありません。',
-                },
-            }));
-        }
+        Fs.getStats(path)
+            .then((stats) => {
+                if (stats.kind === ItemKind.Folder) {
+                    dispatch(slices.currentFolderPath.actions.update(path));
+                } else {
+                    dispatch(slices.popups.actions.add({
+                        uuid: generateUuid(),
+                        data: {
+                            title: 'エラー',
+                            description: 'フォルダパスを指定してください。',
+                        },
+                    }));
+                }
+            })
+            .catch((e) => {
+                if (e.message === FsErrorKind.NotExists) {
+                    dispatch(slices.popups.actions.add({
+                        uuid: generateUuid(),
+                        data: {
+                            title: 'エラー',
+                            description: '指定されたパスが見つかりません。',
+                        },
+                    }));
+                } else {
+                    console.error(e);
+                }
+            });
     }
 }
