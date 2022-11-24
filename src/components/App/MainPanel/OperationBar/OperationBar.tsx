@@ -76,9 +76,11 @@ export default function OperationBar() {
 
     useEffect(() => {
         document.addEventListener('keydown', onKeyDown);
-
+        document.addEventListener('mousedown', onMouseDown);
+        
         return () => {
             document.removeEventListener('keydown', onKeyDown);
+            document.removeEventListener('mousedown', onMouseDown);
         };
     }, [onKeyDown]);
 
@@ -169,7 +171,20 @@ export default function OperationBar() {
     function onKeyDown(event: KeyboardEvent) {
         const target = event.target as HTMLElement;
 
-        if (target.id === pathEditBarRef.current?.id && showPathEditBar && event.key === 'Enter') {
+        if (target.id === pathEditBarRef.current?.id && showPathEditBar) {
+            switch (event.key) {
+                case 'Enter':
+                case 'Escape':
+                confirmWorkingFolderPathOnEditBar();
+                break;
+            }
+        }
+    }
+
+    function onMouseDown(event: MouseEvent) {
+        const target = event.target as HTMLElement;
+
+        if (target.id !== pathEditBarRef.current?.id && showPathEditBar) {
             confirmWorkingFolderPathOnEditBar();
         }
     }

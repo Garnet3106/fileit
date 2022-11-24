@@ -25,8 +25,8 @@
 }
 
 .operation-bar-path-item {
-    background-color: var(--unselected-tab-color);
     align-items: center;
+    background-color: var(--unselected-tab-color);
     border-right: 2px solid #141416;
     display: flex;
     height: 30px;
