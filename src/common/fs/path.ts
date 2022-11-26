@@ -54,6 +54,7 @@ export class ItemPathError extends Error {
 }
 
 export type DriveLetter = string | undefined;
+export const duplicateItemSuffix = '_copy';
 
 export class ItemPath {
     private driveLetter: DriveLetter;
@@ -131,5 +132,19 @@ export class ItemPath {
     public getIdentifier(): ItemIdentifier {
         const id = this.hierarchy.at(this.hierarchy.length - 1) ?? '/';
         return this._isFolder ? id as FolderItemIdentifier : FileItemIdentifier.from(id);
+    }
+
+    public duplicate(): ItemPath {
+        let id = this.getIdentifier();
+
+        if (!this.isFolder()) {
+            const fileId = id as FileItemIdentifier;
+            id = FileItemIdentifier.from(fileId.name + duplicateItemSuffix + '.' + fileId.extension);
+        } else {
+            (id as string) += duplicateItemSuffix;
+        }
+
+        const newPath = new ItemPath(this.getDriveLetter(), this.getHierarchy().concat(), this.isFolder());
+        return newPath.getParent().append(id, this.isFolder());
     }
 }

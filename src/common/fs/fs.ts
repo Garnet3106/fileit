@@ -58,7 +58,6 @@ export class FsError extends Error {
 }
 
 export const fsEncoding = 'utf-8';
-export const duplicateItemSuffix = '_copy';
 
 export interface IFs {
     exists(path: ItemPath): boolean;
@@ -73,10 +72,16 @@ export interface IFs {
 }
 
 export default class Fs {
-    private static isProdEnv: boolean = process.env.NODE_ENV === 'production';
-
     private static fs(): IFs {
-        return Fs.isProdEnv ? new NativeFs() : new FakeFs();
+        return process.env.NODE_ENV !== 'development' ? new NativeFs() : new FakeFs();
+    }
+
+    public static getDuplicatePath(path: ItemPath): ItemPath {
+        do {
+            path = path.duplicate();
+        } while (Fs.exists(path));
+
+        return path;
     }
 
     public static exists(path: ItemPath): boolean {
@@ -137,7 +142,7 @@ export class NativeFs implements IFs {
     }
 
     public getChildren(path: ItemPath): Promise<Item[]> {
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
             const options = {
                 encoding: fsEncoding,
                 withFileTypes: true,
@@ -148,36 +153,33 @@ export class NativeFs implements IFs {
                     const children: Item[] = [];
 
                     const promises: Promise<void>[] = dirents.map((eachDirent) => new Promise(async (resolve) => {
-                        try {
-                            const isFolder = eachDirent.isDirectory();
-                            const childPath = path.append(eachDirent.name, isFolder);
-                            const stats = await this.getStats(childPath).catch(() => null);
+                        const isFolder = eachDirent.isDirectory();
+                        const childPath = path.append(eachDirent.name, isFolder);
+                        const stats = await this.getStats(childPath).catch(() => null);
 
-                            if (stats === null) {
-                                console.error('An item ignored.');
-                                resolve();
-                                return;
-                            }
-
-                            const childItem = !isFolder ? {
-                                kind: ItemKind.File,
-                                path: path.append(FileItemIdentifier.from(eachDirent.name), isFolder),
-                                stats: stats as FileItemStats,
-                            } as FileItem : {
-                                kind: ItemKind.Folder,
-                                path: path.append(eachDirent.name, isFolder),
-                                stats: stats as FolderItemStats,
-                            } as FolderItem;
-
-                            children.push(new Item(childItem));
+                        if (stats === null) {
+                            console.error('An item ignored.');
                             resolve();
-                        } catch (e) {
-                            console.error(e);
+                            return;
                         }
+
+                        const childItem = !isFolder ? {
+                            kind: ItemKind.File,
+                            path: path.append(FileItemIdentifier.from(eachDirent.name), isFolder),
+                            stats: stats as FileItemStats,
+                        } as FileItem : {
+                            kind: ItemKind.Folder,
+                            path: path.append(eachDirent.name, isFolder),
+                            stats: stats as FolderItemStats,
+                        } as FolderItem;
+
+                        children.push(new Item(childItem));
+                        resolve();
                     }));
 
                     Promise.all(promises).then(() => resolve(children));
-                });
+                })
+                .catch((e: any) => reject(FsError.from(e, path)));
         });
     }
 
@@ -188,13 +190,7 @@ export class NativeFs implements IFs {
                 return;
             }
 
-            let targetId = path.getIdentifier().toString() + duplicateItemSuffix;
-
-            while (this.exists(path.getParent().append(targetId, false))) {
-                targetId += duplicateItemSuffix;
-            }
-
-            const targetPath = path.getParent().append(targetId, path.isFolder());
+            const targetPath = Fs.getDuplicatePath(path);
             const fsConstants = NativeFs.fsSync().constants;
             const fsPromises = NativeFs.fsPromises();
 
@@ -384,13 +380,8 @@ export class FakeFs implements IFs {
 
             const originalParent = path.getParent();
             const parentChildren = (FakeFs.items[originalParent.getFullPath()] as FakeFolderItem).children;
-            let targetId = path.getIdentifier().toString() + duplicateItemSuffix;
 
-            while (parentChildren.some((v) => v.id === targetId)) {
-                targetId += duplicateItemSuffix;
-            }
-
-            const targetPath = originalParent.append(targetId, isOriginalFolder);
+            const targetPath = Fs.getDuplicatePath(path);
             const targetFullPath = targetPath.getFullPath();
             const target: FakeItem = isOriginalFolder ? {
                 kind: ItemKind.Folder,
@@ -405,7 +396,7 @@ export class FakeFs implements IFs {
             };
 
             parentChildren.push({
-                id: targetId,
+                id: targetPath.getIdentifier().toString(),
                 isFolder: isOriginalFolder,
             });
             FakeFs.items[targetFullPath] = target;
