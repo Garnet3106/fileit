@@ -17,5 +17,6 @@ export const ipcMessageSender = {
     },
     fs: {
         runFile: (path: string) => sendIpcMessage('run-file', path),
+        trash: (path: string) => sendIpcMessage('trash-file', path),
     },
 };

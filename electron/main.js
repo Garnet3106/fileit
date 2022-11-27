@@ -29,8 +29,15 @@ const createWindow = () => {
 };
 
 ipcMain.on('close-window', () => mainWindow?.close());
+
 ipcMain.on('minimize-window', () => mainWindow?.minimize());
-ipcMain.on('run-file', (_event, path) => shell.openPath(path).catch(console.error));
+
+ipcMain.on('run-file', (_event, targetPath) => shell.openPath(targetPath).catch(console.error));
+
+// Use path.resolve() to convert received path separators for Windows.
+// See more: https://github.com/electron/electron/issues/28831
+ipcMain.on('trash-file', (_event, targetPath) => shell.trashItem(path.resolve(targetPath)).then(() => console.log('hello')).catch(console.error));
+
 app.once('window-all-closed', () => app.quit());
 
 app.whenReady().then(createWindow);

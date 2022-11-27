@@ -16,7 +16,9 @@ export const variables = {
     contentItemIconSize: 18,
 };
 
-export const initialPath = new ItemPath(undefined, [], true);
+// fix
+const initialDriveLetter = process.env.NODE_ENV === 'production' ? 'C' : undefined;
+export const initialPath = new ItemPath(initialDriveLetter, [], true);
 
 export default function ContentPanel() {
     const [items, setItems] = useState<Item[]>([]);

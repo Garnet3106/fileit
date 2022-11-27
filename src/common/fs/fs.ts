@@ -1,4 +1,5 @@
 import { Dirent } from "fs";
+import { ipcMessageSender } from "../ipc";
 import { FileItem, FileItemStats, FolderItem, FolderItemStats, Item, ItemKind, ItemStats } from "./item";
 import { FileItemIdentifier, ItemPath } from "./path";
 
@@ -68,6 +69,8 @@ export interface IFs {
 
     duplicate(path: ItemPath): Promise<void>;
 
+    trash(path: ItemPath): void;
+
     watch(path: ItemPath, callback: () => void): void;
 }
 
@@ -98,6 +101,11 @@ export default class Fs {
 
     public static duplicate(path: ItemPath): Promise<void> {
         return Fs.fs().duplicate(path);
+    }
+
+    public static trash(path: ItemPath) {
+        console.log(path)
+        Fs.fs().trash(path);
     }
 
     public static watch(path: ItemPath, callback: () => void) {
@@ -204,6 +212,12 @@ export class NativeFs implements IFs {
                 resolve();
             }
         });
+    }
+
+    public trash(path: ItemPath) {
+        if (window.confirm(path.getFullPath())) {
+            ipcMessageSender.fs.trash(path.getFullPath());
+        }
     }
 
     public watch(path: ItemPath, callback: () => void) {
@@ -403,6 +417,14 @@ export class FakeFs implements IFs {
             this.dispatchWatcher(originalParent);
             resolve();
         });
+    }
+
+    public trash(path: ItemPath) {
+        const children = (FakeFs.items[path.getParent().getFullPath()] as FakeFolderItem).children;
+        const id = path.getIdentifier().toString();
+        children.splice(children.findIndex((v) => v.id === id), 1);
+        delete FakeFs.items[path.getFullPath()];
+        this.dispatchWatcher(path.getParent());
     }
 
     private dispatchWatcher(parentPath: ItemPath) {

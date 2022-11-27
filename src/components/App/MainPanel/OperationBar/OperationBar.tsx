@@ -22,6 +22,7 @@ export const operationIconIds = {
     },
     item: {
         copy: 'copy',
+        trash: 'trash',
     },
 };
 
@@ -77,63 +78,76 @@ export default function OperationBar() {
     useEffect(() => {
         document.addEventListener('keydown', onKeyDown);
         document.addEventListener('mousedown', onMouseDown);
-        
+
         return () => {
             document.removeEventListener('keydown', onKeyDown);
             document.removeEventListener('mousedown', onMouseDown);
         };
     }, [onKeyDown]);
 
+    const rowItems = {
+        window: (
+            <div className="operation-bar-row-items">
+                <OperationIcon id={operationIconIds.window.prev} />
+                <OperationIcon id={operationIconIds.window.next} />
+                <OperationIcon id={operationIconIds.window.reload} />
+            </div>
+        ),
+        path: (
+            <div className="operation-bar-row-items" style={{
+                // fix
+                width: `calc(100vw - ${leftPanelVariables.width + (90 + (3 * 2)) + (3 * 2)}px)`,
+            }}>
+                <input
+                    className="operation-bar-path-edit"
+                    id="pathEditBar"
+                    style={styles.operationBarPathEdit}
+                    onChange={(e) => setPathEditBarValue(e.target.value)}
+                    value={pathEditBarValue}
+                    ref={pathEditBarRef}
+                />
+                <div className="operation-bar-path" style={styles.operationBarPath}>
+                    {
+                        fullDirPath.map((eachPath, index) => (
+                            <div
+                                className="operation-bar-path-item"
+                                onClick={() => {
+                                    const parent = currentFolderPath?.getParent(fullDirPath.length - index - 1);
+
+                                    if (parent !== undefined) {
+                                        dispatch(slices.currentFolderPath.actions.update(parent));
+                                    }
+                                }}
+                                key={generateUuid()}
+                            >
+                                {eachPath}
+                                {index === fullDirPath.length - 1 && lastPathItemChild}
+                            </div>
+                        ))
+                    }
+                </div>
+            </div>
+        ),
+        operation: (
+            <div className="operation-bar-row-items">
+                <OperationIcon id={operationIconIds.item.copy} onClick={() => {
+                    iterateSelectedPaths((path) => Fs.duplicate(path).catch(console.error));
+                }} />
+                <OperationIcon id={operationIconIds.item.trash} onClick={() => {
+                    iterateSelectedPaths((path) => Fs.trash(path));
+                }} />
+            </div>
+        ),
+    };
+
     return (
         <div className="operation-bar-container" style={styles.container}>
             <div className="operation-bar-row">
-                <div className="operation-bar-row-items">
-                    <OperationIcon id={operationIconIds.window.prev} />
-                    <OperationIcon id={operationIconIds.window.next} />
-                    <OperationIcon id={operationIconIds.window.reload} />
-                </div>
-                <div className="operation-bar-row-items" style={{
-                    // fix
-                    width: `calc(100vw - ${leftPanelVariables.width + (90 + (3 * 2)) + (3 * 2)}px)`,
-                }}>
-                    <input
-                        className="operation-bar-path-edit"
-                        id="pathEditBar"
-                        style={styles.operationBarPathEdit}
-                        onChange={(e) => setPathEditBarValue(e.target.value)}
-                        value={pathEditBarValue}
-                        ref={pathEditBarRef}
-                    />
-                    <div className="operation-bar-path" style={styles.operationBarPath}>
-                        {
-                            fullDirPath.map((eachPath, index) => (
-                                <div
-                                    className="operation-bar-path-item"
-                                    onClick={() => {
-                                        const parent = currentFolderPath?.getParent(fullDirPath.length - index - 1);
-
-                                        if (parent !== undefined) {
-                                            dispatch(slices.currentFolderPath.actions.update(parent));
-                                        }
-                                    }}
-                                    key={generateUuid()}
-                                >
-                                    {eachPath}
-                                    {index === fullDirPath.length - 1 && lastPathItemChild}
-                                </div>
-                            ))
-                        }
-                    </div>
-                </div>
+                {rowItems.window}
+                {rowItems.path}
             </div>
             <div className="operation-bar-row">
-                <div className="operation-bar-row-items">
-                    <OperationIcon id={operationIconIds.item.copy} onClick={() => {
-                        iterateSelectedPaths((path) => {
-                            Fs.duplicate(path).catch(console.error);
-                        });
-                    }} />
-                </div>
+                {rowItems.operation}
             </div>
         </div>
     );
