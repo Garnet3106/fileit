@@ -114,6 +114,8 @@ export default class Fs {
 };
 
 export class NativeFs implements IFs {
+    private static watcher: any = undefined;
+
     private static fsSync(): any {
         return process.env.NODE_ENV === 'test' ? require('fs') : window.require('fs');
     }
@@ -221,7 +223,11 @@ export class NativeFs implements IFs {
     }
 
     public watch(path: ItemPath, callback: () => void) {
-        // unimplemented
+        if (NativeFs.watcher !== undefined) {
+            NativeFs.watcher.close();
+        }
+
+        NativeFs.watcher = NativeFs.fsSync().watch(path.getFullPath(), callback);
     }
 }
 
