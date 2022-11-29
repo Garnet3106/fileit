@@ -236,11 +236,17 @@ export default function OperationBar() {
     function onMouseDown(event: MouseEvent) {
         const target = event.target as HTMLElement;
 
-        if (target.id !== pathEditBarRef.current?.id && showPathEditBar) {
-            confirmWorkingFolderPathOnEditBar();
-            return;
+        // Unselect all selected items.
+        if (target.className === 'content-panel-container' && selectedItemPaths.length !== 0) {
+            dispatch(slices.selectedItemPaths.actions.update([]));
         }
 
+        // Close path edit bar.
+        if (target.id !== pathEditBarRef.current?.id && showPathEditBar) {
+            confirmWorkingFolderPathOnEditBar();
+        }
+
+        // Close rename bar.
         if (target.className !== renameBarClassName && renamingItemPath !== null) {
             dispatch(slices.renamingItemPath.actions.update(null));
         }
