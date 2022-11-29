@@ -21,8 +21,8 @@ const initialDriveLetter = process.env.NODE_ENV === 'production' ? 'C' : undefin
 export const initialPath = new ItemPath(initialDriveLetter, [], true);
 
 export default function ContentPanel() {
-    const [items, setItems] = useState<Item[]>([]);
     const dispatch = useDispatch();
+    const currentFolderChildren = useSelector((state: RootState) => state.currentFolderChildren);
     const selectedItemPaths = useSelector((state: RootState) => state.selectedItemPaths);
     const latestCurrentFolderPath = useRef(slices.currentFolderPath.getInitialState());
 
@@ -75,7 +75,7 @@ export default function ContentPanel() {
         },
     ];
 
-    const itemElems = items.map((eachItem) => (
+    const itemElems = currentFolderChildren.map((eachItem) => (
         <ContentItem item={eachItem} properties={properties} isSelected={selectedItemPaths.some((v) => v.isEqual(eachItem.getPath()))} key={eachItem.getFullPath()} />
     ));
 
@@ -91,7 +91,7 @@ export default function ContentPanel() {
     // Do not modify `currentFolderPath` state in this function. It would cause infinite recursion.
     function reloadItems(folderPath: ItemPath) {
         Fs.getChildren(folderPath)
-            .then(setItems)
+            .then((items) => dispatch(slices.currentFolderChildren.actions.update(items)))
             .catch(console.error);
 
         Fs.watch(folderPath, () => reloadItems(folderPath));

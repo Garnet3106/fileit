@@ -95,7 +95,13 @@ export default function OperationBar() {
             <div className="operation-bar-row-items">
                 <OperationIcon id={operationIconIds.window.prev} />
                 <OperationIcon id={operationIconIds.window.next} />
-                <OperationIcon id={operationIconIds.window.reload} />
+                <OperationIcon id={operationIconIds.window.reload} onClick={() => {
+                    if (currentFolderPath !== null) {
+                        Fs.getChildren(currentFolderPath)
+                            .then((items) => dispatch(slices.currentFolderChildren.actions.update(items)))
+                            .catch(console.error);
+                    }
+                }} />
             </div>
         ),
         path: (

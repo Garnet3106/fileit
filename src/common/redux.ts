@@ -3,6 +3,7 @@ import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { PopupItemData } from "../components/App/PopupList/PopupItem/PopupItem";
 import { ItemPath } from './fs/path';
 import { generateUuid } from './utils';
+import { Item } from './fs/item';
 
 // fix
 enableMapSet();
@@ -13,6 +14,13 @@ export const slices = {
         initialState: null as ItemPath | null,
         reducers: {
             update: (_state, action: PayloadAction<ItemPath>) => action.payload,
+        },
+    }),
+    currentFolderChildren: createSlice({
+        name: 'currentFolderChildren',
+        initialState: [] as Item[],
+        reducers: {
+            update: (_state, action: PayloadAction<Item[]>) => action.payload,
         },
     }),
     selectedItemPaths: createSlice({
@@ -83,6 +91,7 @@ export type RootState = ReturnType<typeof store.getState>;
 export const store = configureStore({
     reducer: {
         currentFolderPath: slices.currentFolderPath.reducer,
+        currentFolderChildren: slices.currentFolderChildren.reducer,
         selectedItemPaths: slices.selectedItemPaths.reducer,
         renamingItemPath: slices.renamingItemPath.reducer,
         popups: slices.popups.reducer,
