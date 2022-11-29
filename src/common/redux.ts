@@ -42,6 +42,13 @@ export const slices = {
             },
         },
     }),
+    renamingItemPath: createSlice({
+        name: 'renamingItemPath',
+        initialState: null as ItemPath | null,
+        reducers: {
+            update: (_state, action: PayloadAction<ItemPath | null>) => action.payload,
+        },
+    }),
     popups: createSlice({
         name: 'popups',
         initialState: new Map<string, PopupItemData>(),
@@ -77,6 +84,7 @@ export const store = configureStore({
     reducer: {
         currentFolderPath: slices.currentFolderPath.reducer,
         selectedItemPaths: slices.selectedItemPaths.reducer,
+        renamingItemPath: slices.renamingItemPath.reducer,
         popups: slices.popups.reducer,
     },
     middleware: (getDefaultMiddleware) => getDefaultMiddleware({

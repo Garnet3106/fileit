@@ -1,9 +1,9 @@
-import { useEffect, useRef } from 'react';
-import { useDispatch } from 'react-redux';
+import { MouseEvent, useEffect, useRef } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { ipcMessageSender } from '../../../../../common/ipc';
 import { Item } from '../../../../../common/fs/item';
 import { ItemPropertyKind } from '../../../../../common/property';
-import { slices } from '../../../../../common/redux';
+import { RootState, slices } from '../../../../../common/redux';
 import { PropertyBarItemData } from '../PropertyBar/PropertyBar';
 import './ContentItem.css';
 
@@ -13,6 +13,8 @@ export type ContentItemProps = {
     isSelected: boolean,
 };
 
+export const renameBarClassName = 'content-item-property content-item-property-rename';
+
 export default function ContentItem(props: ContentItemProps) {
     const styles = {
         icon: {
@@ -21,6 +23,9 @@ export default function ContentItem(props: ContentItemProps) {
     };
 
     const dispatch = useDispatch();
+    const renamingItemPath = useSelector((state: RootState) => state.renamingItemPath);
+    const wasRenaming = useRef(false);
+    // fix
     const isCtrlKeyDown = useRef(false);
 
     useEffect(() => {
@@ -38,19 +43,34 @@ export default function ContentItem(props: ContentItemProps) {
 
         switch (eachProperty.kind) {
             case ItemPropertyKind.Icon:
-            return <div className="content-item-property content-item-property-icon" style={styles.icon} key={index} />;
+            return (
+                <div className="content-item-property content-item-property-icon" style={styles.icon} key={index} />
+            );
 
             case ItemPropertyKind.Name:
-            return <div className="content-item-property content-item-property-name" style={{
-                maxWidth: `${eachProperty.width}px`,
-                minWidth: `${eachProperty.width}px`,
-            }} key={index}>{value}</div>;
+            return renamingItemPath?.isEqual(props.item.getPath()) !== true ? (
+                <div className="content-item-property content-item-property-name" style={{
+                    maxWidth: `${eachProperty.width}px`,
+                    minWidth: `${eachProperty.width}px`,
+                }} key={index}>
+                    {value}
+                </div>
+            ) : (
+                <input className={renameBarClassName} style={{
+                    maxWidth: `${eachProperty.width}px`,
+                    minWidth: `${eachProperty.width}px`,
+                }} key={index} />
+            );
 
             default:
-            return <div className="content-item-property" style={{
-                maxWidth: `${eachProperty.width}px`,
-                minWidth: `${eachProperty.width}px`,
-            }} key={index}>{value}</div>;
+            return (
+                <div className="content-item-property" style={{
+                    maxWidth: `${eachProperty.width}px`,
+                    minWidth: `${eachProperty.width}px`,
+                }} key={index}>
+                    {value}
+                </div>
+            );
         }
     });
 
@@ -78,7 +98,13 @@ export default function ContentItem(props: ContentItemProps) {
         dispatch(updateAction);
     }
 
-    function onDoubleClick() {
+    function onDoubleClick(event: MouseEvent) {
+        const target = event.target as HTMLElement;
+
+        if (target.className === renameBarClassName) {
+            return;
+        }
+
         if (props.item.isFolder()) {
             dispatch(slices.currentFolderPath.actions.update(props.item.getPath()));
         } else {

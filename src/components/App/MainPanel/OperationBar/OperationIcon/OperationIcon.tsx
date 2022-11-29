@@ -4,17 +4,18 @@ import './OperationIcon.css';
 
 export type OperationIconProps = {
     id: string,
-    isMini?: boolean,
+    mini?: boolean,
+    preventClick?: boolean,
     onClick?: (event: MouseEvent) => void,
 };
 
 export default function OperationIcon(props: OperationIconProps) {
-    const isMini = props.isMini === true;
-    const miniClassName = isMini ? 'operation-icon-container-mini' : '';
+    const miniClassName = props.mini === true ? 'operation-icon-container-mini' : '';
 
     const styles = {
         container: {
             backgroundImage: `url('./lib/img/icons/${preferences.appearance.theme}/operations/${props.id}.svg')`,
+            opacity: props.preventClick === true ? 0.5 : 1,
         },
     };
 

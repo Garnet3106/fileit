@@ -9,7 +9,7 @@ export class FileItemIdentifier {
         extension: string,
     ) {
         if (name.length === 0 && extension.length === 0) {
-            throw new ItemPathError(ItemPathErrorKind.EmptyFileIdentifier);
+            throw new ItemPathError(ItemPathErrorKind.EmptyIdentifier);
         }
 
         this.name = name;
@@ -30,14 +30,16 @@ export class FileItemIdentifier {
     }
 
     public toString(): string {
+        // fix
         return `${this.name}.${this.extension}`;
     }
 };
 
+// todo: Add EmptyIdentifier error.
 export type FolderItemIdentifier = string; 
 
 export enum ItemPathErrorKind {
-    EmptyFileIdentifier = 'Empty string specified as file identifier',
+    EmptyIdentifier = 'Empty string specified as item identifier',
     CannotAppendToFilePath = 'Cannot append to file path.',
     HierarchyCountIsOutOfBounds = 'Hierarchy count is out of bounds.',
 }

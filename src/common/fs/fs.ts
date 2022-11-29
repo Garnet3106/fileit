@@ -69,6 +69,8 @@ export interface IFs {
 
     duplicate(path: ItemPath): Promise<void>;
 
+    rename(from: ItemPath, to: ItemPath): Promise<void>,
+
     trash(path: ItemPath): void;
 
     watch(path: ItemPath, callback: () => void): void;
@@ -103,8 +105,11 @@ export default class Fs {
         return Fs.fs().duplicate(path);
     }
 
+    public static rename(from: ItemPath, to: ItemPath): Promise<void> {
+        return Fs.fs().rename(from, to);
+    }
+
     public static trash(path: ItemPath) {
-        console.log(path)
         Fs.fs().trash(path);
     }
 
@@ -211,6 +216,19 @@ export class NativeFs implements IFs {
                 }
             } else {
                 alert('unimplemented');
+                resolve();
+            }
+        });
+    }
+
+    public rename(from: ItemPath, to: ItemPath): Promise<void> {
+        return new Promise((resolve, reject) => {
+            // fix
+            if (window.confirm(`${from.getFullPath()} to ${to.getFullPath()}`)) {
+                NativeFs.fsPromises().rename(from.getFullPath(), to.getFullPath())
+                    .then(resolve)
+                    .catch((e: any) => reject(FsError.from(e, from)));
+            } else {
                 resolve();
             }
         });
@@ -425,10 +443,48 @@ export class FakeFs implements IFs {
         });
     }
 
+    public rename(from: ItemPath, to: ItemPath): Promise<void> {
+        return new Promise((resolve) => {
+            if (from.isFolder()) {
+                alert('unimplemented');
+                resolve();
+                return;
+            }
+
+            const parent = from.getParent();
+            const children = (FakeFs.items[parent.getFullPath()] as FakeFolderItem).children;
+            const id = from.getIdentifier().toString();
+            const targetIndex = children.findIndex((v) => v.id === id);
+
+            if (targetIndex === -1) {
+                throw new FsError(FsErrorKind.NotExists, from);
+            }
+
+            children[targetIndex] = {
+                id: to.getIdentifier().toString(),
+                isFolder: from.isFolder(),
+            };
+
+            const origItem = FakeFs.items[from.getFullPath()];
+            delete FakeFs.items[from.getFullPath()];
+            origItem.path = to;
+            FakeFs.items[to.getFullPath()] = origItem;
+
+            this.dispatchWatcher(parent);
+            resolve();
+        });
+    }
+
     public trash(path: ItemPath) {
         const children = (FakeFs.items[path.getParent().getFullPath()] as FakeFolderItem).children;
         const id = path.getIdentifier().toString();
-        children.splice(children.findIndex((v) => v.id === id), 1);
+        const targetIndex = children.findIndex((v) => v.id === id);
+
+        if (targetIndex === -1) {
+            throw new FsError(FsErrorKind.NotExists, path);
+        }
+
+        children.splice(targetIndex, 1);
         delete FakeFs.items[path.getFullPath()];
         this.dispatchWatcher(path.getParent());
     }

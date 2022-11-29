@@ -30,6 +30,15 @@ export default function ContentPanel() {
         dispatch(slices.currentFolderPath.actions.update(initialPath));
     }, []);
 
+    useEffect(() => {
+        // Unselect item paths which not exists.
+        selectedItemPaths.forEach((eachPath) => {
+            if (!Fs.exists(eachPath)) {
+                dispatch(slices.selectedItemPaths.actions.remove(eachPath));
+            }
+        });
+    });
+
     store.subscribe(() => {
         const currentFolderPath = store.getState().currentFolderPath;
 
@@ -79,7 +88,7 @@ export default function ContentPanel() {
         </div>
     );
 
-    // Do not modify store data in this function. It may cause infinite recursion.
+    // Do not modify `currentFolderPath` state in this function. It would cause infinite recursion.
     function reloadItems(folderPath: ItemPath) {
         Fs.getChildren(folderPath)
             .then(setItems)

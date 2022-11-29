@@ -6,9 +6,10 @@ import { useDispatch, useSelector } from 'react-redux/es/exports';
 import { RootState, slices, store } from '../../../../common/redux';
 import { variables as leftPanelVariables } from '../../LeftPanel/LeftPanel';
 import Fs, { FsErrorKind } from '../../../../common/fs/fs';
-import { ItemPath } from '../../../../common/fs/path';
+import { FileItemIdentifier, ItemPath } from '../../../../common/fs/path';
 import { createRef, useEffect, useState } from 'react';
 import { ItemKind } from '../../../../common/fs/item';
+import { renameBarClassName } from '../ContentPanel/ContentItem/ContentItem';
 
 export const operationIconIds = {
     window: {
@@ -21,6 +22,7 @@ export const operationIconIds = {
         edit: 'edit',
     },
     item: {
+        create: 'create',
         copy: 'copy',
         trash: 'trash',
     },
@@ -50,6 +52,7 @@ export default function OperationBar() {
 
     const currentFolderPath = useSelector((state: RootState) => state.currentFolderPath);
     const selectedItemPaths = useSelector((state: RootState) => state.selectedItemPaths);
+    const renamingItemPath = useSelector((state: RootState) => state.renamingItemPath);
     const [pathEditBarValue, setPathEditBarValue] = useState('');
 
     let fullDirPath = currentFolderPath?.getHierarchy() ?? [];
@@ -64,8 +67,8 @@ export default function OperationBar() {
             display: 'flex',
             marginLeft: 6,
         }}>
-            <OperationIcon id={operationIconIds.path.copy} isMini={true} onClick={onClickPathCopyIcon} />
-            <OperationIcon id={operationIconIds.path.edit} isMini={true} onClick={onClickPathEditIcon} />
+            <OperationIcon id={operationIconIds.path.copy} mini={true} onClick={onClickPathCopyIcon} />
+            <OperationIcon id={operationIconIds.path.edit} mini={true} onClick={onClickPathEditIcon} />
         </div>
     );
 
@@ -84,6 +87,8 @@ export default function OperationBar() {
             document.removeEventListener('mousedown', onMouseDown);
         };
     }, [onKeyDown]);
+
+    const preventIconClick = selectedItemPaths.length === 0;
 
     const rowItems = {
         window: (
@@ -130,10 +135,13 @@ export default function OperationBar() {
         ),
         operation: (
             <div className="operation-bar-row-items">
-                <OperationIcon id={operationIconIds.item.copy} onClick={() => {
+                <OperationIcon id={operationIconIds.item.create} preventClick={false} onClick={() => {
+                    // fix
+                }} />
+                <OperationIcon id={operationIconIds.item.copy} preventClick={preventIconClick} onClick={() => {
                     iterateSelectedPaths((path) => Fs.duplicate(path).catch(console.error));
                 }} />
-                <OperationIcon id={operationIconIds.item.trash} onClick={() => {
+                <OperationIcon id={operationIconIds.item.trash} preventClick={preventIconClick} onClick={() => {
                     iterateSelectedPaths((path) => Fs.trash(path));
                 }} />
             </div>
@@ -191,14 +199,38 @@ export default function OperationBar() {
     function onKeyDown(event: KeyboardEvent) {
         const target = event.target as HTMLElement;
 
+        // Start item renaming.
+        if (event.key === 'F2' && selectedItemPaths.length !== 0) {
+            dispatch(slices.renamingItemPath.actions.update(selectedItemPaths[0]));
+            return;
+        }
+
+        // End item renaming.
+        if (target.className === renameBarClassName && renamingItemPath !== null) {
+            switch (event.key) {
+                case 'Enter':
+                confirmRenaming((target as HTMLInputElement).value);
+                return;
+
+                case 'Escape':
+                confirmRenaming();
+                return;
+            }
+        }
+
+        // Close path edit bar.
         if (target.id === pathEditBarRef.current?.id && showPathEditBar) {
             switch (event.key) {
                 case 'Enter':
+                // fix
                 case 'Escape':
                 confirmWorkingFolderPathOnEditBar();
-                break;
+                return;
             }
         }
+
+        // Run selected items.
+        // fix
     }
 
     function onMouseDown(event: MouseEvent) {
@@ -206,7 +238,26 @@ export default function OperationBar() {
 
         if (target.id !== pathEditBarRef.current?.id && showPathEditBar) {
             confirmWorkingFolderPathOnEditBar();
+            return;
         }
+
+        if (target.className !== renameBarClassName && renamingItemPath !== null) {
+            dispatch(slices.renamingItemPath.actions.update(null));
+        }
+    }
+
+    function confirmRenaming(newId?: string) {
+        if (renamingItemPath === null) {
+            return;
+        }
+
+        if (newId !== undefined && newId.length !== 0) {
+            const id = renamingItemPath.isFolder() ? newId : FileItemIdentifier.from(newId);
+            const newPath = renamingItemPath.getParent().append(id, renamingItemPath.isFolder());
+            Fs.rename(renamingItemPath, newPath);
+        }
+
+        dispatch(slices.renamingItemPath.actions.update(null));
     }
 
     function confirmWorkingFolderPathOnEditBar() {
