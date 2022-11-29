@@ -1,4 +1,4 @@
-import { MouseEvent, useEffect, useRef } from 'react';
+import { MouseEvent, useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { ipcMessageSender } from '../../../../../common/ipc';
 import { Item } from '../../../../../common/fs/item';
@@ -24,7 +24,7 @@ export default function ContentItem(props: ContentItemProps) {
 
     const dispatch = useDispatch();
     const renamingItemPath = useSelector((state: RootState) => state.renamingItemPath);
-    const wasRenaming = useRef(false);
+    const [renameBarValue, setRenameBarValue] = useState(props.item.getPath().getIdentifier().toString());
     // fix
     const isCtrlKeyDown = useRef(false);
 
@@ -59,7 +59,7 @@ export default function ContentItem(props: ContentItemProps) {
                 <input className={renameBarClassName} style={{
                     maxWidth: `${eachProperty.width}px`,
                     minWidth: `${eachProperty.width}px`,
-                }} key={index} />
+                }} value={renameBarValue} onChange={(e) => setRenameBarValue(e.target.value)} key={index} />
             );
 
             default:
