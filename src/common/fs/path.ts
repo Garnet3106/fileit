@@ -30,8 +30,8 @@ export class FileItemIdentifier {
     }
 
     public toString(): string {
-        // fix
-        return `${this.name}.${this.extension}`;
+        const period = this.extension.length === 0 ? '' : '.';
+        return this.name + period + this.extension;
     }
 };
 
