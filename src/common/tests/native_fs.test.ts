@@ -104,8 +104,14 @@ describe('NativeFs.getChildren()', () => {
 });
 
 describe('Fs.duplicatePath()', () => {
-    test('duplicate file path', async () => {
+    test('duplicate file path ', async () => {
         const path = getNativeItemPath(['duplicate', 'a.txt'], false);
+        const expected = path.getParent().append(FileItemIdentifier.from('a_copy.txt'), false).getFullPath();
+        expect(Fs.getDuplicatePath(path).getFullPath()).toEqual(expected);
+    });
+
+    test('duplicate file path when target exists', async () => {
+        const path = getNativeItemPath(['duplicate', 'exists.txt'], false);
         const expected = path.getParent().append(FileItemIdentifier.from('exists_copy_copy.txt'), false).getFullPath();
         expect(Fs.getDuplicatePath(path).getFullPath()).toEqual(expected);
     });

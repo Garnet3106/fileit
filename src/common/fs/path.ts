@@ -17,7 +17,14 @@ export class FileItemIdentifier {
     }
 
     public static from(id: string): FileItemIdentifier {
-        const tokens = id.split('.');
+        const noWhitespaceId = id.replace(/\s/g, '');
+
+        if (noWhitespaceId.match(/(^[.]*$)|(^.*\.$)/) !== null) {
+            throw new ItemPathError(ItemPathErrorKind.EmptyIdentifier);
+        }
+
+        const trimmedId = id.replace(/^\s+|\s+$/g, '');
+        const tokens = trimmedId.split('.');
 
         // without extension
         if (tokens.length === 1) {
@@ -25,13 +32,13 @@ export class FileItemIdentifier {
         }
 
         const extension = tokens[tokens.length - 1];
-        const name = id.substring(0, id.length - extension.length - 1);
+        const name = trimmedId.substring(0, trimmedId.length - extension.length - 1);
         return new FileItemIdentifier(name, extension);
     }
 
     public toString(): string {
-        const period = this.extension.length === 0 ? '' : '.';
-        return this.name + period + this.extension;
+        const dot = this.extension.length === 0 ? '' : '.';
+        return this.name + dot + this.extension;
     }
 };
 

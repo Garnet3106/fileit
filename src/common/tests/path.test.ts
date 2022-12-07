@@ -9,7 +9,7 @@ describe('append path', () => {
         expect((new ItemPath('C', ['parent'], true)).append('dir', true).getFullPath()).toEqual('C:/parent/dir/');
     });
 
-    test('[failure] append to file path', () => {
+    test('append to file path', () => {
         expect(() => (new ItemPath(undefined, ['file.txt'], false)).append('dir', true).getFullPath()).toThrowError(ItemPathErrorKind.CannotAppendToFilePath);
     });
 });
@@ -69,19 +69,49 @@ describe('duplicate path', () => {
 });
 
 describe('generate file identifier', () => {
-    test('[failure] generate empty file identifier', () => {
-        expect(() => FileItemIdentifier.from('')).toThrowError(ItemPathErrorKind.EmptyFileIdentifier);
+    test('empty string', () => {
+        expect(() => FileItemIdentifier.from('')).toThrowError(ItemPathErrorKind.EmptyIdentifier);
     });
 
-    test('generate normal file identifier', () => {
+    test('normal', () => {
         expect(FileItemIdentifier.from('file.txt')).toEqual(new FileItemIdentifier('file', 'txt'));
     });
 
-    test('generate file identifier without extension', () => {
+    test('untrimmed normal', () => {
+        expect(FileItemIdentifier.from('  file.txt  ')).toEqual(new FileItemIdentifier('file', 'txt'));
+    });
+
+    test('single dot', () => {
+        expect(() => FileItemIdentifier.from('.')).toThrowError(ItemPathErrorKind.EmptyIdentifier);
+    });
+
+    test('double dots with whitespaces', () => {
+        expect(() => FileItemIdentifier.from(' . . ')).toThrowError(ItemPathErrorKind.EmptyIdentifier);
+    });
+
+    test('dot after name', () => {
+        expect(() => FileItemIdentifier.from('file.')).toThrowError(ItemPathErrorKind.EmptyIdentifier);
+    });
+
+    test('without extension', () => {
         expect(FileItemIdentifier.from('file')).toEqual(new FileItemIdentifier('file', ''));
     });
 
-    test('generate file identifier without name', () => {
+    test('without name', () => {
         expect(FileItemIdentifier.from('.txt')).toEqual(new FileItemIdentifier('', 'txt'));
+    });
+});
+
+describe('convert file identifier to string', () => {
+    test('normal', () => {
+        expect(new FileItemIdentifier('file', 'txt')).toEqual('file.txt');
+    });
+
+    test('only name', () => {
+        expect(new FileItemIdentifier('file', '')).toEqual('file');
+    });
+
+    test('only extension', () => {
+        expect(new FileItemIdentifier('', 'txt')).toEqual('.txt');
     });
 });
