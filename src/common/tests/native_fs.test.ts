@@ -10,19 +10,27 @@ const nativeFs = new NativeFs();
 
 describe('NativeFs.exists()', () => {
     test('existing file', async () => {
-        expect(await nativeFs.exists(getNativeItemPath(['existence', 'a'], true))).toEqual(true);
+        expect(await nativeFs.exists(getNativeItemPath(['existence', 'exists'], true))).toEqual(true);
     });
 
     test('existing directory', async () => {
-        expect(await nativeFs.exists(getNativeItemPath(['existence', 'a.txt'], false))).toEqual(true);
+        expect(await nativeFs.exists(getNativeItemPath(['existence', 'exists.txt'], false))).toEqual(true);
     });
 
     test('not existing file', async () => {
-        expect(await nativeFs.exists(getNativeItemPath(['existence', 'b'], true))).toEqual(false);
+        expect(await nativeFs.exists(getNativeItemPath(['existence', 'notexists'], true))).toEqual(false);
     });
 
     test('not existing directory', async () => {
-        expect(await nativeFs.exists(getNativeItemPath(['existence', 'b.txt'], false))).toEqual(false);
+        expect(await nativeFs.exists(getNativeItemPath(['existence', 'notexists.txt'], false))).toEqual(false);
+    });
+
+    test('not existing file but exists as a folder', async () => {
+        expect(await nativeFs.exists(getNativeItemPath(['existence', 'exists'], false))).toEqual(true);
+    });
+
+    test('not existing folder but exists as a file', async () => {
+        expect(await nativeFs.exists(getNativeItemPath(['existence', 'exists.txt'], true))).toEqual(true);
     });
 });
 

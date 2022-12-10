@@ -104,14 +104,14 @@ describe('generate file identifier', () => {
 
 describe('convert file identifier to string', () => {
     test('normal', () => {
-        expect(new FileItemIdentifier('file', 'txt')).toEqual('file.txt');
+        expect(new FileItemIdentifier('file', 'txt').toString()).toEqual('file.txt');
     });
 
     test('only name', () => {
-        expect(new FileItemIdentifier('file', '')).toEqual('file');
+        expect(new FileItemIdentifier('file', '').toString()).toEqual('file');
     });
 
     test('only extension', () => {
-        expect(new FileItemIdentifier('', 'txt')).toEqual('.txt');
+        expect(new FileItemIdentifier('', 'txt').toString()).toEqual('.txt');
     });
 });
