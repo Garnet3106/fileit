@@ -15,20 +15,6 @@ describe('append path', () => {
 });
 
 describe('get parent path', () => {
-    test('get root parent path', () => {
-        expect((new ItemPath(undefined, [], true)).getFullPath()).toEqual('/');
-    });
-
-    test('get root parent path with drive letter', () => {
-        expect((new ItemPath('C', [], true)).getFullPath()).toEqual('C:/');
-    });
-
-    // test('create parent path with formatting', () => {
-    //     expect((new ItemPath(['', 'C:/', 'parent1/parent2'], '', true)).getParents()).toEqual(['C', 'parent1', 'parent2']);
-    // });
-});
-
-describe('get parent path', () => {
     test('get full root path without parent', () => {
         expect((new ItemPath(undefined, [], true)).getFullPath()).toEqual('/');
     });
@@ -68,6 +54,16 @@ describe('duplicate path', () => {
     });
 });
 
+describe('new file identifier', () => {
+    test('includes illegal character', () => {
+        expect(() => new FileItemIdentifier('?', 'txt')).toThrowError(ItemPathErrorKind.IncludesIllegalCharacter);
+    });
+
+    test('includes control character', () => {
+        expect(new FileItemIdentifier('\u0000', 'txt')).toEqual(new FileItemIdentifier('_', 'txt'));
+    });
+});
+
 describe('generate file identifier', () => {
     test('empty string', () => {
         expect(() => FileItemIdentifier.from('')).toThrowError(ItemPathErrorKind.EmptyIdentifier);
@@ -103,14 +99,6 @@ describe('generate file identifier', () => {
 
     test('without name', () => {
         expect(FileItemIdentifier.from('.txt')).toEqual(new FileItemIdentifier('', 'txt'));
-    });
-
-    test('includes illegal character', () => {
-        expect(() => FileItemIdentifier.from('?.txt')).toThrowError(ItemPathErrorKind.IncludesIllegalCharacter);
-    });
-
-    test('includes control character', () => {
-        expect(FileItemIdentifier.from('\u0000.txt')).toEqual(new FileItemIdentifier('_', 'txt'));
     });
 });
 

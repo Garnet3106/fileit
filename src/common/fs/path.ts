@@ -14,24 +14,23 @@ export class FileItemIdentifier {
             throw new ItemPathError(ItemPathErrorKind.EmptyIdentifier);
         }
 
-        this.name = name;
-        this.extension = extension;
-    }
-
-    public static from(id: string): FileItemIdentifier {
-        if (id.match(illegalIdentifierPattern) !== null) {
+        if ((name + extension).match(illegalIdentifierPattern) !== null) {
             throw new ItemPathError(ItemPathErrorKind.IncludesIllegalCharacter);
         }
 
-        // Replace control characters.
-        const escapedId = id.replaceAll(/[\x00-\x1f\x7f-\x9f]/g, '_');
-        const noWhitespaceId = escapedId.replace(/\s/g, '');
+        const escapeControlChars = (v: string) => v.replaceAll(/[\x00-\x1f\x7f-\x9f]/g, '_');
+        this.name = escapeControlChars(name);
+        this.extension = escapeControlChars(extension);
+    }
+
+    public static from(id: string): FileItemIdentifier {
+        const noWhitespaceId = id.replace(/\s/g, '');
 
         if (noWhitespaceId.match(/^[.]*$/) !== null) {
             throw new ItemPathError(ItemPathErrorKind.EmptyIdentifier);
         }
 
-        const trimmedId = escapedId.replace(/^\s+|\s+$/g, '');
+        const trimmedId = id.replace(/^\s+|\s+$/g, '');
         const tokens = trimmedId.split('.');
 
         // without extension
