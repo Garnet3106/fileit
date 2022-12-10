@@ -64,3 +64,14 @@
     white-space: nowrap;
     width: 100%;
 }
+
+.operation-pane-input {
+    background-color: var(--unselected-tab-color);
+    border: none;
+    border-radius: 3px;
+    color: var(--font-color);
+    height: 20px;
+    outline: none;
+    padding: 2px 5px;
+    min-width: 150px;
+}

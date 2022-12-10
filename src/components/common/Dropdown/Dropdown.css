@@ -1,0 +1,6 @@
+.dropdown {
+    border-radius: 5px;
+    flex-direction: column;
+    position: absolute;
+    z-index: 10000;
+}

@@ -67,6 +67,8 @@ export interface IFs {
 
     getChildren(path: ItemPath): Promise<Item[]>;
 
+    create(path: ItemPath): Promise<void>;
+
     duplicate(path: ItemPath): Promise<void>;
 
     rename(from: ItemPath, to: ItemPath): Promise<void>,
@@ -101,6 +103,10 @@ export default class Fs {
         return Fs.fs().getChildren(path);
     }
 
+    public static create(path: ItemPath): Promise<void> {
+        return Fs.fs().create(path);
+    }
+
     public static duplicate(path: ItemPath): Promise<void> {
         return Fs.fs().duplicate(path);
     }
@@ -130,7 +136,10 @@ export class NativeFs implements IFs {
     }
 
     public exists(path: ItemPath): boolean {
-        return NativeFs.fsSync().existsSync(path.getFullPath());
+        const exists = NativeFs.fsSync().existsSync;
+        const fileExists = exists(new ItemPath(path.getDriveLetter(), path.getHierarchy(), false).getFullPath());
+        const folderExists = exists(new ItemPath(path.getDriveLetter(), path.getHierarchy(), true).getFullPath());
+        return fileExists || folderExists;
     }
 
     public getStats(path: ItemPath): Promise<ItemStats> {
@@ -195,6 +204,29 @@ export class NativeFs implements IFs {
                     Promise.all(promises).then(() => resolve(children));
                 })
                 .catch((e: any) => reject(FsError.from(e, path)));
+        });
+    }
+
+    public create(path: ItemPath): Promise<void> {
+        return new Promise((resolve, reject) => {
+            if (this.exists(path)) {
+                reject(new FsError(FsErrorKind.AlreadyExists));
+                return;
+            }
+
+            if (window.confirm(path.getFullPath())) {
+                if (path.isFolder()) {
+                    NativeFs.fsPromises().mkdir(path.getFullPath())
+                        .then(resolve)
+                        .catch((e: any) => FsError.from(e, path));
+                } else {
+                    NativeFs.fsPromises().writeFile(path.getFullPath(), '')
+                        .then(resolve)
+                        .catch((e: any) => FsError.from(e, path));
+                }
+            } else {
+                resolve();
+            }
         });
     }
 
@@ -347,7 +379,10 @@ export class FakeFs implements IFs {
     }
 
     public exists(path: ItemPath): boolean {
-        return FakeFs.getItem(path) !== undefined;
+        const exists = (path: ItemPath) => FakeFs.getItem(path) !== undefined;
+        const fileExists = exists(new ItemPath(path.getDriveLetter(), path.getHierarchy(), false));
+        const folderExists = exists(new ItemPath(path.getDriveLetter(), path.getHierarchy(), true));
+        return fileExists || folderExists;
     }
 
     public getStats(path: ItemPath): Promise<ItemStats> {
@@ -439,6 +474,18 @@ export class FakeFs implements IFs {
             });
             FakeFs.items[targetFullPath] = target;
             this.dispatchWatcher(originalParent);
+            resolve();
+        });
+    }
+
+    public create(path: ItemPath): Promise<void> {
+        return new Promise((resolve, reject) => {
+            if (this.exists(path)) {
+                reject(new FsError(FsErrorKind.AlreadyExists));
+                return;
+            }
+
+            // fix
             resolve();
         });
     }
