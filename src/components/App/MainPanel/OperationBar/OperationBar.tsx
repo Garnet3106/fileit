@@ -254,6 +254,48 @@ export default function OperationBar() {
     function onKeyDown(event: KeyboardEvent) {
         const target = event.target as HTMLElement;
 
+        if (event.ctrlKey && event.shiftKey && event.key === 'V') {
+            navigator.clipboard.readText()
+                .then((value) => {
+                    const path = ItemPath.from(value, true);
+
+                    if (!Fs.exists(path)) {
+                        const valueLengthLimit = 80;
+                        const trimmedValue = value.length > valueLengthLimit ?
+                            value.substring(0, valueLengthLimit) + '...' :
+                            value;
+
+                        dispatch(slices.popups.actions.add({
+                            title: 'FileMe',
+                            // fix
+                            description: 'ペーストされたパスは存在しません。(' + trimmedValue + ')',
+                        }));
+
+                        return;
+                    }
+
+                    Fs.getStats(path)
+                        .then((stats) => {
+                            if (stats.kind !== ItemKind.Folder) {
+                                dispatch(slices.popups.actions.add({
+                                    title: 'FileMe',
+                                    description: 'ペーストされたパスはフォルダではありません。',
+                                }));
+
+                                return;
+                            }
+
+                            dispatch(slices.currentFolderPath.actions.update(path));
+                        })
+                        .catch((e) => {
+                            throw e;
+                        });
+                })
+                .catch((e) => {
+                    throw e;
+                });
+        }
+
         if (event.key === 'Enter') {
             const createItem = (name: string, isFolder: boolean) => {
                 const path = currentFolderPath?.append(name, isFolder);
