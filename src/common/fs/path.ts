@@ -1,5 +1,7 @@
 export type ItemIdentifier = FileItemIdentifier | FolderItemIdentifier;
 
+const illegalIdentifierPattern = /[\/\\"<>|:*?]/;
+
 export class FileItemIdentifier {
     name: string;
     extension: string;
@@ -17,13 +19,19 @@ export class FileItemIdentifier {
     }
 
     public static from(id: string): FileItemIdentifier {
-        const noWhitespaceId = id.replace(/\s/g, '');
+        if (id.match(illegalIdentifierPattern) !== null) {
+            throw new ItemPathError(ItemPathErrorKind.IncludesIllegalCharacter);
+        }
+
+        // Replace control characters.
+        const escapedId = id.replaceAll(/[\x00-\x1f\x7f-\x9f]/g, '_');
+        const noWhitespaceId = escapedId.replace(/\s/g, '');
 
         if (noWhitespaceId.match(/^[.]*$/) !== null) {
             throw new ItemPathError(ItemPathErrorKind.EmptyIdentifier);
         }
 
-        const trimmedId = id.replace(/^\s+|\s+$/g, '');
+        const trimmedId = escapedId.replace(/^\s+|\s+$/g, '');
         const tokens = trimmedId.split('.');
 
         // without extension
@@ -48,9 +56,10 @@ export class FileItemIdentifier {
 export type FolderItemIdentifier = string; 
 
 export enum ItemPathErrorKind {
-    EmptyIdentifier = 'Empty string specified as item identifier',
+    EmptyIdentifier = 'Empty string specified as item identifier.',
     CannotAppendToFilePath = 'Cannot append to file path.',
     HierarchyCountIsOutOfBounds = 'Hierarchy count is out of bounds.',
+    IncludesIllegalCharacter = 'Item identifier includes illegal character.',
 }
 
 export class ItemPathError extends Error {

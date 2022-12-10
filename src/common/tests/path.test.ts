@@ -104,6 +104,14 @@ describe('generate file identifier', () => {
     test('without name', () => {
         expect(FileItemIdentifier.from('.txt')).toEqual(new FileItemIdentifier('', 'txt'));
     });
+
+    test('includes illegal character', () => {
+        expect(() => FileItemIdentifier.from('?.txt')).toThrowError(ItemPathErrorKind.IncludesIllegalCharacter);
+    });
+
+    test('includes control character', () => {
+        expect(FileItemIdentifier.from('\u0000.txt')).toEqual(new FileItemIdentifier('_', 'txt'));
+    });
 });
 
 describe('convert file identifier to string', () => {
