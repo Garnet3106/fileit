@@ -77,6 +77,10 @@ describe('generate file identifier', () => {
         expect(FileItemIdentifier.from('file.txt')).toEqual(new FileItemIdentifier('file', 'txt'));
     });
 
+    test('normal with triple dots', () => {
+        expect(FileItemIdentifier.from('file...txt')).toEqual(new FileItemIdentifier('file..', 'txt'));
+    });
+
     test('untrimmed normal', () => {
         expect(FileItemIdentifier.from('  file.txt  ')).toEqual(new FileItemIdentifier('file', 'txt'));
     });
@@ -89,8 +93,8 @@ describe('generate file identifier', () => {
         expect(() => FileItemIdentifier.from(' . . ')).toThrowError(ItemPathErrorKind.EmptyIdentifier);
     });
 
-    test('dot after name', () => {
-        expect(() => FileItemIdentifier.from('file.')).toThrowError(ItemPathErrorKind.EmptyIdentifier);
+    test('dots after name', () => {
+        expect(FileItemIdentifier.from('file..')).toEqual(new FileItemIdentifier('file..', ''));
     });
 
     test('without extension', () => {

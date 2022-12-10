@@ -19,7 +19,7 @@ export class FileItemIdentifier {
     public static from(id: string): FileItemIdentifier {
         const noWhitespaceId = id.replace(/\s/g, '');
 
-        if (noWhitespaceId.match(/(^[.]*$)|(^.*\.$)/) !== null) {
+        if (noWhitespaceId.match(/^[.]*$/) !== null) {
             throw new ItemPathError(ItemPathErrorKind.EmptyIdentifier);
         }
 
@@ -32,7 +32,9 @@ export class FileItemIdentifier {
         }
 
         const extension = tokens[tokens.length - 1];
-        const name = trimmedId.substring(0, trimmedId.length - extension.length - 1);
+        // Justify the end index not to skip a last dot.
+        const nameEnd = trimmedId.length - extension.length - (trimmedId.endsWith('.') ? 0 : 1);
+        const name = trimmedId.substring(0, nameEnd);
         return new FileItemIdentifier(name, extension);
     }
 
