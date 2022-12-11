@@ -35,11 +35,40 @@ export const variables = {
 };
 
 export default function OperationBar() {
+    const dispatch = useDispatch();
+
+    const currentFolderPath = useSelector((state: RootState) => state.currentFolderPath);
+    const selectedItemPaths = useSelector((state: RootState) => state.selectedItemPaths);
+    const renamingItemPath = useSelector((state: RootState) => state.renamingItemPath);
+    const [pathEditBarValue, setPathEditBarValue] = useState('');
+
+    let fullDirPath = currentFolderPath?.getHierarchy() ?? [];
+
+    if (currentFolderPath !== null) {
+        const first = currentFolderPath.getDriveLetter() !== undefined ? currentFolderPath.getDriveLetter() + ':' : '/';
+        fullDirPath = [first].concat(fullDirPath);
+    }
+
+    const newFolderDropdownRef = createRef<DropdownRef>();
+    const newFileDropdownRef = createRef<DropdownRef>();
+    const pathEditBarRef = createRef<HTMLInputElement>();
+
+    useEffect(() => {
+        pathEditBarRef.current?.focus();
+    });
+
+    useEffect(() => {
+        document.addEventListener('keydown', onKeyDown);
+        document.addEventListener('mousedown', onMouseDown);
+
+        return () => {
+            document.removeEventListener('keydown', onKeyDown);
+            document.removeEventListener('mousedown', onMouseDown);
+        };
+    }, [onKeyDown]);
+
     const renderers = {
         dropdowns: () => {
-            const newFolderDropdownRef = createRef<DropdownRef>();
-            const newFileDropdownRef = createRef<DropdownRef>();
-
             const newFolderDropdown: DropdownItemData[] = [
                 {
                     id: 'folder',
@@ -56,16 +85,116 @@ export default function OperationBar() {
                 },
             ];
 
-            return {
-                dropdownElement: (
-                    <>
-                    <Dropdown pivot={[155, 95]} items={newFolderDropdown} ref={newFolderDropdownRef} />
-                    <Dropdown pivot={[185, 95]} items={newFileDropdown} ref={newFileDropdownRef} />
-                    </>
+            return (
+                <>
+                <Dropdown pivot={[155, 95]} items={newFolderDropdown} ref={newFolderDropdownRef} />
+                <Dropdown pivot={[185, 95]} items={newFileDropdown} ref={newFileDropdownRef} />
+                </>
+            );
+        },
+        rows: () => {
+            const lastPathItemChild = (
+                <div style={{
+                    display: 'flex',
+                    marginLeft: 6,
+                }}>
+                    <OperationIcon id={operationIconIds.path.copy} mini={true} onClick={onClickPathCopyIcon} />
+                    <OperationIcon id={operationIconIds.path.edit} mini={true} onClick={onClickPathEditIcon} />
+                </div>
+            );
+
+            const preventIconClick = selectedItemPaths.length === 0;
+
+            const rowItems = {
+                window: (
+                    <div className="operation-bar-row-items">
+                        <OperationIcon id={operationIconIds.window.prev} />
+                        <OperationIcon id={operationIconIds.window.next} />
+                        <OperationIcon id={operationIconIds.window.reload} onClick={() => {
+                            if (currentFolderPath !== null) {
+                                Fs.getChildren(currentFolderPath)
+                                    .then((items) => dispatch(slices.currentFolderChildren.actions.update(items)))
+                                    .catch(console.error);
+                            }
+                        }} />
+                    </div>
                 ),
-                newFolderDropdownRef: newFolderDropdownRef,
-                newFileDropdownRef: newFileDropdownRef,
+                path: (
+                    <div className="operation-bar-row-items" style={{
+                        // fix
+                        width: `calc(100vw - ${leftPanelVariables.width + (90 + (3 * 2)) + (3 * 2)}px)`,
+                    }}>
+                        <input
+                            className="operation-bar-path-edit"
+                            id="pathEditBar"
+                            style={styles.operationBarPathEdit}
+                            onChange={(e) => setPathEditBarValue(e.target.value)}
+                            value={pathEditBarValue}
+                            ref={pathEditBarRef}
+                        />
+                        <div className="operation-bar-path" style={styles.operationBarPath}>
+                            {
+                                fullDirPath.map((eachPath, index) => (
+                                    <div
+                                        className="operation-bar-path-item"
+                                        onClick={() => {
+                                            const parent = currentFolderPath?.getParent(fullDirPath.length - index - 1);
+
+                                            if (parent !== undefined) {
+                                                dispatch(slices.currentFolderPath.actions.update(parent));
+                                            }
+                                        }}
+                                        key={generateUuid()}
+                                    >
+                                        {eachPath}
+                                        {index === fullDirPath.length - 1 && lastPathItemChild}
+                                    </div>
+                                ))
+                            }
+                        </div>
+                    </div>
+                ),
+                operation: (
+                    <div className="operation-bar-row-items">
+                        <OperationIcon
+                            id={operationIconIds.item.create}
+                            preventClick={false}
+                            onClick={() => newFolderDropdownRef.current?.switchVisibility()}
+                        />
+                        <OperationIcon
+                            id={operationIconIds.item.create}
+                            preventClick={false}
+                            onClick={() => newFileDropdownRef.current?.switchVisibility()}
+                        />
+                        <OperationIcon
+                            id={operationIconIds.item.copy}
+                            preventClick={preventIconClick}
+                            onClick={() => {
+                                iterateSelectedPaths((path) => Fs.duplicate(path).catch(console.error));
+                            }}
+                        />
+                        <OperationIcon
+                            id={operationIconIds.item.trash}
+                            preventClick={preventIconClick}
+                            onClick={() => {
+                                iterateSelectedPaths((path) => Fs.trash(path));
+                            }}
+                        />
+                    </div>
+                ),
             };
+
+            return (
+                <>
+                <div className="operation-bar-row">
+                    {rowItems.window}
+                    {rowItems.path}
+                </div>
+                <div className="operation-bar-row">
+                    {rowItems.operation}
+                </div>
+                </>
+            );
         },
     };
 
@@ -84,139 +213,13 @@ export default function OperationBar() {
         },
     };
 
-    const dispatch = useDispatch();
-
-    const currentFolderPath = useSelector((state: RootState) => state.currentFolderPath);
-    const selectedItemPaths = useSelector((state: RootState) => state.selectedItemPaths);
-    const renamingItemPath = useSelector((state: RootState) => state.renamingItemPath);
-    const [pathEditBarValue, setPathEditBarValue] = useState('');
-
-    let fullDirPath = currentFolderPath?.getHierarchy() ?? [];
-
-    if (currentFolderPath !== null) {
-        const first = currentFolderPath.getDriveLetter() !== undefined ? currentFolderPath.getDriveLetter() + ':' : '/';
-        fullDirPath = [first].concat(fullDirPath);
-    }
-
-    const lastPathItemChild = (
-        <div style={{
-            display: 'flex',
-            marginLeft: 6,
-        }}>
-            <OperationIcon id={operationIconIds.path.copy} mini={true} onClick={onClickPathCopyIcon} />
-            <OperationIcon id={operationIconIds.path.edit} mini={true} onClick={onClickPathEditIcon} />
-        </div>
-    );
-
-    const pathEditBarRef = createRef<HTMLInputElement>();
-
-    useEffect(() => {
-        pathEditBarRef.current?.focus();
-    });
-
-    useEffect(() => {
-        document.addEventListener('keydown', onKeyDown);
-        document.addEventListener('mousedown', onMouseDown);
-
-        return () => {
-            document.removeEventListener('keydown', onKeyDown);
-            document.removeEventListener('mousedown', onMouseDown);
-        };
-    }, [onKeyDown]);
-
-    const { dropdownElement, newFolderDropdownRef, newFileDropdownRef } = renderers.dropdowns();
-
-    const preventIconClick = selectedItemPaths.length === 0;
-
-    const rowItems = {
-        window: (
-            <div className="operation-bar-row-items">
-                <OperationIcon id={operationIconIds.window.prev} />
-                <OperationIcon id={operationIconIds.window.next} />
-                <OperationIcon id={operationIconIds.window.reload} onClick={() => {
-                    if (currentFolderPath !== null) {
-                        Fs.getChildren(currentFolderPath)
-                            .then((items) => dispatch(slices.currentFolderChildren.actions.update(items)))
-                            .catch(console.error);
-                    }
-                }} />
-            </div>
-        ),
-        path: (
-            <div className="operation-bar-row-items" style={{
-                // fix
-                width: `calc(100vw - ${leftPanelVariables.width + (90 + (3 * 2)) + (3 * 2)}px)`,
-            }}>
-                <input
-                    className="operation-bar-path-edit"
-                    id="pathEditBar"
-                    style={styles.operationBarPathEdit}
-                    onChange={(e) => setPathEditBarValue(e.target.value)}
-                    value={pathEditBarValue}
-                    ref={pathEditBarRef}
-                />
-                <div className="operation-bar-path" style={styles.operationBarPath}>
-                    {
-                        fullDirPath.map((eachPath, index) => (
-                            <div
-                                className="operation-bar-path-item"
-                                onClick={() => {
-                                    const parent = currentFolderPath?.getParent(fullDirPath.length - index - 1);
-
-                                    if (parent !== undefined) {
-                                        dispatch(slices.currentFolderPath.actions.update(parent));
-                                    }
-                                }}
-                                key={generateUuid()}
-                            >
-                                {eachPath}
-                                {index === fullDirPath.length - 1 && lastPathItemChild}
-                            </div>
-                        ))
-                    }
-                </div>
-            </div>
-        ),
-        operation: (
-            <div className="operation-bar-row-items">
-                <OperationIcon
-                    id={operationIconIds.item.create}
-                    preventClick={false}
-                    onClick={() => newFolderDropdownRef.current?.switchVisibility()}
-                />
-                <OperationIcon
-                    id={operationIconIds.item.create}
-                    preventClick={false}
-                    onClick={() => newFileDropdownRef.current?.switchVisibility()}
-                />
-                <OperationIcon
-                    id={operationIconIds.item.copy}
-                    preventClick={preventIconClick}
-                    onClick={() => {
-                        iterateSelectedPaths((path) => Fs.duplicate(path).catch(console.error));
-                    }}
-                />
-                <OperationIcon
-                    id={operationIconIds.item.trash}
-                    preventClick={preventIconClick}
-                    onClick={() => {
-                        iterateSelectedPaths((path) => Fs.trash(path));
-                    }}
-                />
-            </div>
-        ),
-    };
+    const dropdowns = renderers.dropdowns();
+    const rows = renderers.rows();
 
     return (
         <div className="operation-bar-container" style={styles.container}>
-            {dropdownElement}
-            <div className="operation-bar-row">
-                {rowItems.window}
-                {rowItems.path}
-            </div>
-            <div className="operation-bar-row">
-                {rowItems.operation}
-            </div>
+            {dropdowns}
+            {rows}
         </div>
     );
 
