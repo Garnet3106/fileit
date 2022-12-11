@@ -218,11 +218,11 @@ export class NativeFs implements IFs {
                 if (path.isFolder()) {
                     NativeFs.fsPromises().mkdir(path.getFullPath())
                         .then(resolve)
-                        .catch((e: any) => FsError.from(e, path));
+                        .catch((e: any) => reject(FsError.from(e, path)));
                 } else {
                     NativeFs.fsPromises().writeFile(path.getFullPath(), '')
                         .then(resolve)
-                        .catch((e: any) => FsError.from(e, path));
+                        .catch((e: any) => reject(FsError.from(e, path)));
                 }
             } else {
                 resolve();

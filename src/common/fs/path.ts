@@ -1,6 +1,6 @@
 export type ItemIdentifier = FileItemIdentifier | FolderItemIdentifier;
 
-const illegalIdentifierPattern = /[\/\\"<>|:*?]/;
+const illegalIdentifierPattern = /[\/\\"<>|:*?\x00-\x1f\x7f-\x9f]/;
 
 export class FileItemIdentifier {
     name: string;
@@ -14,13 +14,14 @@ export class FileItemIdentifier {
             throw new ItemPathError(ItemPathErrorKind.EmptyIdentifier);
         }
 
-        if ((name + extension).match(illegalIdentifierPattern) !== null) {
+        const validationTarget = name + extension;
+
+        if (validationTarget.match(illegalIdentifierPattern) !== null) {
             throw new ItemPathError(ItemPathErrorKind.IncludesIllegalCharacter);
         }
 
-        const escapeControlChars = (v: string) => v.replaceAll(/[\x00-\x1f\x7f-\x9f]/g, '_');
-        this.name = escapeControlChars(name);
-        this.extension = escapeControlChars(extension);
+        this.name = name;
+        this.extension = extension;
     }
 
     public static from(id: string): FileItemIdentifier {

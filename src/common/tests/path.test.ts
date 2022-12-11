@@ -58,10 +58,6 @@ describe('new file identifier', () => {
     test('includes illegal character', () => {
         expect(() => new FileItemIdentifier('?', 'txt')).toThrowError(ItemPathErrorKind.IncludesIllegalCharacter);
     });
-
-    test('includes control character', () => {
-        expect(new FileItemIdentifier('\u0000', 'txt')).toEqual(new FileItemIdentifier('_', 'txt'));
-    });
 });
 
 describe('generate file identifier', () => {
