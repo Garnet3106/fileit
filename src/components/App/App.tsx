@@ -1,7 +1,7 @@
 import LeftPanel from './LeftPanel/LeftPanel';
 import MainPanel from './MainPanel/MainPanel';
 import './App.css';
-import PopupList from './PopupList/PopupList';
+import PopupList from '../common/PopupList/PopupList';
 
 export default function App() {
     const styles = {

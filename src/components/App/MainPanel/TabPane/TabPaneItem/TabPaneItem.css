@@ -1,4 +1,4 @@
-.tab-bar-item-container {
+.tab-pane-item-container {
     align-items: center;
     display: flex;
     flex-direction: row;
@@ -9,11 +9,11 @@
     min-width: 150px;
 }
 
-.tab-bar-item-container:last-of-type {
+.tab-pane-item-container:last-of-type {
     margin-right: 0;
 }
 
-.tab-bar-item-icon {
+.tab-pane-item-icon {
     background-size: contain;
     height: 18px;
     margin: 0 5px;
@@ -22,7 +22,7 @@
     max-width: 18px;
 }
 
-.tab-bar-item-close {
+.tab-pane-item-close {
     background-image: url('../../../../../../lib/img/tab/close.svg');
     background-position: center;
     background-repeat: no-repeat;
@@ -35,6 +35,6 @@
     transition: opacity 50ms;
 }
 
-.tab-bar-item-close:active {
+.tab-pane-item-close:active {
     opacity: 1;
 }

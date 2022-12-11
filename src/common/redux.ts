@@ -1,6 +1,6 @@
 import { enableMapSet } from 'immer';
 import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { PopupItemData } from "../components/App/PopupList/PopupItem/PopupItem";
+import { PopupItemData } from "../components/common/PopupList/PopupItem/PopupItem";
 import { ItemPath } from './fs/path';
 import { generateUuid } from './utils';
 import { Item } from './fs/item';

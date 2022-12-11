@@ -1,11 +1,11 @@
-.tab-bar-container {
+.tab-pane-container {
     display: flex;
     flex-direction: row;
     overflow-x: hidden;
     width: 100%;
 }
 
-.tab-bar-items {
+.tab-pane-items {
     display: flex;
     flex-direction: row;
     overflow-x: scroll;
@@ -13,34 +13,34 @@
     -webkit-app-region: drag;
 }
 
-.tab-bar-items::-webkit-scrollbar {
+.tab-pane-items::-webkit-scrollbar {
     display: none;
 }
 
-.tab-bar-operations {
+.tab-pane-operations {
     align-items: center;
     display: flex;
     flex-direction: row;
 }
 
-.tab-bar-operation-icon {
+.tab-pane-operation-icon {
     background-position: center;
     background-repeat: no-repeat;
     background-size: 45% 45%;
-    height: var(--tab-bar-height);
+    height: var(--tab-pane-height);
     opacity: .5;
     transition: opacity 50ms;
-    width: var(--tab-bar-height);
+    width: var(--tab-pane-height);
 }
 
-.tab-bar-operation-icon:active {
+.tab-pane-operation-icon:active {
     opacity: .7;
 }
 
-.tab-bar-operation-icon-minimize {
+.tab-pane-operation-icon-minimize {
     background-image: url('../../../../../lib/img/window/minimize.svg');
 }
 
-.tab-bar-operation-icon-close {
+.tab-pane-operation-icon-close {
     background-image: url('../../../../../lib/img/window/close.svg');
 }

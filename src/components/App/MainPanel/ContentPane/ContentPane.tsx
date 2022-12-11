@@ -1,10 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
-import { Item } from '../../../../common/fs/item';
+import { useEffect, useRef } from 'react';
 import { variables as detailBarVariables } from '../DetailBar/DetailBar';
-import { variables as operationBarVariables } from '../OperationBar/OperationBar';
-import { variables as tabBarVariables } from '../TabBar/TabBar';
+import { variables as operationPaneVariables } from '../OperationPane/OperationPane';
+import { variables as tabPaneVariables } from '../TabPane/TabPane';
 import ContentItem from './ContentItem/ContentItem';
-import './ContentPanel.css';
+import './ContentPane.css';
 import PropertyBar, { ItemPropertyKind } from './PropertyBar/PropertyBar';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, slices, store } from '../../../../common/redux';
@@ -20,7 +19,7 @@ export const variables = {
 const initialDriveLetter = process.env.NODE_ENV === 'production' ? 'C' : undefined;
 export const initialPath = new ItemPath(initialDriveLetter, [], true);
 
-export default function ContentPanel() {
+export default function ContentPane() {
     const dispatch = useDispatch();
     const currentFolderChildren = useSelector((state: RootState) => state.currentFolderChildren);
     const selectedItemPaths = useSelector((state: RootState) => state.selectedItemPaths);
@@ -51,7 +50,7 @@ export default function ContentPanel() {
 
     const styles = {
         container: {
-            height: `calc(100% - ${tabBarVariables.height + operationBarVariables.height + detailBarVariables.height}px)`,
+            height: `calc(100% - ${tabPaneVariables.height + operationPaneVariables.height + detailBarVariables.height}px)`,
         },
     };
 
@@ -80,9 +79,9 @@ export default function ContentPanel() {
     ));
 
     return (
-        <div className="content-panel-container" style={styles.container}>
+        <div className="content-pane-container" style={styles.container}>
             <PropertyBar items={properties} />
-            <div className="content-panel-items">
+            <div className="content-pane-items">
                 {itemElems}
             </div>
         </div>

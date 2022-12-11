@@ -3,14 +3,14 @@ import NativeWindow from '../../../../common/native_window';
 import { preferences } from '../../../../common/preferences';
 import { Tab, TabIcon } from '../../../../common/tab';
 import { generateUuid } from '../../../../common/utils';
-import './TabBar.css';
-import TabBarItem from './TabBarItem/TabBarItem';
+import './TabPane.css';
+import TabPaneItem from './TabPaneItem/TabPaneItem';
 
 export const variables = {
     height: 30,
 };
 
-export default function TabBar() {
+export default function TabPane() {
     const [tabs, setTabs] = useState<Tab[]>([]);
     const [selectedTabId, setSelectedTabId] = useState<string | null>(null);
 
@@ -25,7 +25,7 @@ export default function TabBar() {
     };
 
     const tabItems = tabs.map((eachTab) => (
-        <TabBarItem
+        <TabPaneItem
             item={eachTab}
             selected={eachTab.id === selectedTabId}
             onClick={selectTab}
@@ -35,13 +35,13 @@ export default function TabBar() {
     ));
 
     return (
-        <div className="tab-bar-container" style={styles.container}>
-            <div className="tab-bar-items" style={styles.items}>
+        <div className="tab-pane-container" style={styles.container}>
+            <div className="tab-pane-items" style={styles.items}>
                 {tabItems}
             </div>
-            <div className="tab-bar-operations">
-                <div className="tab-bar-operation-icon tab-bar-operation-icon-minimize" onClick={NativeWindow.minimize} />
-                <div className="tab-bar-operation-icon tab-bar-operation-icon-close" onClick={NativeWindow.close} />
+            <div className="tab-pane-operations">
+                <div className="tab-pane-operation-icon tab-pane-operation-icon-minimize" onClick={NativeWindow.minimize} />
+                <div className="tab-pane-operation-icon tab-pane-operation-icon-close" onClick={NativeWindow.close} />
             </div>
         </div>
     );

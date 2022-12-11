@@ -1,6 +1,6 @@
 import { preferences } from '../../../../common/preferences';
 import { generateUuid } from '../../../../common/utils';
-import './OperationBar.css';
+import './OperationPane.css';
 import OperationIcon from './OperationIcon/OperationIcon';
 import { useDispatch, useSelector } from 'react-redux/es/exports';
 import { RootState, slices, store } from '../../../../common/redux';
@@ -9,7 +9,7 @@ import Fs, { FsErrorKind } from '../../../../common/fs/fs';
 import { FileItemIdentifier, ItemPath } from '../../../../common/fs/path';
 import { createRef, useEffect, useState } from 'react';
 import { ItemKind } from '../../../../common/fs/item';
-import { renameBarClassName } from '../ContentPanel/ContentItem/ContentItem';
+import { renameBarClassName } from '../ContentPane/ContentItem/ContentItem';
 import Dropdown, { DropdownRef } from '../../../common/Dropdown/Dropdown';
 import { DropdownItemData } from '../../../common/Dropdown/DropdownItem/DropdownItem';
 
@@ -34,7 +34,7 @@ export const variables = {
     height: (30 * 2) + (3 * 3),
 };
 
-export default function OperationBar() {
+export default function OperationPane() {
     const dispatch = useDispatch();
 
     const currentFolderPath = useSelector((state: RootState) => state.currentFolderPath);
@@ -107,7 +107,7 @@ export default function OperationBar() {
 
             const rowItems = {
                 window: (
-                    <div className="operation-bar-row-items">
+                    <div className="operation-pane-row-items">
                         <OperationIcon id={operationIconIds.window.prev} />
                         <OperationIcon id={operationIconIds.window.next} />
                         <OperationIcon id={operationIconIds.window.reload} onClick={() => {
@@ -120,23 +120,23 @@ export default function OperationBar() {
                     </div>
                 ),
                 path: (
-                    <div className="operation-bar-row-items" style={{
+                    <div className="operation-pane-row-items" style={{
                         // fix
                         width: `calc(100vw - ${leftPanelVariables.width + (90 + (3 * 2)) + (3 * 2)}px)`,
                     }}>
                         <input
-                            className="operation-bar-path-edit"
+                            className="operation-pane-path-edit"
                             id="pathEditBar"
-                            style={styles.operationBarPathEdit}
+                            style={styles.pathEditBar}
                             onChange={(e) => setPathEditBarValue(e.target.value)}
                             value={pathEditBarValue}
                             ref={pathEditBarRef}
                         />
-                        <div className="operation-bar-path" style={styles.operationBarPath}>
+                        <div className="operation-pane-path" style={styles.pathBar}>
                             {
                                 fullDirPath.map((eachPath, index) => (
                                     <div
-                                        className="operation-bar-path-item"
+                                        className="operation-pane-path-item"
                                         onClick={() => {
                                             const parent = currentFolderPath?.getParent(fullDirPath.length - index - 1);
 
@@ -155,7 +155,7 @@ export default function OperationBar() {
                     </div>
                 ),
                 operation: (
-                    <div className="operation-bar-row-items">
+                    <div className="operation-pane-row-items">
                         <OperationIcon
                             id={operationIconIds.item.create}
                             preventClick={false}
@@ -186,11 +186,11 @@ export default function OperationBar() {
 
             return (
                 <>
-                <div className="operation-bar-row">
+                <div className="operation-pane-row">
                     {rowItems.window}
                     {rowItems.path}
                 </div>
-                <div className="operation-bar-row">
+                <div className="operation-pane-row">
                     {rowItems.operation}
                 </div>
                 </>
@@ -205,10 +205,10 @@ export default function OperationBar() {
             backgroundColor: preferences.appearance.background.panel1,
             height: `${variables.height}px`,
         },
-        operationBarPath: {
+        pathBar: {
             display: showPathEditBar ? 'none' : 'flex',
         },
-        operationBarPathEdit: {
+        pathEditBar: {
             display: showPathEditBar ? 'block' : 'none',
         },
     };
@@ -217,7 +217,7 @@ export default function OperationBar() {
     const rows = renderers.rows();
 
     return (
-        <div className="operation-bar-container" style={styles.container}>
+        <div className="operation-pane-container" style={styles.container}>
             {dropdowns}
             {rows}
         </div>
@@ -386,7 +386,7 @@ export default function OperationBar() {
         const target = event.target as HTMLElement;
 
         // Unselect all selected items.
-        if (target.className === 'content-panel-container' && selectedItemPaths.length !== 0) {
+        if (target.className === 'content-pane-container' && selectedItemPaths.length !== 0) {
             dispatch(slices.selectedItemPaths.actions.update([]));
         }
 

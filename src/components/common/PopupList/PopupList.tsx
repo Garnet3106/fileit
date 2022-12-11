@@ -1,6 +1,6 @@
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../common/redux';
-import { variables as detailBarVariables } from '../MainPanel/DetailBar/DetailBar';
+import { variables as detailBarVariables } from '../../App/MainPanel/DetailBar/DetailBar';
 import PopupItem from './PopupItem/PopupItem';
 import './PopupList.css';
 

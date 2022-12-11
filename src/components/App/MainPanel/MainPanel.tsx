@@ -1,9 +1,9 @@
 import { preferences } from '../../../common/preferences';
 import { variables as leftPanelVariables } from '../LeftPanel/LeftPanel';
-import ContentPanel from './ContentPanel/ContentPanel';
+import ContentPane from './ContentPane/ContentPane';
 import DetailBar from './DetailBar/DetailBar';
-import OperationBar from './OperationBar/OperationBar';
-import TabBar from './TabBar/TabBar';
+import OperationPane from './OperationPane/OperationPane';
+import TabPane from './TabPane/TabPane';
 import './MainPanel.css';
 
 export const variables = {
@@ -22,9 +22,9 @@ export default function MainPanel() {
 
     return (
         <div className="main-panel-container" style={styles.container}>
-            <TabBar />
-            <OperationBar />
-            <ContentPanel />
+            <TabPane />
+            <OperationPane />
+            <ContentPane />
             <DetailBar />
         </div>
     );

@@ -1,5 +1,5 @@
 import { preferences } from '../../../../common/preferences';
-import { variables as tabBarVariables } from '../../MainPanel/TabBar/TabBar';
+import { variables as tabPaneVariables } from '../../MainPanel/TabPane/TabPane';
 import './ItemMenu.css';
 
 export const variables = {
@@ -10,7 +10,7 @@ export default function ItemMenu() {
     const styles = {
         top: {
             borderColor: preferences.appearance.border1,
-            height: tabBarVariables.height,
+            height: tabPaneVariables.height,
         },
         group: {
             borderColor: preferences.appearance.border1,
