@@ -10,7 +10,7 @@ import { FileItemIdentifier, ItemPath } from '../../../../common/fs/path';
 import { createRef, useEffect, useState } from 'react';
 import { ItemKind } from '../../../../common/fs/item';
 import { renameBarClassName } from '../ContentPanel/ContentItem/ContentItem';
-import Dropdown from '../../../common/Dropdown/Dropdown';
+import Dropdown, { DropdownRef } from '../../../common/Dropdown/Dropdown';
 import { DropdownItemData } from '../../../common/Dropdown/DropdownItem/DropdownItem';
 
 export const operationIconIds = {
@@ -35,35 +35,39 @@ export const variables = {
 };
 
 export default function OperationBar() {
-    // fix
-    const [isNewFolderDropdownDisplayed, setIsNewFolderDropdownDisplayed] = useState(false);
-    const [isNewFileDropdownDisplayed, setIsNewFileDropdownDisplayed] = useState(false);
-    const [newFolderDropdownValue, setNewFolderDropdownValue] = useState('');
-    const [newFileDropdownValue, setNewFileDropdownValue] = useState('');
+    const renderers = {
+        dropdowns: () => {
+            const newFolderDropdownRef = createRef<DropdownRef>();
+            const newFileDropdownRef = createRef<DropdownRef>();
 
-    const newFolderDropdown: DropdownItemData[] = [
-        {
-            id: 'folder',
-            value: <input
-                className="operation-pane-input"
-                type="text"
-                value={newFolderDropdownValue}
-                onChange={(e) => setNewFolderDropdownValue(e.target.value)}
-            />,
-        },
-    ];
+            const newFolderDropdown: DropdownItemData[] = [
+                {
+                    id: 'folder',
+                    inputField: true,
+                    onConfirm: (v) => createItem(v, true),
+                },
+            ];
 
-    const newFileDropdown: DropdownItemData[] = [
-        {
-            id: 'file',
-            value: <input
-                className="operation-pane-input"
-                type="text"
-                value={newFileDropdownValue}
-                onChange={(e) => setNewFileDropdownValue(e.target.value)}
-            />,
+            const newFileDropdown: DropdownItemData[] = [
+                {
+                    id: 'file',
+                    inputField: true,
+                    onConfirm: (v) => createItem(v, false),
+                },
+            ];
+
+            return {
+                dropdownElement: (
+                    <>
+                    <Dropdown pivot={[155, 95]} items={newFolderDropdown} ref={newFolderDropdownRef} />
+                    <Dropdown pivot={[185, 95]} items={newFileDropdown} ref={newFileDropdownRef} />
+                    </>
+                ),
+                newFolderDropdownRef: newFolderDropdownRef,
+                newFileDropdownRef: newFileDropdownRef,
+            };
         },
-    ];
+    };
 
     const [showPathEditBar, setShowPathEditBar] = useState(false);
 
@@ -119,6 +123,8 @@ export default function OperationBar() {
             document.removeEventListener('mousedown', onMouseDown);
         };
     }, [onKeyDown]);
+
+    const { dropdownElement, newFolderDropdownRef, newFileDropdownRef } = renderers.dropdowns();
 
     const preventIconClick = selectedItemPaths.length === 0;
 
@@ -176,12 +182,12 @@ export default function OperationBar() {
                 <OperationIcon
                     id={operationIconIds.item.create}
                     preventClick={false}
-                    onClick={() => setIsNewFolderDropdownDisplayed(!isNewFolderDropdownDisplayed)}
+                    onClick={() => newFolderDropdownRef.current?.switchVisibility()}
                 />
                 <OperationIcon
                     id={operationIconIds.item.create}
                     preventClick={false}
-                    onClick={() => setIsNewFileDropdownDisplayed(!isNewFileDropdownDisplayed)}
+                    onClick={() => newFileDropdownRef.current?.switchVisibility()}
                 />
                 <OperationIcon
                     id={operationIconIds.item.copy}
@@ -203,8 +209,7 @@ export default function OperationBar() {
 
     return (
         <div className="operation-bar-container" style={styles.container}>
-            <Dropdown displayed={[isNewFolderDropdownDisplayed, setIsNewFolderDropdownDisplayed]} pivot={[155, 95]} items={newFolderDropdown} />
-            <Dropdown displayed={[isNewFileDropdownDisplayed, setIsNewFileDropdownDisplayed]} pivot={[185, 95]} items={newFileDropdown} />
+            {dropdownElement}
             <div className="operation-bar-row">
                 {rowItems.window}
                 {rowItems.path}
@@ -251,6 +256,50 @@ export default function OperationBar() {
         }
     }
 
+    function createItem(name: string, isFolder: boolean) {
+        if (name.replaceAll(' ', '').length === 0) {
+            return;
+        }
+
+        const path = currentFolderPath?.append(name, isFolder);
+
+        if (path === undefined) {
+            return;
+        }
+
+        Fs.create(path)
+            .then(() => {
+                const payload = isFolder ? {
+                    title: '新規フォルダ',
+                    description: 'フォルダが作成されました。',
+                } : {
+                    title: '新規ファイル',
+                    description: 'ファイルが作成されました。',
+                };
+
+                dispatch(slices.popups.actions.add(payload));
+            })
+            .catch((e: any) => {
+                let description;
+
+                switch (e.message) {
+                    case FsErrorKind.AlreadyExists:
+                    description = 'すでに同じ名前のアイテムが存在します。';
+                    break;
+
+                    default:
+                    console.error(e);
+                    description = '不明なエラーが発生しました。';
+                    break;
+                }
+
+                dispatch(slices.popups.actions.add({
+                    title: '新規フォルダ',
+                    description: description,
+                }));
+            });
+    }
+
     function onKeyDown(event: KeyboardEvent) {
         const target = event.target as HTMLElement;
 
@@ -294,68 +343,6 @@ export default function OperationBar() {
                 .catch((e) => {
                     throw e;
                 });
-        }
-
-        if (event.key === 'Enter') {
-            const createItem = (name: string, isFolder: boolean) => {
-                const path = currentFolderPath?.append(name, isFolder);
-
-                if (path === undefined) {
-                    return;
-                }
-
-                Fs.create(path)
-                    .then(() => {
-                        const payload = isFolder ? {
-                            title: '新規フォルダ',
-                            description: 'フォルダが作成されました。',
-                        } : {
-                            title: '新規ファイル',
-                            description: 'ファイルが作成されました。',
-                        };
-
-                        dispatch(slices.popups.actions.add(payload));
-                    })
-                    .catch((e: any) => {
-                        let description;
-
-                        switch (e.message) {
-                            case FsErrorKind.AlreadyExists:
-                            description = 'すでに同じ名前のアイテムが存在します。';
-                            break;
-
-                            default:
-                            console.error(e);
-                            description = '不明なエラーが発生しました。';
-                            break;
-                        }
-
-                        dispatch(slices.popups.actions.add({
-                            title: '新規フォルダ',
-                            description: description,
-                        }));
-                    });
-            }
-
-            if (isNewFolderDropdownDisplayed) {
-                if (newFolderDropdownValue.replaceAll(' ', '').length !== 0) {
-                    createItem(newFolderDropdownValue, true);
-                }
-
-                setNewFolderDropdownValue('');
-                setIsNewFolderDropdownDisplayed(false);
-                return;
-            }
-
-            if (isNewFileDropdownDisplayed) {
-                if (newFileDropdownValue.replaceAll(' ', '').length !== 0) {
-                    createItem(newFileDropdownValue, false);
-                }
-
-                setNewFileDropdownValue('');
-                setIsNewFileDropdownDisplayed(false);
-                return;
-            }
         }
 
         // Start item renaming.

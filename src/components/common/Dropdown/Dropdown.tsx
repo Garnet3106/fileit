@@ -1,16 +1,23 @@
 import DropdownItem, { DropdownItemData } from "./DropdownItem/DropdownItem";
 import './Dropdown.css';
 import { preferences } from "../../../common/preferences";
-import { Dispatch, SetStateAction } from "react";
+import { ForwardedRef, forwardRef, useImperativeHandle, useState } from "react";
 
 export type DropdownProps = {
-    displayed: [boolean, Dispatch<SetStateAction<boolean>>],
     pivot: [number, number],
     items: DropdownItemData[],
 };
 
-export default function Dropdown(props: DropdownProps) {
-    const [displayed, setDisplayed] = props.displayed;
+export type DropdownRef = {
+    switchVisibility: () => void,
+};
+
+function Dropdown(props: DropdownProps, ref: ForwardedRef<DropdownRef>) {
+    const [displayed, setDisplayed] = useState(false);
+
+    useImperativeHandle(ref, () => ({
+        switchVisibility: () => setDisplayed(!displayed),
+    }));
 
     const styles = {
         container: {
@@ -22,7 +29,7 @@ export default function Dropdown(props: DropdownProps) {
     };
 
     const itemElems = props.items.map((eachItem) => (
-        <DropdownItem data={eachItem} key={eachItem.id} />
+        <DropdownItem data={eachItem} setDropdownDisplayed={setDisplayed} key={eachItem.id} />
     ));
 
     return (
@@ -31,3 +38,5 @@ export default function Dropdown(props: DropdownProps) {
         </div>
     );
 }
+
+export default forwardRef(Dropdown);
