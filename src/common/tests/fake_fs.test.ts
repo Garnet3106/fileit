@@ -1,6 +1,6 @@
 import { FakeFs } from '../fs/fs';
 import { ItemKind } from '../fs/item';
-import { FileItemIdentifier, ItemIdentifier, ItemPath } from '../fs/path';
+import { FileItemIdentifier, FolderItemIdentifier, ItemIdentifier, ItemPath } from '../fs/path';
 
 const fs = new FakeFs();
 
@@ -16,7 +16,7 @@ test('fake fs: get directory children', async () => {
             kind: ItemKind.File,
         },
         {
-            id: 'usr',
+            id: new FolderItemIdentifier('usr'),
             kind: ItemKind.Folder,
         },
     ];

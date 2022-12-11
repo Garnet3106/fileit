@@ -189,11 +189,11 @@ export class NativeFs implements IFs {
 
                         const childItem = !isFolder ? {
                             kind: ItemKind.File,
-                            path: path.append(FileItemIdentifier.from(eachDirent.name), isFolder),
+                            path: childPath,
                             stats: stats as FileItemStats,
                         } as FileItem : {
                             kind: ItemKind.Folder,
-                            path: path.append(eachDirent.name, isFolder),
+                            path: childPath,
                             stats: stats as FolderItemStats,
                         } as FolderItem;
 

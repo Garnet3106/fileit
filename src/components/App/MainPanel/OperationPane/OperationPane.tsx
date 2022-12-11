@@ -6,7 +6,7 @@ import { useDispatch, useSelector } from 'react-redux/es/exports';
 import { RootState, slices, store } from '../../../../common/redux';
 import { variables as leftPanelVariables } from '../../LeftPanel/LeftPanel';
 import Fs, { FsErrorKind } from '../../../../common/fs/fs';
-import { FileItemIdentifier, ItemIdentifier, ItemPath, ItemPathErrorKind } from '../../../../common/fs/path';
+import { FileItemIdentifier, FolderItemIdentifier, ItemIdentifier, ItemPath, ItemPathErrorKind } from '../../../../common/fs/path';
 import { createRef, useEffect, useState } from 'react';
 import { ItemKind } from '../../../../common/fs/item';
 import { renameBarClassName } from '../ContentPane/ContentItem/ContentItem';
@@ -260,25 +260,23 @@ export default function OperationPane() {
     }
 
     function createItem(name: string, isFolder: boolean) {
+        if (currentFolderPath === null) {
+            return;
+        }
+
         if (name.replaceAll(' ', '').length === 0) {
             return;
         }
 
-        let id: ItemIdentifier;
+        let path: ItemPath;
 
         try {
-            id = isFolder ? name : FileItemIdentifier.from(name);
+            path = currentFolderPath.append(name, isFolder);
         } catch (e: any) {
             alert('unimplemented');
         }
 
-        const path = currentFolderPath?.append(id!, isFolder);
-
-        if (path === undefined) {
-            return;
-        }
-
-        Fs.create(path)
+        Fs.create(path!)
             .then(() => {
                 const payload = isFolder ? {
                     title: '新規フォルダ',
@@ -417,8 +415,7 @@ export default function OperationPane() {
         }
 
         if (newId !== undefined && newId.length !== 0) {
-            const id = renamingItemPath.isFolder() ? newId : FileItemIdentifier.from(newId);
-            const newPath = renamingItemPath.getParent().append(id, renamingItemPath.isFolder());
+            const newPath = renamingItemPath.getParent().append(newId, renamingItemPath.isFolder());
             Fs.rename(renamingItemPath, newPath);
         }
 

@@ -1,10 +1,54 @@
-export type ItemIdentifier = FileItemIdentifier | FolderItemIdentifier;
+export enum ItemPathErrorKind {
+    EmptyIdentifier = 'Empty string specified as item identifier.',
+    CannotAppendToFilePath = 'Cannot append to file path.',
+    HierarchyCountIsOutOfBounds = 'Hierarchy count is out of bounds.',
+    IncludesIllegalCharacter = 'Item identifier includes illegal character.',
+}
+
+export class ItemPathError extends Error {
+    public path?: ItemPath;
+
+    public constructor(kind: ItemPathErrorKind, path?: ItemPath) {
+        super();
+        this.name = '';
+        this.message = kind;
+        this.path = path;
+    }
+}
 
 const illegalIdentifierPattern = /[\/\\"<>|:*?\x00-\x1f\x7f-\x9f]/;
 
-export class FileItemIdentifier {
-    name: string;
-    extension: string;
+export class ItemIdentifierValidationResult {
+    public readonly errorKind?: ItemPathErrorKind;
+
+    public constructor(errorKind?: ItemPathErrorKind) {
+        this.errorKind = errorKind;
+    }
+
+    public then(callback: () => void): ItemIdentifierValidationResult {
+        if (this.errorKind === undefined) {
+            callback();
+        }
+
+        return this;
+    }
+
+    public catch(callback: (errorKind: ItemPathErrorKind) => void): ItemIdentifierValidationResult {
+        if (this.errorKind !== undefined) {
+            callback(this.errorKind);
+        }
+
+        return this;
+    }
+}
+
+export interface ItemIdentifier {
+    toString: () => string;
+}
+
+export class FileItemIdentifier implements ItemIdentifier {
+    private name: string;
+    private extension: string;
 
     public constructor(
         name: string,
@@ -14,21 +58,15 @@ export class FileItemIdentifier {
             throw new ItemPathError(ItemPathErrorKind.EmptyIdentifier);
         }
 
-        const validationTarget = name + extension;
-
-        if (validationTarget.match(illegalIdentifierPattern) !== null) {
-            throw new ItemPathError(ItemPathErrorKind.IncludesIllegalCharacter);
-        }
-
         this.name = name;
         this.extension = extension;
     }
 
     public static from(id: string): FileItemIdentifier {
-        const noWhitespaceId = id.replace(/\s/g, '');
+        const validationResult = FileItemIdentifier.validate(id);
 
-        if (noWhitespaceId.match(/^[.]*$/) !== null) {
-            throw new ItemPathError(ItemPathErrorKind.EmptyIdentifier);
+        if (validationResult.errorKind !== undefined) {
+            throw new ItemPathError(validationResult.errorKind);
         }
 
         const trimmedId = id.replace(/^\s+|\s+$/g, '');
@@ -46,30 +84,43 @@ export class FileItemIdentifier {
         return new FileItemIdentifier(name, extension);
     }
 
+    public static validate(id: string): ItemIdentifierValidationResult {
+        const noWhitespaceId = id.replace(/\s/g, '');
+
+        if (noWhitespaceId.match(/^[.]*$/) !== null) {
+            return new ItemIdentifierValidationResult(ItemPathErrorKind.EmptyIdentifier);
+        }
+
+        if (id.match(illegalIdentifierPattern) !== null) {
+            return new ItemIdentifierValidationResult(ItemPathErrorKind.IncludesIllegalCharacter);
+        }
+
+        return new ItemIdentifierValidationResult();
+    }
+
+    public getName(): string {
+        return this.name;
+    }
+
+    public getExtension(): string {
+        return this.extension;
+    }
+
     public toString(): string {
         const dot = this.extension.length === 0 ? '' : '.';
         return this.name + dot + this.extension;
     }
-};
-
-// todo: Add EmptyIdentifier error.
-export type FolderItemIdentifier = string; 
-
-export enum ItemPathErrorKind {
-    EmptyIdentifier = 'Empty string specified as item identifier.',
-    CannotAppendToFilePath = 'Cannot append to file path.',
-    HierarchyCountIsOutOfBounds = 'Hierarchy count is out of bounds.',
-    IncludesIllegalCharacter = 'Item identifier includes illegal character.',
 }
 
-export class ItemPathError extends Error {
-    public path?: ItemPath;
+export class FolderItemIdentifier implements ItemIdentifier {
+    private id: string;
 
-    public constructor(kind: ItemPathErrorKind, path?: ItemPath) {
-        super();
-        this.name = '';
-        this.message = kind;
-        this.path = path;
+    public constructor(id: string) {
+        this.id = id;
+    }
+
+    public toString(): string {
+        return this.id;
     }
 }
 
@@ -113,15 +164,20 @@ export class ItemPath {
     }
 
     public append(
-        id: ItemIdentifier,
+        id: string,
         isFolder: boolean,
     ): ItemPath {
         if (!this._isFolder) {
             throw new ItemPathError(ItemPathErrorKind.CannotAppendToFilePath, this);
         }
 
-        // test: toString()
-        const path = this.hierarchy.concat(id.toString());
+        const validationResult = FileItemIdentifier.validate(id);
+
+        if (validationResult.errorKind !== undefined) {
+            throw new ItemPathError(validationResult.errorKind);
+        }
+
+        const path = this.hierarchy.concat(id);
         return new ItemPath(this.driveLetter, path, isFolder);
     }
 
@@ -151,20 +207,20 @@ export class ItemPath {
 
     public getIdentifier(): ItemIdentifier {
         const id = this.hierarchy.at(this.hierarchy.length - 1) ?? '/';
-        return this._isFolder ? id as FolderItemIdentifier : FileItemIdentifier.from(id);
+        return this._isFolder ? new FolderItemIdentifier(id) : FileItemIdentifier.from(id);
     }
 
     public duplicate(): ItemPath {
         let id = this.getIdentifier();
 
-        if (!this.isFolder()) {
-            const fileId = id as FileItemIdentifier;
-            id = FileItemIdentifier.from(fileId.name + duplicateItemSuffix + '.' + fileId.extension);
+        if (this.isFolder()) {
+            id = id.toString() + duplicateItemSuffix;
         } else {
-            (id as string) += duplicateItemSuffix;
+            const fileId = id as FileItemIdentifier;
+            id = fileId.getName() + duplicateItemSuffix + '.' + fileId.getExtension();
         }
 
         const newPath = new ItemPath(this.getDriveLetter(), this.getHierarchy().concat(), this.isFolder());
-        return newPath.getParent().append(id, this.isFolder());
+        return newPath.getParent().append(id.toString(), this.isFolder());
     }
 }

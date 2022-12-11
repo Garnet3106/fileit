@@ -1,6 +1,6 @@
 import Fs, { FsErrorKind, NativeFs } from '../fs/fs';
 import { ItemKind } from '../fs/item';
-import { FileItemIdentifier, ItemIdentifier, ItemPath } from '../fs/path';
+import { FileItemIdentifier, FolderItemIdentifier, ItemIdentifier, ItemPath } from '../fs/path';
 
 function getNativeItemPath(hierarchy: string[], isFolder: boolean): ItemPath {
     return ItemPath.from(`${__dirname}/fs/${hierarchy.join('/')}`, isFolder);
@@ -79,11 +79,11 @@ describe('NativeFs.getChildren()', () => {
         }[] = [
             {
                 kind: ItemKind.Folder,
-                id: 'a',
+                id: new FolderItemIdentifier('a'),
             },
             {
                 kind: ItemKind.Folder,
-                id: 'b',
+                id: new FolderItemIdentifier('b'),
             },
             {
                 kind: ItemKind.File,
@@ -114,13 +114,13 @@ describe('NativeFs.getChildren()', () => {
 describe('Fs.duplicatePath()', () => {
     test('duplicate file path ', async () => {
         const path = getNativeItemPath(['duplicate', 'a.txt'], false);
-        const expected = path.getParent().append(FileItemIdentifier.from('a_copy.txt'), false).getFullPath();
+        const expected = path.getParent().append('a_copy.txt', false).getFullPath();
         expect(Fs.getDuplicatePath(path).getFullPath()).toEqual(expected);
     });
 
     test('duplicate file path when target exists', async () => {
         const path = getNativeItemPath(['duplicate', 'exists.txt'], false);
-        const expected = path.getParent().append(FileItemIdentifier.from('exists_copy_copy.txt'), false).getFullPath();
+        const expected = path.getParent().append('exists_copy_copy.txt', false).getFullPath();
         expect(Fs.getDuplicatePath(path).getFullPath()).toEqual(expected);
     });
 });

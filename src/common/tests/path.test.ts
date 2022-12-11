@@ -55,9 +55,6 @@ describe('duplicate path', () => {
 });
 
 describe('new file identifier', () => {
-    test('includes illegal character', () => {
-        expect(() => new FileItemIdentifier('?', 'txt')).toThrowError(ItemPathErrorKind.IncludesIllegalCharacter);
-    });
 });
 
 describe('generate file identifier', () => {
@@ -95,6 +92,10 @@ describe('generate file identifier', () => {
 
     test('without name', () => {
         expect(FileItemIdentifier.from('.txt')).toEqual(new FileItemIdentifier('', 'txt'));
+    });
+
+    test('includes illegal character', () => {
+        expect(() => FileItemIdentifier.from('\u0000.txt')).toThrowError(ItemPathErrorKind.IncludesIllegalCharacter);
     });
 });
 
