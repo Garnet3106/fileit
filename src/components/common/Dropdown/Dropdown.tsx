@@ -1,7 +1,7 @@
 import DropdownItem, { DropdownItemData } from "./DropdownItem/DropdownItem";
 import './Dropdown.css';
 import { preferences } from "../../../common/preferences";
-import { ForwardedRef, forwardRef, useImperativeHandle, useState } from "react";
+import { ForwardedRef, forwardRef, useEffect, useImperativeHandle, useState } from "react";
 
 export type DropdownProps = {
     pivot: [number, number],
@@ -29,7 +29,7 @@ function Dropdown(props: DropdownProps, ref: ForwardedRef<DropdownRef>) {
     };
 
     const itemElems = props.items.map((eachItem) => (
-        <DropdownItem data={eachItem} setDropdownDisplayed={setDisplayed} key={eachItem.id} />
+        <DropdownItem data={eachItem} dropdownDisplayedState={[displayed, setDisplayed]} key={eachItem.id} />
     ));
 
     return (

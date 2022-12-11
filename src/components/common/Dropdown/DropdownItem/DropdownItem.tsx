@@ -10,10 +10,11 @@ export type DropdownItemData = {
 
 export type DropdownItemProps = {
     data: DropdownItemData,
-    setDropdownDisplayed: Dispatch<SetStateAction<boolean>>,
+    dropdownDisplayedState: [boolean, Dispatch<SetStateAction<boolean>>],
 };
 
 export default function DropdownItem(props: DropdownItemProps) {
+    const [dropdownDisplayed, setDropdownDisplayed] = props.dropdownDisplayedState;
     const [value, setValue] = useState(props.data.value ?? '');
 
     const content = props.data.inputField !== true ? value : (
@@ -27,9 +28,11 @@ export default function DropdownItem(props: DropdownItemProps) {
 
     useEffect(() => {
         document.addEventListener('keydown', onKeyDown);
+        document.addEventListener('mousedown', onMouseDown);
 
         return () => {
             document.removeEventListener('keydown', onKeyDown);
+            document.removeEventListener('mousedown', onMouseDown);
         };
     }, [onKeyDown]);
 
@@ -46,13 +49,41 @@ export default function DropdownItem(props: DropdownItemProps) {
     }
 
     function onKeyDown(event: KeyboardEvent) {
-        if (props.data.inputField === true && event.key === 'Enter') {
-            props.setDropdownDisplayed(false);
-            setValue('');
+        if (props.data.inputField === true && dropdownDisplayed) {
+            switch (event.key) {
+                case 'Escape':
+                closeDropdown();
+                break;
 
-            if (props.data.onConfirm !== undefined) {
-                props.data.onConfirm(value);
+                case 'Enter':
+                closeDropdown();
+
+                if (props.data.onConfirm !== undefined) {
+                    props.data.onConfirm(value);
+                }
+                break;
             }
         }
+    }
+
+    function onMouseDown(event: MouseEvent) {
+        const target = event.target as HTMLElement;
+
+        if (props.data.inputField === true && dropdownDisplayed) {
+            switch (target.className) {
+                case 'dropdown-item':
+                case 'dropdown-item-input':
+                break;
+
+                default:
+                closeDropdown();
+                break;
+            }
+        }
+    }
+
+    function closeDropdown() {
+        setDropdownDisplayed(false);
+        setValue('');
     }
 }
