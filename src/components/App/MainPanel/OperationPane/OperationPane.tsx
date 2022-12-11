@@ -370,9 +370,11 @@ export default function OperationPane() {
         // Close path edit bar.
         if (target.id === pathEditBarRef.current?.id && showPathEditBar) {
             switch (event.key) {
-                case 'Enter':
-                // fix
                 case 'Escape':
+                confirmWorkingFolderPathOnEditBar(false);
+                break;
+                
+                case 'Enter':
                 confirmWorkingFolderPathOnEditBar();
                 return;
             }
@@ -415,8 +417,12 @@ export default function OperationPane() {
         dispatch(slices.renamingItemPath.actions.update(null));
     }
 
-    function confirmWorkingFolderPathOnEditBar() {
+    function confirmWorkingFolderPathOnEditBar(update: boolean = true) {
         setShowPathEditBar(false);
+
+        if (!update) {
+            return;
+        }
 
         const path = ItemPath.from(pathEditBarValue, true);
 
