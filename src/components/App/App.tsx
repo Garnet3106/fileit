@@ -6,7 +6,7 @@ import PopupList from '../common/PopupList/PopupList';
 export default function App() {
     const styles = {
         container: {
-            backgroundColor: '#00000077',
+            backgroundColor: '#0f0f11b5',
         },
     };
 

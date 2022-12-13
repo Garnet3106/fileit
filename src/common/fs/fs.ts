@@ -1,7 +1,8 @@
 import { Dirent } from "fs";
 import { ipcMessageSender } from "../ipc";
 import { FileItem, FileItemStats, FolderItem, FolderItemStats, Item, ItemKind, ItemStats } from "./item";
-import { FileItemIdentifier, ItemPath } from "./path";
+import { ItemPath } from "./path";
+import { Buffer } from "buffer";
 
 export enum FsErrorKind {
     NotExists = 'Item not exists.',
@@ -9,7 +10,7 @@ export enum FsErrorKind {
     NotADirectory = 'Item is not a directory.',
     NotAFile = 'Item is not a file.',
     BusyOrLocked = 'Item is busy or locked.',
-    CannotDuplicateTheRootFolder = 'Cannot duplicate the root folder.',
+    CannotProcessTheRootFolder = 'Cannot process the root folder.',
     OperationNotPermitted = 'Operation not permitted.',
 }
 
@@ -17,6 +18,7 @@ export namespace FsErrorKind {
     const messagePairs: [string, FsErrorKind][] = [
         ['EBUSY:', FsErrorKind.BusyOrLocked],
         ['EEXIST:', FsErrorKind.AlreadyExists],
+        ['EISDIR:', FsErrorKind.NotAFile],
         ['ENOENT:', FsErrorKind.NotExists],
         ['EPERM:', FsErrorKind.OperationNotPermitted],
     ];
@@ -59,6 +61,13 @@ export class FsError extends Error {
 }
 
 export const fsEncoding = 'utf-8';
+export const fsBufferSize = 1024;
+export const maximumBufferLength = 64;
+
+export type FileContent = {
+    chunks: Buffer[],
+    omitted: boolean,
+};
 
 export interface IFs {
     exists(path: ItemPath): boolean;
@@ -68,6 +77,8 @@ export interface IFs {
     getChildren(path: ItemPath): Promise<Item[]>;
 
     create(path: ItemPath): Promise<void>;
+
+    readFile(path: ItemPath): Promise<FileContent>;
 
     duplicate(path: ItemPath): Promise<void>;
 
@@ -105,6 +116,10 @@ export default class Fs {
 
     public static create(path: ItemPath): Promise<void> {
         return Fs.fs().create(path);
+    }
+
+    public static readFile(path: ItemPath): Promise<FileContent> {
+        return Fs.fs().readFile(path);
     }
 
     public static duplicate(path: ItemPath): Promise<void> {
@@ -230,10 +245,63 @@ export class NativeFs implements IFs {
         });
     }
 
+    public readFile(path: ItemPath): Promise<FileContent> {
+        return new Promise((resolve, reject) => {
+            if (path.isRoot()) {
+                reject(new FsError(FsErrorKind.CannotProcessTheRootFolder, path));
+                return;
+            }
+
+            if (path.isFolder()) {
+                reject(new FsError(FsErrorKind.NotAFile, path));
+                return;
+            }
+
+            const read = () => {
+                let omitted = false;
+                const stream = NativeFs.fsSync().createReadStream(path.getFullPath(), {
+                    encoding: 'utf8',
+                    highWaterMark: fsBufferSize,
+                });
+
+                let count = 0;
+                let chunks: Buffer[] = [];
+
+                stream.on('data', (newChunk: Buffer) => {
+                    chunks.push(newChunk);
+                    count += 1;
+
+                    if (count >= maximumBufferLength) {
+                        omitted = true;
+                        stream.close();
+                    }
+                });
+
+                stream.on('close', () => resolve({
+                    chunks: chunks,
+                    omitted: omitted,
+                }));
+
+                stream.on('error', (e: any) => reject(FsError.from(e, path)));
+            };
+
+            this.getStats(path)
+                .then((stats) => {
+                    if (stats.kind !== ItemKind.File) {
+                        reject(new FsError(FsErrorKind.NotAFile, path));
+                        return;
+                    }
+
+                    read();
+                })
+                .catch(reject);
+        });
+    }
+
     public duplicate(path: ItemPath): Promise<void> {
         return new Promise(async (resolve, reject) => {
             if (path.isRoot()) {
-                reject(new FsError(FsErrorKind.CannotDuplicateTheRootFolder, path));
+                reject(new FsError(FsErrorKind.CannotProcessTheRootFolder, path));
                 return;
             }
 
@@ -281,7 +349,9 @@ export class NativeFs implements IFs {
     }
 }
 
-export type FakeFileItem = FileItem;
+export type FakeFileItem = FileItem & {
+    content: Buffer,
+};
 
 export type FakeFolderItem = FolderItem & {
     children: {
@@ -326,6 +396,7 @@ export class FakeFs implements IFs {
                 lastAccessed: new Date(),
                 lastModified: new Date(),
             },
+            content: Buffer.from('content of desktop.ini'),
         },
         '/usr/': {
             kind: ItemKind.Folder,
@@ -357,6 +428,7 @@ export class FakeFs implements IFs {
                 lastAccessed: new Date(),
                 lastModified: new Date(),
             },
+            content: Buffer.from('content of desktop.ini'),
         },
         '/usr/win32.sys': {
             kind: ItemKind.File,
@@ -368,6 +440,7 @@ export class FakeFs implements IFs {
                 lastAccessed: new Date(),
                 lastModified: new Date(),
             },
+            content: Buffer.from('content of win32.sys'),
         },
     };
 
@@ -421,10 +494,53 @@ export class FakeFs implements IFs {
         });
     }
 
+    public create(path: ItemPath): Promise<void> {
+        return new Promise((resolve, reject) => {
+            if (this.exists(path)) {
+                reject(new FsError(FsErrorKind.AlreadyExists));
+                return;
+            }
+
+            // fix
+            resolve();
+        });
+    }
+
+    public readFile(path: ItemPath): Promise<FileContent> {
+        return new Promise((resolve, reject) => {
+            if (path.isRoot()) {
+                reject(new FsError(FsErrorKind.CannotProcessTheRootFolder, path));
+                return;
+            }
+
+            if (path.isFolder()) {
+                reject(new FsError(FsErrorKind.NotAFile, path));
+                return;
+            }
+
+            const item = FakeFs.getItem(path);
+
+            if (item === undefined) {
+                reject(new FsError(FsErrorKind.NotExists, path));
+                return;
+            }
+
+            if (item.kind === ItemKind.Folder) {
+                reject(new FsError(FsErrorKind.NotAFile, path));
+                return;
+            }
+
+            resolve({
+                chunks: [Buffer.from((item as FakeFileItem).content)],
+                omitted: false,
+            });
+        });
+    }
+
     public duplicate(path: ItemPath): Promise<void> {
         return new Promise(async (resolve, reject) => {
             if (path.isRoot()) {
-                reject(new FsError(FsErrorKind.CannotDuplicateTheRootFolder, path));
+                reject(new FsError(FsErrorKind.CannotProcessTheRootFolder, path));
                 return;
             }
 
@@ -466,6 +582,8 @@ export class FakeFs implements IFs {
                 kind: ItemKind.File,
                 path: targetPath,
                 stats: stats,
+                // fix
+                content: (await this.readFile(path).catch(reject))!.chunks[0],
             };
 
             parentChildren.push({
@@ -474,18 +592,6 @@ export class FakeFs implements IFs {
             });
             FakeFs.items[targetFullPath] = target;
             this.dispatchWatcher(originalParent);
-            resolve();
-        });
-    }
-
-    public create(path: ItemPath): Promise<void> {
-        return new Promise((resolve, reject) => {
-            if (this.exists(path)) {
-                reject(new FsError(FsErrorKind.AlreadyExists));
-                return;
-            }
-
-            // fix
             resolve();
         });
     }

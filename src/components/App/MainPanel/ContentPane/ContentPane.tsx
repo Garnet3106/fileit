@@ -9,6 +9,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState, slices, store } from '../../../../common/redux';
 import Fs from '../../../../common/fs/fs';
 import { ItemPath } from '../../../../common/fs/path';
+import PreviewPopup from './PreviewPopup/PreviewPopup';
 
 export const variables = {
     propertyItemHorizontalMargin: 5,
@@ -84,6 +85,7 @@ export default function ContentPane() {
             <div className="content-pane-items">
                 {itemElems}
             </div>
+            <PreviewPopup />
         </div>
     );
 

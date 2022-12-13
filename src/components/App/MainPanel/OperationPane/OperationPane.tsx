@@ -6,7 +6,7 @@ import { useDispatch, useSelector } from 'react-redux/es/exports';
 import { RootState, slices, store } from '../../../../common/redux';
 import { variables as leftPanelVariables } from '../../LeftPanel/LeftPanel';
 import Fs, { FsErrorKind } from '../../../../common/fs/fs';
-import { FileItemIdentifier, FolderItemIdentifier, ItemIdentifier, ItemPath, ItemPathErrorKind } from '../../../../common/fs/path';
+import { ItemPath } from '../../../../common/fs/path';
 import { createRef, useEffect, useState } from 'react';
 import { ItemKind } from '../../../../common/fs/item';
 import { renameBarClassName } from '../ContentPane/ContentItem/ContentItem';
