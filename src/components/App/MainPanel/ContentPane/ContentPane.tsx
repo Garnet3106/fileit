@@ -10,6 +10,8 @@ import { RootState, slices, store } from '../../../../common/redux';
 import Fs from '../../../../common/fs/fs';
 import { ItemPath } from '../../../../common/fs/path';
 import PreviewPopup from './PreviewPopup/PreviewPopup';
+import { Item, ItemSortOrder } from '../../../../common/fs/item';
+import { ipcMessageSender } from '../../../../common/ipc';
 
 export const variables = {
     propertyItemHorizontalMargin: 5,
@@ -24,6 +26,7 @@ export default function ContentPane() {
     const dispatch = useDispatch();
     const currentFolderChildren = useSelector((state: RootState) => state.currentFolderChildren);
     const selectedItemPaths = useSelector((state: RootState) => state.selectedItemPaths);
+    const itemSortOrder = useSelector((state: RootState) => state.itemSortOrder);
     const latestCurrentFolderPath = useRef(slices.currentFolderPath.getInitialState());
 
     useEffect(() => {
@@ -92,9 +95,23 @@ export default function ContentPane() {
     // Do not modify `currentFolderPath` state in this function. It would cause infinite recursion.
     function reloadItems(folderPath: ItemPath) {
         Fs.getChildren(folderPath)
-            .then((items) => dispatch(slices.currentFolderChildren.actions.update(items)))
+            .then((items) => dispatch(slices.currentFolderChildren.actions.update(items.sort(getItemSorter()))))
             .catch(console.error);
 
         Fs.watch(folderPath, () => reloadItems(folderPath));
+    }
+
+    function getItemSorter(): (a: Item, b: Item) => number {
+        switch (itemSortOrder) {
+            case ItemSortOrder.NameAscend:
+            return (a, b) => a.getIdentifier().toString().localeCompare(b.getIdentifier().toString());
+
+            case ItemSortOrder.NameDescend:
+            return (a, b) => a.getIdentifier().toString().localeCompare(b.getIdentifier().toString()) * -1;
+
+            default:
+            console.error('unimplemented');
+            return () => 0;
+        }
     }
 }

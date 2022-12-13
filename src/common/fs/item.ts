@@ -106,3 +106,8 @@ export type FolderItem = {
     path: ItemPath,
     stats: FolderItemStats,
 };
+
+export enum ItemSortOrder {
+    NameAscend,
+    NameDescend,
+}

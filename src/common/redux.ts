@@ -3,7 +3,7 @@ import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { PopupItemData } from "../components/common/PopupList/PopupItem/PopupItem";
 import { ItemPath } from './fs/path';
 import { generateUuid } from './utils';
-import { Item } from './fs/item';
+import { Item, ItemSortOrder } from './fs/item';
 
 // fix
 enableMapSet();
@@ -21,6 +21,13 @@ export const slices = {
         initialState: [] as Item[],
         reducers: {
             update: (_state, action: PayloadAction<Item[]>) => action.payload,
+        },
+    }),
+    itemSortOrder: createSlice({
+        name: 'itemSortOrder',
+        initialState: ItemSortOrder.NameAscend,
+        reducers: {
+            update: (_state, action: PayloadAction<ItemSortOrder>) => action.payload,
         },
     }),
     selectedItemPaths: createSlice({
@@ -92,6 +99,7 @@ export const store = configureStore({
     reducer: {
         currentFolderPath: slices.currentFolderPath.reducer,
         currentFolderChildren: slices.currentFolderChildren.reducer,
+        itemSortOrder: slices.itemSortOrder.reducer,
         selectedItemPaths: slices.selectedItemPaths.reducer,
         renamingItemPath: slices.renamingItemPath.reducer,
         popups: slices.popups.reducer,
