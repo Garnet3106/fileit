@@ -40,6 +40,7 @@ export default function OperationPane() {
     const currentFolderPath = useSelector((state: RootState) => state.currentFolderPath);
     const selectedItemPaths = useSelector((state: RootState) => state.selectedItemPaths);
     const renamingItemPath = useSelector((state: RootState) => state.renamingItemPath);
+    const showPathEditBar = useSelector((state: RootState) => state.showPathEditBar);
     const [pathEditBarValue, setPathEditBarValue] = useState('');
 
     let fullDirPath = currentFolderPath?.getHierarchy() ?? [];
@@ -198,8 +199,6 @@ export default function OperationPane() {
         },
     };
 
-    const [showPathEditBar, setShowPathEditBar] = useState(false);
-
     const styles = {
         container: {
             backgroundColor: preferences.appearance.background.panel1,
@@ -252,7 +251,7 @@ export default function OperationPane() {
     }
 
     function onClickPathEditIcon() {
-        setShowPathEditBar(true);
+        dispatch(slices.showPathEditBar.actions.update(true));
 
         if (currentFolderPath !== null) {
             setPathEditBarValue(currentFolderPath.getFullPath());
@@ -376,13 +375,13 @@ export default function OperationPane() {
         // Close path edit bar.
         if (target.id === pathEditBarRef.current?.id && showPathEditBar) {
             switch (event.key) {
-                case 'Escape':
-                confirmWorkingFolderPathOnEditBar(false);
-                break;
-                
                 case 'Enter':
                 confirmWorkingFolderPathOnEditBar();
                 return;
+
+                case 'Escape':
+                confirmWorkingFolderPathOnEditBar(false);
+                break;
             }
         }
 
@@ -423,7 +422,7 @@ export default function OperationPane() {
     }
 
     function confirmWorkingFolderPathOnEditBar(update: boolean = true) {
-        setShowPathEditBar(false);
+        dispatch(slices.showPathEditBar.actions.update(false));
 
         if (!update) {
             return;

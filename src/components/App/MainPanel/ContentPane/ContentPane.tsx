@@ -23,11 +23,21 @@ const initialDriveLetter = process.env.NODE_ENV === 'production' ? 'C' : undefin
 export const initialPath = new ItemPath(initialDriveLetter, [], true);
 
 export default function ContentPane() {
+    useEffect(() => {
+        document.addEventListener('keydown', onKeyDown);
+
+        return () => {
+            document.removeEventListener('keydown', onKeyDown);
+        };
+    }, [onKeyDown]);
+
     const dispatch = useDispatch();
     const currentFolderChildren = useSelector((state: RootState) => state.currentFolderChildren);
     const selectedItemPaths = useSelector((state: RootState) => state.selectedItemPaths);
     const itemSortOrder = useSelector((state: RootState) => state.itemSortOrder);
     const latestCurrentFolderPath = useRef(slices.currentFolderPath.getInitialState());
+    const renamingItemPath = useSelector((state: RootState) => state.renamingItemPath);
+    const showPathEditBar = useSelector((state: RootState) => state.showPathEditBar);
 
     useEffect(() => {
         dispatch(slices.currentFolderPath.actions.update(initialPath));
@@ -112,6 +122,110 @@ export default function ContentPane() {
             default:
             console.error('unimplemented');
             return () => 0;
+        }
+    }
+
+    function onKeyDown(event: KeyboardEvent) {
+        if (event.ctrlKey) {
+            return;
+        }
+
+        const getSelectedItemIndex = () => {
+            const currentItem = selectedItemPaths.at(selectedItemPaths.length - 1);
+            let selectedItemIndex = 0;
+
+            const isSelectedItemFound = currentItem !== undefined ? (
+                currentFolderChildren.some((eachItem) => {
+                    if (eachItem.getFullPath() === currentItem.getFullPath()) {
+                        return true;
+                    }
+
+                    selectedItemIndex += 1;
+                })
+            ) : false;
+
+            return isSelectedItemFound ? selectedItemIndex : undefined;
+        };
+
+        if (!event.shiftKey && event.code === 'ArrowUp') {
+            const selectedItemIndex = getSelectedItemIndex();
+            let newPaths = selectedItemPaths;
+
+            if (selectedItemIndex === undefined) {
+                const targetItem = currentFolderChildren.at(currentFolderChildren.length - 1);
+
+                if (targetItem !== undefined) {
+                    newPaths = [targetItem.getPath()];
+                }
+            } else {
+                const targetItem = currentFolderChildren.at(selectedItemIndex - 1);
+
+                if (targetItem === undefined) {
+                    const targetItem = currentFolderChildren.at(currentFolderChildren.length - 1);
+
+                    if (targetItem !== undefined) {
+                        newPaths = [targetItem.getPath()];
+                    }
+                } else {
+                    newPaths = [targetItem.getPath()];
+                }
+            }
+
+            dispatch(slices.selectedItemPaths.actions.update(newPaths));
+            event.preventDefault();
+            return;
+        }
+
+        if (!event.shiftKey && event.code === 'ArrowDown') {
+            const selectedItemIndex = getSelectedItemIndex();
+            let newPaths = selectedItemPaths;
+
+            if (selectedItemIndex === undefined) {
+                const targetItem = currentFolderChildren.at(0);
+
+                if (targetItem !== undefined) {
+                    newPaths = [targetItem.getPath()];
+                }
+            } else {
+                const targetItem = currentFolderChildren.at(selectedItemIndex + 1);
+
+                if (targetItem === undefined) {
+                    const targetItem = currentFolderChildren.at(0);
+
+                    if (targetItem !== undefined) {
+                        newPaths = [targetItem.getPath()];
+                    }
+                } else {
+                    newPaths = [targetItem.getPath()];
+                }
+            }
+
+            dispatch(slices.selectedItemPaths.actions.update(newPaths));
+            event.preventDefault();
+            return;
+        }
+
+        if (event.code === 'Enter') {
+            selectedItemPaths.forEach((eachPath) => {
+                if (eachPath.isFolder()) {
+                    // fix: add new tabs
+                    dispatch(slices.currentFolderPath.actions.update(eachPath));
+                } else {
+                    ipcMessageSender.fs.runFile(eachPath.getFullPath());
+                }
+            });
+
+            return;
+        }
+
+        if (
+            event.code === 'Escape' &&
+            selectedItemPaths.length !== 0 &&
+            !showPathEditBar &&
+            renamingItemPath === null
+        ) {
+            dispatch(slices.selectedItemPaths.actions.update([]));
+            return;
         }
     }
 }

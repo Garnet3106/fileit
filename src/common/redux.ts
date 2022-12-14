@@ -57,6 +57,13 @@ export const slices = {
             },
         },
     }),
+    showPathEditBar: createSlice({
+        name: 'showPathEditBar',
+        initialState: false,
+        reducers: {
+            update: (_state, action: PayloadAction<boolean>) => action.payload,
+        },
+    }),
     renamingItemPath: createSlice({
         name: 'renamingItemPath',
         initialState: null as ItemPath | null,
@@ -101,6 +108,7 @@ export const store = configureStore({
         currentFolderChildren: slices.currentFolderChildren.reducer,
         itemSortOrder: slices.itemSortOrder.reducer,
         selectedItemPaths: slices.selectedItemPaths.reducer,
+        showPathEditBar: slices.showPathEditBar.reducer,
         renamingItemPath: slices.renamingItemPath.reducer,
         popups: slices.popups.reducer,
     },
