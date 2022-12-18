@@ -1,3 +1,5 @@
+import { Platform } from "../utils";
+
 export enum ItemPathErrorKind {
     EmptyIdentifier = 'Empty string specified as item identifier.',
     CannotAppendToFilePath = 'Cannot append to file path.',
@@ -158,6 +160,20 @@ export class ItemPath {
         this._isFolder = isFolder;
     }
 
+    // todo: add tests
+    public static from(path: string, isFolder: boolean): ItemPath {
+        const matches = path.match(/^(?<driveLetter>[a-zA-Z]):(?<hierarchy>.*)/);
+        const primitiveHierarchy = matches !== null ? matches.groups!['hierarchy'] : path;
+        const hierarchy = primitiveHierarchy.split(/[\/\\]/g).filter((v) => v.length !== 0);
+        const driveLetter = matches !== null ? matches.groups!['driveLetter'].toUpperCase() : undefined;
+        return new ItemPath(driveLetter, hierarchy, isFolder);
+    }
+
+    public static getRoot(platform: Platform): ItemPath {
+        const driveLetter = platform === Platform.Win32 ? 'C' : undefined;
+        return new ItemPath(driveLetter, [], true);
+    }
+
     public isEqual(path: ItemPath): boolean {
         return this.getFullPath() === path.getFullPath();
     }
@@ -168,15 +184,6 @@ export class ItemPath {
 
     public isFolder(): boolean {
         return this._isFolder;
-    }
-
-    // todo: add tests
-    public static from(path: string, isFolder: boolean): ItemPath {
-        const matches = path.match(/^(?<driveLetter>[a-zA-Z]):(?<hierarchy>.*)/);
-        const primitiveHierarchy = matches !== null ? matches.groups!['hierarchy'] : path;
-        const hierarchy = primitiveHierarchy.split(/[\/\\]/g).filter((v) => v.length !== 0);
-        const driveLetter = matches !== null ? matches.groups!['driveLetter'].toUpperCase() : undefined;
-        return new ItemPath(driveLetter, hierarchy, isFolder);
     }
 
     public append(
@@ -240,7 +247,3 @@ export class ItemPath {
         return newPath.getParent().append(id.toString(), this.isFolder());
     }
 }
-
-// fix
-const initialDriveLetter = process.env.NODE_ENV === 'production' ? 'C' : undefined;
-export const initialWorkingFolderPath = new ItemPath(initialDriveLetter, [], true);

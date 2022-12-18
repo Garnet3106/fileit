@@ -28,6 +28,10 @@ const createWindow = () => {
     mainWindow.loadFile(path.resolve(__dirname, '../build/index.html'));
 };
 
+ipcMain.on('get-platform', (event) => event.reply('get-platform', process.platform));
+
+ipcMain.on('get-home-path', (event) => event.reply('get-home-path', process.env[process.platform === 'win32' ? 'USERPROFILE' : 'HOME']));
+
 ipcMain.on('close-window', () => mainWindow?.close());
 
 ipcMain.on('minimize-window', () => mainWindow?.minimize());

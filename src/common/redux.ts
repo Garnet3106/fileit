@@ -1,7 +1,7 @@
 import { enableMapSet } from 'immer';
 import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { PopupItemData } from "../components/common/PopupList/PopupItem/PopupItem";
-import { initialWorkingFolderPath, ItemPath } from './fs/path';
+import { ItemPath } from './fs/path';
 import { generateUuid } from './utils';
 import { Item, ItemSortOrder } from './fs/item';
 import { Tab } from './tab';
@@ -17,24 +17,20 @@ enableMapSet();
 export const slices = {
     tab: createSlice({
         name: 'tab',
-        initialState: (() => {
-            const id = generateUuid();
-
-            const initialTab = {
-                id: id,
-                path: initialWorkingFolderPath,
-            };
-
-            return {
-                tabs: [initialTab],
-                selected: initialTab,
-            } as TabState;
-        })(),
+        initialState: {
+            tabs: [],
+            selected: null,
+        } as TabState,
         reducers: {
-            open: (state, action: PayloadAction<Tab>) => {
+            open: (state, action: PayloadAction<ItemPath>) => {
                 const newState = Object.assign({}, state);
-                newState.tabs = [...newState.tabs, action.payload];
-                newState.selected = action.payload;
+                const newTab = {
+                    id: generateUuid(),
+                    path: action.payload,
+                };
+
+                newState.tabs = [...newState.tabs, newTab];
+                newState.selected = newTab;
                 return newState;
             },
             close: (state, action: PayloadAction<string>) => {

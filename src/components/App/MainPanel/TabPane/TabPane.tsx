@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { initialWorkingFolderPath, ItemPath } from '../../../../common/fs/path';
+import { ItemPath } from '../../../../common/fs/path';
 import NativeWindow from '../../../../common/native_window';
 import { preferences } from '../../../../common/preferences';
 import { RootState, slices, store } from '../../../../common/redux';
-import { generateUuid } from '../../../../common/utils';
+import { platform } from '../../../../common/utils';
 import './TabPane.css';
 import TabPaneItem from './TabPaneItem/TabPaneItem';
 
@@ -23,6 +23,17 @@ export default function TabPane() {
 
     const dispatch = useDispatch();
     const tab = useSelector((state: RootState) => state.tab);
+
+    useEffect(() => {
+        platform.get((platform) => {
+            const tabs = store.getState().tab.tabs;
+
+            // Prevent from opening multiple tabs when opening the first tab.
+            if (tabs.length === 0) {
+                dispatch(slices.tab.actions.open(ItemPath.getRoot(platform)));
+            }
+        });
+    }, []);
 
     const styles = {
         container: {
@@ -60,7 +71,11 @@ export default function TabPane() {
         if (event.ctrlKey && event.code === 'KeyT') {
             // rm
             event.preventDefault();
-            open(initialWorkingFolderPath);
+
+            platform.get((platform) => {
+                open(ItemPath.getRoot(platform));
+            });
+
             return;
         }
 
@@ -83,12 +98,7 @@ export default function TabPane() {
     }
 
     function open(path: ItemPath) {
-        const newTab = {
-            id: generateUuid(),
-            path: path,
-        };
-
-        dispatch(slices.tab.actions.open(newTab));
+        dispatch(slices.tab.actions.open(path));
     }
 
     function select(id: string) {
