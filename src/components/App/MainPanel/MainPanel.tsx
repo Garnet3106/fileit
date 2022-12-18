@@ -1,5 +1,5 @@
 import { preferences } from '../../../common/preferences';
-import { variables as leftPanelVariables } from '../LeftPanel/LeftPanel';
+import { variables as leftPanelVariables } from '../LeftPane/LeftPane';
 import ContentPane from './ContentPane/ContentPane';
 import DetailBar from './DetailBar/DetailBar';
 import OperationPane from './OperationPane/OperationPane';

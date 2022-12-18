@@ -1,29 +1,20 @@
-.item-menu-container {
-    height: 100%;
-}
-
-.item-menu-top {
+.left-pane-group {
     border-bottom-width: 1px;
     padding: 5px 0;
 }
 
-.item-menu-group {
-    border-bottom-width: 1px;
-    padding: 5px 0;
-}
-
-.item-menu-item {
+.left-pane-item {
     align-items: center;
     display: flex;
     height: 25px;
     padding: 0 8px;
 }
 
-.item-menu-item-icon {
+.left-pane-item-icon {
     background-color: #aaa;
     margin-right: 5px;
 }
 
-.item-menu-item-text {
+.left-pane-item-text {
     color: var(--dark-font-color);
 }

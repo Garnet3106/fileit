@@ -107,6 +107,7 @@ export const slices = {
             update: (_state, action: PayloadAction<ItemSortOrder>) => action.payload,
         },
     }),
+    // fix: move into tab state
     selectedItemPaths: createSlice({
         name: 'selectedItemPaths',
         initialState: [] as ItemPath[],

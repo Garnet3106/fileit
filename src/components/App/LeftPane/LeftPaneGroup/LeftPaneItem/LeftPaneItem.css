@@ -1,0 +1,20 @@
+.left-pane-group {
+    border-bottom-width: 1px;
+    padding: 5px 0;
+}
+
+.left-pane-item {
+    align-items: center;
+    display: flex;
+    height: 25px;
+    padding: 0 8px;
+}
+
+.left-pane-item-icon {
+    background-color: #aaa;
+    margin-right: 5px;
+}
+
+.left-pane-item-text {
+    color: var(--dark-font-color);
+}

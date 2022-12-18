@@ -4,7 +4,7 @@ import './OperationPane.css';
 import OperationIcon from './OperationIcon/OperationIcon';
 import { useDispatch, useSelector } from 'react-redux/es/exports';
 import { RootState, slices, store } from '../../../../common/redux';
-import { variables as leftPanelVariables } from '../../LeftPanel/LeftPanel';
+import { variables as leftPanelVariables } from '../../LeftPane/LeftPane';
 import Fs, { FsErrorKind } from '../../../../common/fs/fs';
 import { ItemPath } from '../../../../common/fs/path';
 import { createRef, useEffect, useState } from 'react';

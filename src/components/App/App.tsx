@@ -1,4 +1,4 @@
-import LeftPanel from './LeftPanel/LeftPanel';
+import LeftPane from './LeftPane/LeftPane';
 import MainPanel from './MainPanel/MainPanel';
 import './App.css';
 import PopupList from '../common/PopupList/PopupList';
@@ -13,7 +13,7 @@ export default function App() {
     return (
         <div className="app-background">
             <div className="app-container" style={styles.container}>
-                <LeftPanel />
+                <LeftPane />
                 <MainPanel />
                 <PopupList />
             </div>

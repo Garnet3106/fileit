@@ -1,0 +1,9 @@
+.left-pane-container {
+    overflow-x: hidden;
+    height: 100%;
+}
+
+.left-pane-top {
+    border-bottom-width: 1px;
+    padding: 5px 0;
+}
