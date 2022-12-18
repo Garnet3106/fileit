@@ -312,7 +312,10 @@ export default function OperationPane() {
     function onKeyDown(event: KeyboardEvent) {
         const target = event.target as HTMLElement;
 
-        if (event.ctrlKey && event.shiftKey && event.code === 'keyV') {
+        if (event.ctrlKey && event.shiftKey && event.code === 'KeyV') {
+            // rm
+            event.preventDefault();
+
             navigator.clipboard.readText()
                 .then((value) => {
                     const path = ItemPath.from(value, true);
