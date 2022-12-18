@@ -37,16 +37,17 @@ export const variables = {
 export default function OperationPane() {
     const dispatch = useDispatch();
 
-    const currentFolderPath = useSelector((state: RootState) => state.currentFolderPath);
+    const tab = useSelector((state: RootState) => state.tab);
     const selectedItemPaths = useSelector((state: RootState) => state.selectedItemPaths);
     const renamingItemPath = useSelector((state: RootState) => state.renamingItemPath);
     const showPathEditBar = useSelector((state: RootState) => state.showPathEditBar);
     const [pathEditBarValue, setPathEditBarValue] = useState('');
 
-    let fullDirPath = currentFolderPath?.getHierarchy() ?? [];
+    const workingFolderPath = tab.selected?.path;
+    let fullDirPath = workingFolderPath?.getHierarchy() ?? [];
 
-    if (currentFolderPath !== null) {
-        const first = currentFolderPath.getDriveLetter() !== undefined ? currentFolderPath.getDriveLetter() + ':' : '/';
+    if (workingFolderPath !== undefined) {
+        const first = workingFolderPath.getDriveLetter() !== undefined ? workingFolderPath.getDriveLetter() + ':' : '/';
         fullDirPath = [first].concat(fullDirPath);
     }
 
@@ -112,8 +113,8 @@ export default function OperationPane() {
                         <OperationIcon id={operationIconIds.window.prev} />
                         <OperationIcon id={operationIconIds.window.next} />
                         <OperationIcon id={operationIconIds.window.reload} onClick={() => {
-                            if (currentFolderPath !== null) {
-                                Fs.getChildren(currentFolderPath)
+                            if (workingFolderPath !== undefined) {
+                                Fs.getChildren(workingFolderPath)
                                     .then((items) => dispatch(slices.currentFolderChildren.actions.update(items)))
                                     .catch(console.error);
                             }
@@ -139,10 +140,10 @@ export default function OperationPane() {
                                     <div
                                         className="operation-pane-path-item"
                                         onClick={() => {
-                                            const parent = currentFolderPath?.getParent(fullDirPath.length - index - 1);
+                                            const parent = workingFolderPath?.getParent(fullDirPath.length - index - 1);
 
                                             if (parent !== undefined) {
-                                                dispatch(slices.currentFolderPath.actions.update(parent));
+                                                dispatch(slices.tab.actions.changePath(parent));
                                             }
                                         }}
                                         key={generateUuid()}
@@ -236,10 +237,10 @@ export default function OperationPane() {
     }
 
     function onClickPathCopyIcon() {
-        const currentPath = store.getState().currentFolderPath;
+        const workingFolderPath = store.getState().tab.selected?.path;
 
-        if (currentPath !== null) {
-            navigator.clipboard.writeText(currentPath.getFullPath()).catch(console.error);
+        if (workingFolderPath !== undefined) {
+            navigator.clipboard.writeText(workingFolderPath.getFullPath()).catch(console.error);
 
             dispatch(slices.popups.actions.add({
                 title: '操作ペイン',
@@ -253,13 +254,13 @@ export default function OperationPane() {
     function onClickPathEditIcon() {
         dispatch(slices.showPathEditBar.actions.update(true));
 
-        if (currentFolderPath !== null) {
-            setPathEditBarValue(currentFolderPath.getFullPath());
+        if (workingFolderPath !== undefined) {
+            setPathEditBarValue(workingFolderPath.getFullPath());
         }
     }
 
     function createItem(name: string, isFolder: boolean) {
-        if (currentFolderPath === null) {
+        if (workingFolderPath === undefined) {
             return;
         }
 
@@ -270,7 +271,7 @@ export default function OperationPane() {
         let path: ItemPath;
 
         try {
-            path = currentFolderPath.append(name, isFolder);
+            path = workingFolderPath.append(name, isFolder);
         } catch (e: any) {
             alert('unimplemented');
         }
@@ -311,7 +312,7 @@ export default function OperationPane() {
     function onKeyDown(event: KeyboardEvent) {
         const target = event.target as HTMLElement;
 
-        if (event.ctrlKey && event.shiftKey && event.key === 'V') {
+        if (event.ctrlKey && event.shiftKey && event.code === 'keyV') {
             navigator.clipboard.readText()
                 .then((value) => {
                     const path = ItemPath.from(value, true);
@@ -342,7 +343,7 @@ export default function OperationPane() {
                                 return;
                             }
 
-                            dispatch(slices.currentFolderPath.actions.update(path));
+                            dispatch(slices.tab.actions.changePath(path));
                         })
                         .catch((e) => {
                             throw e;
@@ -354,14 +355,14 @@ export default function OperationPane() {
         }
 
         // Start item renaming.
-        if (event.key === 'F2' && selectedItemPaths.length !== 0) {
+        if (event.code === 'F2' && selectedItemPaths.length !== 0) {
             dispatch(slices.renamingItemPath.actions.update(selectedItemPaths[0]));
             return;
         }
 
         // End item renaming.
         if (target.className === renameBarClassName && renamingItemPath !== null) {
-            switch (event.key) {
+            switch (event.code) {
                 case 'Enter':
                 confirmRenaming((target as HTMLInputElement).value);
                 return;
@@ -374,7 +375,7 @@ export default function OperationPane() {
 
         // Close path edit bar.
         if (target.id === pathEditBarRef.current?.id && showPathEditBar) {
-            switch (event.key) {
+            switch (event.code) {
                 case 'Enter':
                 confirmWorkingFolderPathOnEditBar();
                 return;
@@ -433,7 +434,7 @@ export default function OperationPane() {
         Fs.getStats(path)
             .then((stats) => {
                 if (stats.kind === ItemKind.Folder) {
-                    dispatch(slices.currentFolderPath.actions.update(path));
+                    dispatch(slices.tab.actions.changePath(path));
                 } else {
                     dispatch(slices.popups.actions.add({
                         title: 'エラー',

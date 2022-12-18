@@ -6,7 +6,6 @@ import { store } from '../../../../../common/redux';
 import { variables as tabBarVariables } from '../../TabPane/TabPane';
 import './PreviewPopup.css';
 
-export const imageFileExtensionPattern = /^apng|bmp|gif|jfif|jpeg|jpg|png|webp$/;
 
 export enum ItemPreviewContentKind {
     Folder,
@@ -68,7 +67,7 @@ export default function PreviewPopup() {
 
                 const fileId = targetPath.getIdentifier() as FileItemIdentifier;
 
-                if (fileId.getExtension().match(imageFileExtensionPattern)) {
+                if (fileId.isImage()) {
                     setContent({
                         kind: ItemPreviewContentKind.ImageFile,
                         path: targetPath,
@@ -198,7 +197,7 @@ export default function PreviewPopup() {
     );
 
     function onKeyDown(event: KeyboardEvent) {
-        if (event.key === ' ' && content !== undefined) {
+        if (event.code === 'Space' && content !== undefined) {
             setHidden((state) => !state);
             // Prevent from scrolling of content pane by space key.
             event.preventDefault();

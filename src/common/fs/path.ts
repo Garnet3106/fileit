@@ -16,7 +16,15 @@ export class ItemPathError extends Error {
     }
 }
 
-const illegalIdentifierPattern = /[\/\\"<>|:*?\x00-\x1f\x7f-\x9f]/;
+export const filePatterns = {
+    identifier: {
+        illegal: /[\/\\"<>|:*?\x00-\x1f\x7f-\x9f]/,
+    },
+    extensions: {
+        compressed: /^(gz|lzh|tgz|zip)$/,
+        image: /^(apng|bmp|gif|jfif|jpeg|jpg|png|webp)$/,
+    },
+};
 
 export class ItemIdentifierValidationResult {
     public readonly errorKind?: ItemPathErrorKind;
@@ -91,7 +99,7 @@ export class FileItemIdentifier implements ItemIdentifier {
             return new ItemIdentifierValidationResult(ItemPathErrorKind.EmptyIdentifier);
         }
 
-        if (id.match(illegalIdentifierPattern) !== null) {
+        if (id.match(filePatterns.identifier.illegal) !== null) {
             return new ItemIdentifierValidationResult(ItemPathErrorKind.IncludesIllegalCharacter);
         }
 
@@ -109,6 +117,14 @@ export class FileItemIdentifier implements ItemIdentifier {
     public toString(): string {
         const dot = this.extension.length === 0 ? '' : '.';
         return this.name + dot + this.extension;
+    }
+
+    public isImage(): boolean {
+        return this.getExtension().match(filePatterns.extensions.image) !== null;
+    }
+
+    public isCompressed(): boolean {
+        return this.getExtension().match(filePatterns.extensions.compressed) !== null;
     }
 }
 
@@ -224,3 +240,7 @@ export class ItemPath {
         return newPath.getParent().append(id.toString(), this.isFolder());
     }
 }
+
+// fix
+const initialDriveLetter = process.env.NODE_ENV === 'production' ? 'C' : undefined;
+export const initialWorkingFolderPath = new ItemPath(initialDriveLetter, [], true);

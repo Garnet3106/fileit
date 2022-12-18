@@ -106,7 +106,7 @@ export default function ContentItem(props: ContentItemProps) {
         }
 
         if (props.item.isFolder()) {
-            dispatch(slices.currentFolderPath.actions.update(props.item.getPath()));
+            dispatch(slices.tab.actions.changePath(props.item.getPath()));
         } else {
             ipcMessageSender.fs.runFile(props.item.getFullPath());
         }

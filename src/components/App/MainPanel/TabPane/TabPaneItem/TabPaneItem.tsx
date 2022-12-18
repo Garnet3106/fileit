@@ -1,6 +1,7 @@
 import { MouseEvent } from 'react';
+import { FileItemIdentifier } from '../../../../../common/fs/path';
 import { preferences } from '../../../../../common/preferences';
-import { Tab } from '../../../../../common/tab';
+import { Tab, TabIcon } from '../../../../../common/tab';
 import './TabPaneItem.css';
 
 export type TabPaneItemProps = {
@@ -11,12 +12,16 @@ export type TabPaneItemProps = {
 };
 
 export default function TabPaneItem(props: TabPaneItemProps) {
+    const path = props.item.path;
+    const title = path.getIdentifier().toString();
+    const icon = !path.isFolder() && (path.getIdentifier() as FileItemIdentifier).isCompressed() ? TabIcon.CompressedFolder : TabIcon.Folder;
+
     const styles = {
         container: {
             backgroundColor: props.selected ? 'var(--selected-tab-color)' : 'var(--unselected-tab-color)',
         },
         icon: {
-            backgroundImage: `url('./lib/img/icons/${preferences.appearance.theme}/${props.item.icon}.svg')`,
+            backgroundImage: `url('./lib/img/icons/${preferences.appearance.theme}/${icon}.svg')`,
         },
     };
 
@@ -27,7 +32,7 @@ export default function TabPaneItem(props: TabPaneItemProps) {
                 display: 'flex',
             }}>
                 <div className="tab-pane-item-icon" style={styles.icon} />
-                {props.item.title}
+                {title}
             </div>
             <div className="tab-pane-item-close" />
         </div>

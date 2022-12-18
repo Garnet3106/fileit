@@ -8,7 +8,6 @@ import PropertyBar, { ItemPropertyKind } from './PropertyBar/PropertyBar';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, slices, store } from '../../../../common/redux';
 import Fs from '../../../../common/fs/fs';
-import { ItemPath } from '../../../../common/fs/path';
 import PreviewPopup from './PreviewPopup/PreviewPopup';
 import { Item, ItemSortOrder } from '../../../../common/fs/item';
 import { ipcMessageSender } from '../../../../common/ipc';
@@ -17,10 +16,6 @@ export const variables = {
     propertyItemHorizontalMargin: 5,
     contentItemIconSize: 18,
 };
-
-// fix
-const initialDriveLetter = process.env.NODE_ENV === 'production' ? 'C' : undefined;
-export const initialPath = new ItemPath(initialDriveLetter, [], true);
 
 export default function ContentPane() {
     useEffect(() => {
@@ -35,13 +30,9 @@ export default function ContentPane() {
     const currentFolderChildren = useSelector((state: RootState) => state.currentFolderChildren);
     const selectedItemPaths = useSelector((state: RootState) => state.selectedItemPaths);
     const itemSortOrder = useSelector((state: RootState) => state.itemSortOrder);
-    const latestCurrentFolderPath = useRef(slices.currentFolderPath.getInitialState());
     const renamingItemPath = useSelector((state: RootState) => state.renamingItemPath);
     const showPathEditBar = useSelector((state: RootState) => state.showPathEditBar);
-
-    useEffect(() => {
-        dispatch(slices.currentFolderPath.actions.update(initialPath));
-    }, []);
+    const latestWorkingFolderPath = useRef(slices.tab.getInitialState().selected?.path ?? null);
 
     useEffect(() => {
         // Unselect item paths which not exists.
@@ -52,15 +43,21 @@ export default function ContentPane() {
         });
     });
 
-    store.subscribe(() => {
-        const currentFolderPath = store.getState().currentFolderPath;
+    useEffect(() => {
+        updateItems();
+    }, []);
 
-        if (currentFolderPath !== null && latestCurrentFolderPath.current?.isEqual(currentFolderPath) !== true) {
-            reloadItems(currentFolderPath);
-        }
+    useEffect(() => {
+        store.subscribe(() => {
+            const workingFolderPath = store.getState().tab.selected?.path;
 
-        latestCurrentFolderPath.current = currentFolderPath;
-    });
+            if (workingFolderPath !== undefined && latestWorkingFolderPath.current?.isEqual(workingFolderPath) !== true) {
+                updateItems();
+            }
+
+            latestWorkingFolderPath.current = workingFolderPath ?? null;
+        });
+    }, []);
 
     const styles = {
         container: {
@@ -102,13 +99,19 @@ export default function ContentPane() {
         </div>
     );
 
-    // Do not modify `currentFolderPath` state in this function. It would cause infinite recursion.
-    function reloadItems(folderPath: ItemPath) {
-        Fs.getChildren(folderPath)
+    // Do not modify `tab` state in this function. It would cause infinite recursion.
+    function updateItems() {
+        const workingFolderPath = store.getState().tab.selected?.path;
+
+        if (workingFolderPath === undefined) {
+            return;
+        }
+
+        Fs.getChildren(workingFolderPath)
             .then((items) => dispatch(slices.currentFolderChildren.actions.update(items.sort(getItemSorter()))))
             .catch(console.error);
 
-        Fs.watch(folderPath, () => reloadItems(folderPath));
+        Fs.watch(workingFolderPath, updateItems);
     }
 
     function getItemSorter(): (a: Item, b: Item) => number {
@@ -209,7 +212,7 @@ export default function ContentPane() {
             selectedItemPaths.forEach((eachPath) => {
                 if (eachPath.isFolder()) {
                     // fix: add new tabs
-                    dispatch(slices.currentFolderPath.actions.update(eachPath));
+                    dispatch(slices.tab.actions.changePath(eachPath));
                 } else {
                     ipcMessageSender.fs.runFile(eachPath.getFullPath());
                 }

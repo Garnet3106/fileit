@@ -1,3 +1,5 @@
+import { ItemPath } from "./fs/path";
+
 export enum TabIcon {
     Folder = 'folder',
     CompressedFolder = 'compressed_folder',
@@ -5,6 +7,5 @@ export enum TabIcon {
 
 export type Tab = {
     id: string,
-    icon: TabIcon,
-    title: string,
+    path: ItemPath,
 };

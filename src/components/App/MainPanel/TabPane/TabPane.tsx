@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { initialWorkingFolderPath, ItemPath } from '../../../../common/fs/path';
 import NativeWindow from '../../../../common/native_window';
 import { preferences } from '../../../../common/preferences';
-import { Tab, TabIcon } from '../../../../common/tab';
+import { RootState, slices, store } from '../../../../common/redux';
 import { generateUuid } from '../../../../common/utils';
 import './TabPane.css';
 import TabPaneItem from './TabPaneItem/TabPaneItem';
@@ -11,8 +13,16 @@ export const variables = {
 };
 
 export default function TabPane() {
-    const [tabs, setTabs] = useState<Tab[]>([]);
-    const [selectedTabId, setSelectedTabId] = useState<string | null>(null);
+    useEffect(() => {
+        document.addEventListener('keydown', onKeyDown);
+
+        return () => {
+            document.removeEventListener('keydown', onKeyDown);
+        };
+    });
+
+    const dispatch = useDispatch();
+    const tab = useSelector((state: RootState) => state.tab);
 
     const styles = {
         container: {
@@ -24,12 +34,12 @@ export default function TabPane() {
         },
     };
 
-    const tabItems = tabs.map((eachTab) => (
+    const tabItems = tab.tabs.map((eachTab) => (
         <TabPaneItem
             item={eachTab}
-            selected={eachTab.id === selectedTabId}
-            onClick={selectTab}
-            onClickCloseIcon={closeTab}
+            selected={eachTab.id === tab.selected?.id}
+            onClick={select}
+            onClickCloseIcon={close}
             key={eachTab.id}
         />
     ));
@@ -46,44 +56,56 @@ export default function TabPane() {
         </div>
     );
 
-    function searchTabIndex(id: string): number | undefined {
-        const targetIndex = tabs.findIndex((eachTab) => eachTab.id === id);
-        return targetIndex !== -1 ? targetIndex : undefined;
+    function onKeyDown(event: KeyboardEvent) {
+        if (event.ctrlKey && event.code === 'KeyT') {
+            // rm
+            event.preventDefault();
+            open(initialWorkingFolderPath);
+            return;
+        }
+
+        if (event.ctrlKey && event.code === 'KeyW') {
+            if (tab.tabs.length !== 1) {
+                event.preventDefault();
+            }
+
+            if (tab.selected !== null) {
+                close(tab.selected.id);
+            }
+
+            return;
+        }
     }
 
-    // fix: open(path: ItemPath)
-    function openTab(title: string, icon: TabIcon) {
+    function findTabIndex(id: string): number | undefined {
+        const targetIndex = tab.tabs.findIndex((eachTab) => eachTab.id === id);
+        return targetIndex === -1 ? undefined : targetIndex;
+    }
+
+    function open(path: ItemPath) {
         const newTab = {
             id: generateUuid(),
-            icon: icon,
-            title: title,
+            path: path,
         };
 
-        setTabs((tabs) => [...tabs, newTab]);
-        setSelectedTabId(newTab.id);
+        dispatch(slices.tab.actions.open(newTab));
     }
 
-    function selectTab(id: string) {
-        if (searchTabIndex(id) === undefined) {
+    function select(id: string) {
+        if (findTabIndex(id) === undefined) {
             console.error(`Couldn't operate unknown or unopened tab ID \`${id}\`.`);
             return;
         }
 
-        setSelectedTabId(id);
+        dispatch(slices.tab.actions.select(id));
     }
 
-    function closeTab(id: string) {
-        const targetIndex = searchTabIndex(id);
-
-        if (targetIndex === undefined) {
+    function close(id: string) {
+        if (findTabIndex(id) === undefined) {
             console.error(`Couldn't operate unknown or unopened tab ID \`${id}\`.`);
             return;
         }
 
-        setTabs((tabs) => tabs.filter((eachTab) => eachTab.id !== id));
-
-        if (id === selectedTabId) {
-            setSelectedTabId(targetIndex > 0 ? tabs[targetIndex - 1].id : null);
-        }
+        dispatch(slices.tab.actions.close(id));
     }
 }

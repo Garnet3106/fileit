@@ -50,7 +50,7 @@ export default function DropdownItem(props: DropdownItemProps) {
 
     function onKeyDown(event: KeyboardEvent) {
         if (props.data.inputField === true && dropdownDisplayed) {
-            switch (event.key) {
+            switch (event.code) {
                 case 'Escape':
                 closeDropdown();
                 break;
