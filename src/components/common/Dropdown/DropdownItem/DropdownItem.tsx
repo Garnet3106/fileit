@@ -5,7 +5,7 @@ export type DropdownItemData = {
     id: string,
     value?: string,
     inputField?: boolean,
-    onConfirm?: (value: string) => void,
+    onConfirm?: (id: string, value: string) => void,
 };
 
 export type DropdownItemProps = {
@@ -54,7 +54,7 @@ export default function DropdownItem(props: DropdownItemProps) {
 
     function onClick() {
         if (props.data.inputField !== true && props.data.onConfirm !== undefined) {
-            props.data.onConfirm(value);
+            props.data.onConfirm(props.data.id, value);
             closeDropdown();
         }
     }
@@ -70,7 +70,7 @@ export default function DropdownItem(props: DropdownItemProps) {
                 closeDropdown(true);
 
                 if (props.data.onConfirm !== undefined) {
-                    props.data.onConfirm(value);
+                    props.data.onConfirm(props.data.id, value);
                 }
                 break;
             }

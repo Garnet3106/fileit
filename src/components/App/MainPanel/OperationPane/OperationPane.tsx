@@ -80,7 +80,7 @@ export default function OperationPane() {
                 {
                     id: 'folder',
                     inputField: true,
-                    onConfirm: (v) => createItem(v, true),
+                    onConfirm: (_id, v) => createItem(v, true),
                 },
             ];
 
@@ -88,7 +88,7 @@ export default function OperationPane() {
                 {
                     id: 'file',
                     inputField: true,
-                    onConfirm: (v) => createItem(v, false),
+                    onConfirm: (_id, v) => createItem(v, false),
                 },
             ];
 
@@ -97,17 +97,17 @@ export default function OperationPane() {
                 {
                     id: 'zip',
                     value: 'ZIP',
-                    onConfirm: (v) => console.log(v),
+                    onConfirm: (id) => console.log(id),
                 },
                 {
                     id: '7z',
                     value: '7Z',
-                    onConfirm: (v) => console.log(v),
+                    onConfirm: (id) => console.log(id),
                 },
                 {
                     id: 'rar',
                     value: 'RAR',
-                    onConfirm: (v) => console.log(v),
+                    onConfirm: (id) => console.log(id),
                 },
             ];
 
