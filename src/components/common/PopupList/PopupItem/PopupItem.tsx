@@ -22,7 +22,10 @@ export const variables = {
 
 export default function PopupItem(props: PopupItemProps) {
     const dispatch = useDispatch();
-    const buttonElements = props.data.buttons?.map((eachButton) => <PopupOperationButton data={eachButton} key={generateUuid()} />);
+    // fix: Close popup on button click.
+    const buttons = props.data.buttons?.map((eachButton) => (
+        <PopupOperationButton data={eachButton} key={generateUuid()} />
+    ));
 
     useEffect(() => {
         setTimeout(close, variables.closeTimeout);
@@ -40,7 +43,7 @@ export default function PopupItem(props: PopupItemProps) {
                 {props.data.description}
             </div>
             <div>
-                {buttonElements}
+                {buttons}
             </div>
         </div>
     );

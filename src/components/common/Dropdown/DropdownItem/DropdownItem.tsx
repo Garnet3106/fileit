@@ -14,10 +14,20 @@ export type DropdownItemProps = {
 };
 
 export default function DropdownItem(props: DropdownItemProps) {
+    useEffect(() => {
+        if (props.data.inputField !== true && props.data.value === undefined) {
+            console.warn('No value specified into text field.');
+        }
+    }, []);
+
     const [dropdownDisplayed, setDropdownDisplayed] = props.dropdownDisplayedState;
     const [value, setValue] = useState(props.data.value ?? '');
 
-    const content = props.data.inputField !== true ? value : (
+    const content = props.data.inputField !== true ? (
+        <div className="dropdown-item-text">
+            {value}
+        </div>
+    ) : (
         <input
             className="dropdown-item-input"
             type="text"
@@ -45,6 +55,7 @@ export default function DropdownItem(props: DropdownItemProps) {
     function onClick() {
         if (props.data.inputField !== true && props.data.onConfirm !== undefined) {
             props.data.onConfirm(value);
+            closeDropdown();
         }
     }
 
@@ -52,11 +63,11 @@ export default function DropdownItem(props: DropdownItemProps) {
         if (props.data.inputField === true && dropdownDisplayed) {
             switch (event.code) {
                 case 'Escape':
-                closeDropdown();
+                closeDropdown(true);
                 break;
 
                 case 'Enter':
-                closeDropdown();
+                closeDropdown(true);
 
                 if (props.data.onConfirm !== undefined) {
                     props.data.onConfirm(value);
@@ -76,14 +87,17 @@ export default function DropdownItem(props: DropdownItemProps) {
                 break;
 
                 default:
-                closeDropdown();
+                closeDropdown(true);
                 break;
             }
         }
     }
 
-    function closeDropdown() {
+    function closeDropdown(initializeValue?: boolean) {
         setDropdownDisplayed(false);
-        setValue('');
+
+        if (initializeValue === true) {
+            setValue('');
+        }
     }
 }

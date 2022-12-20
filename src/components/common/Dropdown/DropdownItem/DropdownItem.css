@@ -2,6 +2,15 @@
     align-items: center;
     display: flex;
     padding: 5px;
+    transition: background-image 50ms;
+}
+
+.dropdown-item:hover {
+    background-color: #313136;
+}
+
+.dropdown-item-text {
+    font-weight: bold;
 }
 
 .dropdown-item-input {

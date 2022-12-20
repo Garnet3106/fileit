@@ -6,12 +6,13 @@ import { useDispatch, useSelector } from 'react-redux/es/exports';
 import { RootState, slices, store } from '../../../../common/redux';
 import { variables as leftPanelVariables } from '../../LeftPane/LeftPane';
 import Fs, { FsErrorKind } from '../../../../common/fs/fs';
-import { ItemPath } from '../../../../common/fs/path';
+import { FileItemIdentifier, ItemPath } from '../../../../common/fs/path';
 import { createRef, useEffect, useState } from 'react';
 import { ItemKind } from '../../../../common/fs/item';
 import { renameBarClassName } from '../ContentPane/ContentItem/ContentItem';
 import Dropdown, { DropdownRef } from '../../../common/Dropdown/Dropdown';
 import { DropdownItemData } from '../../../common/Dropdown/DropdownItem/DropdownItem';
+import { addExtractionHandler, ipcMessageSender } from '../../../../common/ipc';
 
 export const operationIconIds = {
     window: {
@@ -27,6 +28,8 @@ export const operationIconIds = {
         create: 'create',
         copy: 'copy',
         trash: 'trash',
+        compress: 'compress',
+        extract: 'extract',
     },
 };
 
@@ -39,6 +42,7 @@ export default function OperationPane() {
 
     const tab = useSelector((state: RootState) => state.tab);
     const selectedItemPaths = useSelector((state: RootState) => state.selectedItemPaths);
+    const isExtractable = !selectedItemPaths.some((v) => !v.isExtractable());
     const renamingItemPath = useSelector((state: RootState) => state.renamingItemPath);
     const showPathEditBar = useSelector((state: RootState) => state.showPathEditBar);
     const [pathEditBarValue, setPathEditBarValue] = useState('');
@@ -53,6 +57,7 @@ export default function OperationPane() {
 
     const newFolderDropdownRef = createRef<DropdownRef>();
     const newFileDropdownRef = createRef<DropdownRef>();
+    const compressionDropdownRef = createRef<DropdownRef>();
     const pathEditBarRef = createRef<HTMLInputElement>();
 
     useEffect(() => {
@@ -87,10 +92,30 @@ export default function OperationPane() {
                 },
             ];
 
+            // fix
+            const compressionDropdown: DropdownItemData[] = [
+                {
+                    id: 'zip',
+                    value: 'ZIP',
+                    onConfirm: (v) => console.log(v),
+                },
+                {
+                    id: '7z',
+                    value: '7Z',
+                    onConfirm: (v) => console.log(v),
+                },
+                {
+                    id: 'rar',
+                    value: 'RAR',
+                    onConfirm: (v) => console.log(v),
+                },
+            ];
+
             return (
                 <>
                 <Dropdown pivot={[155, 95]} items={newFolderDropdown} ref={newFolderDropdownRef} />
                 <Dropdown pivot={[185, 95]} items={newFileDropdown} ref={newFileDropdownRef} />
+                {!isExtractable && <Dropdown pivot={[275, 95]} items={compressionDropdown} ref={compressionDropdownRef} />}
                 </>
             );
         },
@@ -182,6 +207,17 @@ export default function OperationPane() {
                                 iterateSelectedPaths((path) => Fs.trash(path));
                             }}
                         />
+                        <OperationIcon
+                            id={isExtractable && !preventIconClick ? operationIconIds.item.extract : operationIconIds.item.compress}
+                            preventClick={preventIconClick}
+                            onClick={() => {
+                                if (isExtractable) {
+                                    iterateSelectedPaths(extractFile);
+                                } else {
+                                    compressionDropdownRef.current?.switchVisibility();
+                                }
+                            }}
+                        />
                     </div>
                 ),
             };
@@ -213,6 +249,7 @@ export default function OperationPane() {
         },
     };
 
+
     const dropdowns = renderers.dropdowns();
     const rows = renderers.rows();
 
@@ -223,7 +260,7 @@ export default function OperationPane() {
         </div>
     );
 
-    function iterateSelectedPaths(callback: (path: ItemPath, index: number) => void) {
+    function iterateSelectedPaths(callback?: (path: ItemPath, index: number) => void) {
         if (selectedItemPaths.length === 0) {
             dispatch(slices.popups.actions.add({
                 title: '操作ペイン',
@@ -233,7 +270,31 @@ export default function OperationPane() {
             return;
         }
 
-        selectedItemPaths.forEach(callback);
+        if (callback !== undefined) {
+            selectedItemPaths.forEach(callback);
+        }
+    }
+
+    function extractFile(path: ItemPath) {
+        const destPath = Fs.getExtractionDestinationPath(path);
+
+        if (Fs.exists(destPath)) {
+            dispatch(slices.popups.actions.add({
+                title: 'ファイル解凍',
+                description: '解凍先のフォルダがすでに存在します。',
+                buttons: [
+                    {
+                        text: '上書き',
+                        onClick: () => Fs.extract(path),
+                    },
+                    {
+                        text: '閉じる',
+                    },
+                ],
+            }));
+        } else {
+            Fs.extract(path);
+        }
     }
 
     function onClickPathCopyIcon() {

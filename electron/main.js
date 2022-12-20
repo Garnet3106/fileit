@@ -2,6 +2,8 @@ const { BrowserWindow, app, ipcMain, shell } = require('electron');
 const electronReload = require('electron-reload');
 const isDev = require('electron-is-dev');
 const path = require('path');
+const sZip = require('node-7z');
+
 let mainWindow = null;
 
 const createWindow = () => {
@@ -41,6 +43,27 @@ ipcMain.on('run-file', (_event, targetPath) => shell.openPath(targetPath).catch(
 // Use path.resolve() to convert received path separators for Windows.
 // See more: https://github.com/electron/electron/issues/28831
 ipcMain.on('trash-file', (_event, targetPath) => shell.trashItem(path.resolve(targetPath)).catch(console.error));
+
+ipcMain.on('extract-item', (event, id, src, dist) => {
+    const stream = sZip.extractFull(src, dist);
+
+    stream.on('data', (data) => event.reply('extract-item', {
+        id: id,
+        kind: 'data',
+        value: data.file,
+    }));
+
+    stream.on('end', () => event.reply('extract-item', {
+        id: id,
+        kind: 'end',
+    }));
+
+    stream.on('error', (error) => event.reply('extract-item', {
+        id: id,
+        kind: 'error',
+        value: error,
+    }));
+});
 
 app.once('window-all-closed', () => app.quit());
 

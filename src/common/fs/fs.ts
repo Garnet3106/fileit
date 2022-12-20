@@ -1,7 +1,7 @@
 import { Dirent } from "fs";
-import { ipcMessageSender } from "../ipc";
+import { addExtractionHandler, ipcMessageSender } from "../ipc";
 import { FileItem, FileItemStats, FolderItem, FolderItemStats, Item, ItemKind, ItemStats } from "./item";
-import { ItemPath } from "./path";
+import { FileItemIdentifier, ItemPath } from "./path";
 import { Buffer } from "buffer";
 
 export enum FsErrorKind {
@@ -12,6 +12,7 @@ export enum FsErrorKind {
     BusyOrLocked = 'Item is busy or locked.',
     CannotProcessTheRootFolder = 'Cannot process the root folder.',
     OperationNotPermitted = 'Operation not permitted.',
+    ItemIsNotExtractable = 'Item is not extractable.',
 }
 
 export namespace FsErrorKind {
@@ -86,6 +87,8 @@ export interface IFs {
 
     trash(path: ItemPath): void;
 
+    extract(path: ItemPath): void;
+
     watch(path: ItemPath, callback: () => void): void;
 }
 
@@ -132,6 +135,19 @@ export default class Fs {
 
     public static trash(path: ItemPath) {
         Fs.fs().trash(path);
+    }
+
+    public static extract(path: ItemPath) {
+        Fs.fs().extract(path);
+    }
+
+    public static getExtractionDestinationPath(src: ItemPath): ItemPath {
+        if (!src.isExtractable()) {
+            throw new FsError(FsErrorKind.ItemIsNotExtractable);
+        }
+
+        const fileId = src.getIdentifier() as FileItemIdentifier;
+        return src.getParent().append(fileId.getName(), true);
     }
 
     public static watch(path: ItemPath, callback: () => void) {
@@ -338,6 +354,23 @@ export class NativeFs implements IFs {
         if (window.confirm(path.getFullPath())) {
             ipcMessageSender.fs.trash(path.getFullPath());
         }
+    }
+
+    public extract(path: ItemPath) {
+        if (!path.isExtractable()) {
+            throw new FsError(FsErrorKind.ItemIsNotExtractable);
+        }
+
+        const destPath = Fs.getExtractionDestinationPath(path);
+
+        // rm
+        if (!window.confirm(path.getFullPath() + '\n' + destPath.getFullPath())) {
+            return;
+        }
+
+        const id = ipcMessageSender.fs.extract(path.getFullPath(), destPath.getFullPath());
+        // fix
+        addExtractionHandler(id, console.log);
     }
 
     public watch(path: ItemPath, callback: () => void) {
@@ -626,6 +659,14 @@ export class FakeFs implements IFs {
             this.dispatchWatcher(parent);
             resolve();
         });
+    }
+
+    public extract(path: ItemPath) {
+        if (!path.isExtractable()) {
+            throw new FsError(FsErrorKind.ItemIsNotExtractable);
+        }
+
+        // unimplemented
     }
 
     public trash(path: ItemPath) {

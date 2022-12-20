@@ -23,7 +23,7 @@ export const filePatterns = {
         illegal: /[\/\\"<>|:*?\x00-\x1f\x7f-\x9f]/,
     },
     extensions: {
-        compressed: /^(gz|lzh|tgz|zip)$/,
+        compressed: /^(7z|gz|lzh|tgz|zip)$/,
         image: /^(apng|bmp|gif|jfif|jpeg|jpg|png|webp)$/,
     },
 };
@@ -184,6 +184,13 @@ export class ItemPath {
 
     public isFolder(): boolean {
         return this._isFolder;
+    }
+
+    public isExtractable(): boolean {
+        return (
+            !this.isFolder() &&
+            (this.getIdentifier() as FileItemIdentifier).isCompressed()
+        );
     }
 
     public append(
