@@ -22,9 +22,9 @@ export const variables = {
 
 export default function PopupItem(props: PopupItemProps) {
     const dispatch = useDispatch();
-    // fix: Close popup on button click.
+
     const buttons = props.data.buttons?.map((eachButton) => (
-        <PopupOperationButton data={eachButton} key={generateUuid()} />
+        <PopupOperationButton data={eachButton} onClick={close} key={generateUuid()} />
     ));
 
     useEffect(() => {
