@@ -44,13 +44,37 @@ ipcMain.on('run-file', (_event, targetPath) => shell.openPath(targetPath).catch(
 // See more: https://github.com/electron/electron/issues/28831
 ipcMain.on('trash-file', (_event, targetPath) => shell.trashItem(path.resolve(targetPath)).catch(console.error));
 
-ipcMain.on('extract-item', (event, id, src, dist) => {
-    const stream = sZip.extractFull(src, dist);
+ipcMain.on('compress-item', (event, id, src, dest) => {
+    const stream = sZip.add(dest, src, {
+        $progress: true,
+        recursive: true,
+    });
 
-    stream.on('data', (data) => event.reply('extract-item', {
+    stream.on('progress', (progress) => event.reply('compress-item', {
         id: id,
-        kind: 'data',
-        value: data.file,
+        kind: 'progress',
+        value: progress.percent,
+    }));
+
+    stream.on('end', () => event.reply('compress-item', {
+        id: id,
+        kind: 'end',
+    }));
+
+    stream.on('error', (error) => event.reply('compress-item', {
+        id: id,
+        kind: 'error',
+        value: error,
+    }));
+});
+
+ipcMain.on('extract-item', (event, id, src, dest) => {
+    const stream = sZip.extractFull(src, dest);
+
+    stream.on('progress', (progress) => event.reply('extract-item', {
+        id: id,
+        kind: 'progress',
+        value: progress.percent,
     }));
 
     stream.on('end', () => event.reply('extract-item', {

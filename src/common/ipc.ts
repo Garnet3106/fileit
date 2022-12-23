@@ -25,6 +25,11 @@ export const ipcMessageSender = {
     fs: {
         runFile: (path: string) => sendIpcMessage('run-file', path),
         trash: (path: string) => sendIpcMessage('trash-file', path),
+        compress: (src: string[], dest: string) => {
+            const id = generateUuid();
+            sendIpcMessage('compress-item', id, src, dest);
+            return id;
+        },
         extract: (src: string, dest: string) => {
             const id = generateUuid();
             sendIpcMessage('extract-item', id, src, dest);
@@ -33,19 +38,82 @@ export const ipcMessageSender = {
     },
 };
 
-export type ExtractionHandler = (path: string) => void;
+export type ProgressHandlerCallback = (progress: number) => void;
+export type ProgressErrorHandlerCallback = (error: any) => void;
 
-let extractionHandlerCallbacks = new Map<string, ExtractionHandler>();
+export class ProgressHandler {
+    public onProgress?: ProgressHandlerCallback;
+    public onError?: ProgressErrorHandlerCallback;
+    public progress: number = 0;
 
-export function addExtractionHandler(id: string, callback: ExtractionHandler) {
-    if (process.env.NODE_ENV !== 'production') {
-        console.warn('Cannot add extraction handler on environment other than production.');
-    } else {
-        extractionHandlerCallbacks.set(id, callback);
+    public then(callback: ProgressHandlerCallback): ProgressHandler {
+        this.onProgress = callback;
+        return this;
+    }
+
+    public catch(callback: ProgressErrorHandlerCallback): ProgressHandler {
+        this.onError = callback;
+        return this;
+    }
+
+    // Returns whether progress increased.
+    setProgress(progress: number): boolean {
+        const increased = this.progress < progress;
+        this.progress = progress;
+        return increased;
     }
 }
 
-function initialize() {
+export class ProgressEvent {
+    private handlers = new Map<string, ProgressHandler>();
+
+    public addHandler(id: string, handler: ProgressHandler) {
+        this.handlers.set(id, handler);
+    }
+
+    // Returns whether handler existed and has been deleted.
+    public removeHandler(id: string): boolean {
+        return this.handlers.delete(id);
+    }
+
+    private getHandler(id: string): ProgressHandler | undefined {
+        const handler = this.handlers.get(id);
+
+        if (handler === undefined) {
+            console.warn('Provided ID of progress event handler does not exist.');
+        }
+
+        return handler;
+    }
+
+    public progress(id: string, progress: number) {
+        const handler = this.getHandler(id);
+
+        if (handler === undefined) {
+            return;
+        }
+
+        if (handler.setProgress(progress) && handler.onProgress !== undefined) {
+            handler.onProgress(progress);
+        }
+    }
+}
+
+export const progressEvents = {
+    compression: new ProgressEvent(),
+    extraction: new ProgressEvent(),
+};
+
+let isInitialized = false;
+
+function initializeIpc() {
+    if (isInitialized) {
+        console.warn('IPC initializer called multiple times.');
+        return;
+    }
+
+    isInitialized = true;
+
     if (process.env.NODE_ENV === 'production') {
         const ipcRenderer = getElectron().ipcRenderer;
 
@@ -80,26 +148,31 @@ function initialize() {
         ipcMessageSender.env.getPlatform();
         ipcMessageSender.env.getHomePath();
 
-        ipcRenderer.on('extract-item', (_event: any, value: any) => {
-            switch (value.kind) {
-                case 'data':
-                const callback = extractionHandlerCallbacks.get(value.id);
+        const addProgressEvents = (channel: string, event: ProgressEvent) => {
+            ipcRenderer.on(channel, (_event: any, value: any) => {
+                switch (value.kind) {
+                    case 'progress':
+                    event.progress(value.id, value.value);
+                    break;
 
-                if (callback !== undefined) {
-                    callback(value.value);
+                    case 'end':
+                    event.progress(value.id, 100);
+                    event.removeHandler(value.id);
+                    break;
+
+                    case 'error':
+                    console.error(value.value);
+                    break;
                 }
-                break;
+            });
+        }
 
-                case 'end':
-                case 'error':
-                extractionHandlerCallbacks.delete(value.id);
-                break;
-            }
-        });
+        addProgressEvents('compress-item', progressEvents.compression);
+        addProgressEvents('extract-item', progressEvents.extraction);
     } else {
         platform.set(Platform.Other);
         homeDirectoryPath.set(new ItemPath(undefined, ['usr'], true));
     }
 }
 
-initialize();
+initializeIpc();

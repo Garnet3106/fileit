@@ -5,14 +5,13 @@ import OperationIcon from './OperationIcon/OperationIcon';
 import { useDispatch, useSelector } from 'react-redux/es/exports';
 import { RootState, slices, store } from '../../../../common/redux';
 import { variables as leftPanelVariables } from '../../LeftPane/LeftPane';
-import Fs, { FsErrorKind } from '../../../../common/fs/fs';
-import { FileItemIdentifier, ItemPath } from '../../../../common/fs/path';
+import Fs, { CompressionFormat, FsErrorKind } from '../../../../common/fs/fs';
+import { ItemPath } from '../../../../common/fs/path';
 import { createRef, useEffect, useState } from 'react';
 import { ItemKind } from '../../../../common/fs/item';
 import { renameBarClassName } from '../ContentPane/ContentItem/ContentItem';
 import Dropdown, { DropdownRef } from '../../../common/Dropdown/Dropdown';
 import { DropdownItemData } from '../../../common/Dropdown/DropdownItem/DropdownItem';
-import { addExtractionHandler, ipcMessageSender } from '../../../../common/ipc';
 
 export const operationIconIds = {
     window: {
@@ -42,7 +41,8 @@ export default function OperationPane() {
 
     const tab = useSelector((state: RootState) => state.tab);
     const selectedItemPaths = useSelector((state: RootState) => state.selectedItemPaths);
-    const isExtractable = !selectedItemPaths.some((v) => !v.isExtractable());
+    const isExtractable = selectedItemPaths.length > 0 && !selectedItemPaths.some((v) => !v.isExtractable());
+    const preventIconClick = selectedItemPaths.length === 0;
     const renamingItemPath = useSelector((state: RootState) => state.renamingItemPath);
     const showPathEditBar = useSelector((state: RootState) => state.showPathEditBar);
     const [pathEditBarValue, setPathEditBarValue] = useState('');
@@ -92,22 +92,24 @@ export default function OperationPane() {
                 },
             ];
 
+            const onConfirmCompressionDropdownItem = (id: string) => compressItem(id as CompressionFormat, selectedItemPaths);
+
             // fix
             const compressionDropdown: DropdownItemData[] = [
                 {
-                    id: 'zip',
+                    id: CompressionFormat.Zip,
                     value: 'ZIP',
-                    onConfirm: (id) => console.log(id),
+                    onConfirm: onConfirmCompressionDropdownItem,
                 },
                 {
-                    id: '7z',
+                    id: CompressionFormat.SZip,
                     value: '7Z',
-                    onConfirm: (id) => console.log(id),
+                    onConfirm: onConfirmCompressionDropdownItem,
                 },
                 {
-                    id: 'rar',
+                    id: CompressionFormat.Rar,
                     value: 'RAR',
-                    onConfirm: (id) => console.log(id),
+                    onConfirm: onConfirmCompressionDropdownItem,
                 },
             ];
 
@@ -115,7 +117,7 @@ export default function OperationPane() {
                 <>
                 <Dropdown pivot={[155, 95]} items={newFolderDropdown} ref={newFolderDropdownRef} />
                 <Dropdown pivot={[185, 95]} items={newFileDropdown} ref={newFileDropdownRef} />
-                {!isExtractable && <Dropdown pivot={[275, 95]} items={compressionDropdown} ref={compressionDropdownRef} />}
+                {!preventIconClick && <Dropdown pivot={[275, 95]} items={compressionDropdown} ref={compressionDropdownRef} />}
                 </>
             );
         },
@@ -129,8 +131,6 @@ export default function OperationPane() {
                     <OperationIcon id={operationIconIds.path.edit} mini={true} onClick={onClickPathEditIcon} />
                 </div>
             );
-
-            const preventIconClick = selectedItemPaths.length === 0;
 
             const rowItems = {
                 window: (
@@ -208,13 +208,18 @@ export default function OperationPane() {
                             }}
                         />
                         <OperationIcon
-                            id={isExtractable && !preventIconClick ? operationIconIds.item.extract : operationIconIds.item.compress}
+                            id={operationIconIds.item.compress}
                             preventClick={preventIconClick}
                             onClick={() => {
+                                compressionDropdownRef.current?.switchVisibility();
+                            }}
+                        />
+                        <OperationIcon
+                            id={operationIconIds.item.extract}
+                            preventClick={!isExtractable}
+                            onClick={() => {
                                 if (isExtractable) {
-                                    iterateSelectedPaths(extractFile);
-                                } else {
-                                    compressionDropdownRef.current?.switchVisibility();
+                                    iterateSelectedPaths(extractFile, '圧縮ファイルを選択してください。');
                                 }
                             }}
                         />
@@ -260,11 +265,14 @@ export default function OperationPane() {
         </div>
     );
 
-    function iterateSelectedPaths(callback?: (path: ItemPath, index: number) => void) {
+    function iterateSelectedPaths(
+        callback?: (path: ItemPath, index: number) => void,
+        popupDescriptionOnNotSelected: string = 'アイテムを選択してください。',
+    ) {
         if (selectedItemPaths.length === 0) {
             dispatch(slices.popups.actions.add({
                 title: '操作ペイン',
-                description: 'アイテムを選択してください。',
+                description: popupDescriptionOnNotSelected,
             }));
 
             return;
@@ -275,26 +283,12 @@ export default function OperationPane() {
         }
     }
 
-    function extractFile(path: ItemPath) {
-        const destPath = Fs.getExtractionDestinationPath(path);
+    function compressItem(format: CompressionFormat, paths: ItemPath[]) {
+        Fs.compress(format, paths);
+    }
 
-        if (Fs.exists(destPath)) {
-            dispatch(slices.popups.actions.add({
-                title: 'ファイル解凍',
-                description: '解凍先のフォルダがすでに存在します。',
-                buttons: [
-                    {
-                        text: '上書き',
-                        onClick: () => Fs.extract(path),
-                    },
-                    {
-                        text: '閉じる',
-                    },
-                ],
-            }));
-        } else {
-            Fs.extract(path);
-        }
+    function extractFile(path: ItemPath) {
+        Fs.extract(path);
     }
 
     function onClickPathCopyIcon() {

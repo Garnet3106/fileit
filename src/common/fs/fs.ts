@@ -1,7 +1,7 @@
 import { Dirent } from "fs";
-import { addExtractionHandler, ipcMessageSender } from "../ipc";
+import { ipcMessageSender, progressEvents, ProgressHandler } from "../ipc";
 import { FileItem, FileItemStats, FolderItem, FolderItemStats, Item, ItemKind, ItemStats } from "./item";
-import { FileItemIdentifier, ItemPath } from "./path";
+import { FileItemIdentifier, FolderItemIdentifier, ItemPath } from "./path";
 import { Buffer } from "buffer";
 
 export enum FsErrorKind {
@@ -13,6 +13,7 @@ export enum FsErrorKind {
     CannotProcessTheRootFolder = 'Cannot process the root folder.',
     OperationNotPermitted = 'Operation not permitted.',
     ItemIsNotExtractable = 'Item is not extractable.',
+    NoPathProvided = 'No path provided',
 }
 
 export namespace FsErrorKind {
@@ -61,14 +62,20 @@ export class FsError extends Error {
     }
 }
 
-export const fsEncoding = 'utf-8';
-export const fsBufferSize = 1024;
-export const maximumBufferLength = 64;
+export enum CompressionFormat {
+    Rar = 'rar',
+    SZip = '7z',
+    Zip = 'zip',
+}
 
 export type FileContent = {
     chunks: Buffer[],
     omitted: boolean,
 };
+
+export const fsEncoding = 'utf-8';
+export const fsBufferSize = 1024;
+export const maximumBufferLength = 64;
 
 export interface IFs {
     exists(path: ItemPath): boolean;
@@ -86,6 +93,8 @@ export interface IFs {
     rename(from: ItemPath, to: ItemPath): Promise<void>,
 
     trash(path: ItemPath): void;
+
+    compress(format: CompressionFormat, paths: ItemPath[]): void;
 
     extract(path: ItemPath): void;
 
@@ -137,17 +146,49 @@ export default class Fs {
         Fs.fs().trash(path);
     }
 
+    public static compress(format: CompressionFormat, paths: ItemPath[]) {
+        Fs.fs().compress(format, paths);
+    }
+
     public static extract(path: ItemPath) {
         Fs.fs().extract(path);
     }
 
-    public static getExtractionDestinationPath(src: ItemPath): ItemPath {
-        if (!src.isExtractable()) {
-            throw new FsError(FsErrorKind.ItemIsNotExtractable);
+    public static differentiatePath(path: ItemPath): ItemPath {
+        const id = path.getIdentifier();
+        const name = path.isFolder() ? id.toString() : (id as FileItemIdentifier).getName();
+        const parent = path.getParent();
+
+        function getPath(count: number = 0): ItemPath {
+            const newIdIndex = count === 0 ? '' : '_' + count;
+            const newName = name + newIdIndex;
+            const newId = path.isFolder() ?
+                new FolderItemIdentifier(newName) :
+                new FileItemIdentifier(newName, (path.getIdentifier() as FileItemIdentifier).getExtension());
+            const tmpPath = parent.append(newId.toString(), path.isFolder());
+            const tmpPathExists = Fs.exists(tmpPath);
+            return tmpPathExists ? getPath(count + 1) : tmpPath;
+        };
+
+        return getPath();
+    }
+
+    public static generateCompressionDestinationPath(format: CompressionFormat, src: ItemPath[]): ItemPath | null {
+        const firstSrc = src.at(0);
+
+        if (firstSrc === undefined) {
+            return null;
         }
 
-        const fileId = src.getIdentifier() as FileItemIdentifier;
-        return src.getParent().append(fileId.getName(), true);
+        const parent = firstSrc.getParent();
+
+        if (src.length === 1) {
+            const id = firstSrc.getIdentifier();
+            const name = firstSrc.isFolder() ? id.toString() : (id as FileItemIdentifier).getName();
+            return parent.append((new FileItemIdentifier(name, format)).toString(), false);
+        }
+
+        return parent.append((new FileItemIdentifier('compress', format)).toString(), false);
     }
 
     public static watch(path: ItemPath, callback: () => void) {
@@ -356,12 +397,38 @@ export class NativeFs implements IFs {
         }
     }
 
+    public compress(format: CompressionFormat, paths: ItemPath[]) {
+        const tmpDestPath = Fs.generateCompressionDestinationPath(format, paths);
+
+        if (tmpDestPath === null) {
+            throw new FsError(FsErrorKind.NoPathProvided);
+        }
+
+        const destPath = Fs.differentiatePath(tmpDestPath);
+
+        // rm
+        if (!window.confirm(destPath.getFullPath())) {
+            return;
+        }
+
+        const fullPaths = paths.map((v) => v.getFullPath());
+        const id = ipcMessageSender.fs.compress(fullPaths, destPath.getFullPath());
+        // fix
+        const handler = (new ProgressHandler())
+            .then(console.log)
+            .catch(console.error);
+
+        progressEvents.compression.addHandler(id, handler);
+    }
+
     public extract(path: ItemPath) {
         if (!path.isExtractable()) {
             throw new FsError(FsErrorKind.ItemIsNotExtractable);
         }
 
-        const destPath = Fs.getExtractionDestinationPath(path);
+        const parent = path.getParent();
+        const name = (path.getIdentifier() as FileItemIdentifier).getName();
+        const destPath = Fs.differentiatePath(parent.append(name, true));
 
         // rm
         if (!window.confirm(path.getFullPath() + '\n' + destPath.getFullPath())) {
@@ -370,7 +437,11 @@ export class NativeFs implements IFs {
 
         const id = ipcMessageSender.fs.extract(path.getFullPath(), destPath.getFullPath());
         // fix
-        addExtractionHandler(id, console.log);
+        const handler = (new ProgressHandler())
+            .then(console.log)
+            .catch(console.error);
+
+        progressEvents.extraction.addHandler(id, handler);
     }
 
     public watch(path: ItemPath, callback: () => void) {
@@ -661,11 +732,27 @@ export class FakeFs implements IFs {
         });
     }
 
-    public extract(path: ItemPath) {
-        if (!path.isExtractable()) {
-            throw new FsError(FsErrorKind.ItemIsNotExtractable);
+    public compress(format: CompressionFormat, paths: ItemPath[]) {
+        const tmpDestPath = Fs.generateCompressionDestinationPath(format, paths);
+
+        if (tmpDestPath === null) {
+            throw new FsError(FsErrorKind.NoPathProvided);
         }
 
+        const destPath = Fs.differentiatePath(tmpDestPath);
+        console.log('Compress to ' + destPath.getFullPath());
+        // unimplemented
+    }
+
+    public extract(path: ItemPath) {
+        if (!path.isExtractable()) {
+            throw new FsError(FsErrorKind.ItemIsNotExtractable, path);
+        }
+
+        const parent = path.getParent();
+        const name = (path.getIdentifier() as FileItemIdentifier).getName();
+        const destPath = Fs.differentiatePath(parent.append(name, true));
+        console.log('Extract to ' + destPath.getFullPath());
         // unimplemented
     }
 
