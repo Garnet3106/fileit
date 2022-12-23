@@ -149,16 +149,18 @@ export const slices = {
         name: 'popups',
         initialState: new Map<string, PopupItemData>(),
         reducers: {
-            add: (state, action: PayloadAction<PopupItemData>) => {
-                const uuid = generateUuid();
+            add: (state, action: PayloadAction<PopupItemData & {
+                id?: string,
+            }>) => {
+                const id = action.payload.id ?? generateUuid();
 
-                if (state.has(uuid)) {
+                if (state.has(id)) {
                     console.error('Popup ID is unexpectedly duplicate.');
                     return state;
                 }
 
                 const newState = new Map(state);
-                newState.set(uuid, action.payload);
+                newState.set(id, action.payload);
                 return newState;
             },
             remove: (state, action: PayloadAction<string>) => {
@@ -168,6 +170,34 @@ export const slices = {
 
                 const newState = new Map(state);
                 newState.delete(action.payload);
+                return newState;
+            },
+            changeDescription: (state, action: PayloadAction<{
+                id: string,
+                value: string,
+            }>) => {
+                const newState = new Map(state);
+                const target = Object.assign({}, newState.get(action.payload.id));
+
+                if (target !== undefined) {
+                    target.description = action.payload.value;
+                }
+
+                newState.set(action.payload.id, target);
+                return newState;
+            },
+            changeProgress: (state, action: PayloadAction<{
+                id: string,
+                value: number,
+            }>) => {
+                const newState = new Map(state);
+                const target = Object.assign({}, newState.get(action.payload.id));
+
+                if (target !== undefined) {
+                    target.progress = action.payload.value;
+                }
+
+                newState.set(action.payload.id, target);
                 return newState;
             },
         },

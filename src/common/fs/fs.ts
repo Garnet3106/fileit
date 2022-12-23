@@ -94,9 +94,9 @@ export interface IFs {
 
     trash(path: ItemPath): void;
 
-    compress(format: CompressionFormat, paths: ItemPath[]): void;
+    compress(format: CompressionFormat, paths: ItemPath[], onProgress: (progress: number) => void): void;
 
-    extract(path: ItemPath): void;
+    extract(path: ItemPath, onProgress?: (progress: number) => void): void;
 
     watch(path: ItemPath, callback: () => void): void;
 }
@@ -146,12 +146,12 @@ export default class Fs {
         Fs.fs().trash(path);
     }
 
-    public static compress(format: CompressionFormat, paths: ItemPath[]) {
-        Fs.fs().compress(format, paths);
+    public static compress(format: CompressionFormat, paths: ItemPath[], onProgress: (progress: number) => void) {
+        Fs.fs().compress(format, paths, onProgress);
     }
 
-    public static extract(path: ItemPath) {
-        Fs.fs().extract(path);
+    public static extract(path: ItemPath, onProgress?: (progress: number) => void) {
+        Fs.fs().extract(path, onProgress);
     }
 
     public static differentiatePath(path: ItemPath): ItemPath {
@@ -397,7 +397,7 @@ export class NativeFs implements IFs {
         }
     }
 
-    public compress(format: CompressionFormat, paths: ItemPath[]) {
+    public compress(format: CompressionFormat, paths: ItemPath[], onProgress: (progress: number) => void) {
         const tmpDestPath = Fs.generateCompressionDestinationPath(format, paths);
 
         if (tmpDestPath === null) {
@@ -415,13 +415,17 @@ export class NativeFs implements IFs {
         const id = ipcMessageSender.fs.compress(fullPaths, destPath.getFullPath());
         // fix
         const handler = (new ProgressHandler())
-            .then(console.log)
+            .then((progress) => {
+                if (onProgress !== undefined) {
+                    onProgress(progress);
+                }
+            })
             .catch(console.error);
 
         progressEvents.compression.addHandler(id, handler);
     }
 
-    public extract(path: ItemPath) {
+    public extract(path: ItemPath, onProgress?: (progress: number) => void) {
         if (!path.isExtractable()) {
             throw new FsError(FsErrorKind.ItemIsNotExtractable);
         }
@@ -438,7 +442,11 @@ export class NativeFs implements IFs {
         const id = ipcMessageSender.fs.extract(path.getFullPath(), destPath.getFullPath());
         // fix
         const handler = (new ProgressHandler())
-            .then(console.log)
+            .then((progress) => {
+                if (onProgress !== undefined) {
+                    onProgress(progress);
+                }
+            })
             .catch(console.error);
 
         progressEvents.extraction.addHandler(id, handler);
@@ -732,7 +740,7 @@ export class FakeFs implements IFs {
         });
     }
 
-    public compress(format: CompressionFormat, paths: ItemPath[]) {
+    public compress(format: CompressionFormat, paths: ItemPath[], onProgress?: (progress: number) => void) {
         const tmpDestPath = Fs.generateCompressionDestinationPath(format, paths);
 
         if (tmpDestPath === null) {
@@ -741,10 +749,20 @@ export class FakeFs implements IFs {
 
         const destPath = Fs.differentiatePath(tmpDestPath);
         console.log('Compress to ' + destPath.getFullPath());
+
+        if (onProgress !== undefined) {
+            setTimeout(() => {
+                onProgress(50);
+
+                setTimeout(() => {
+                    onProgress(100);
+                }, 1000);
+            }, 1000);
+        }
         // unimplemented
     }
 
-    public extract(path: ItemPath) {
+    public extract(path: ItemPath, onProgress?: (progress: number) => void) {
         if (!path.isExtractable()) {
             throw new FsError(FsErrorKind.ItemIsNotExtractable, path);
         }
@@ -753,6 +771,16 @@ export class FakeFs implements IFs {
         const name = (path.getIdentifier() as FileItemIdentifier).getName();
         const destPath = Fs.differentiatePath(parent.append(name, true));
         console.log('Extract to ' + destPath.getFullPath());
+
+        if (onProgress !== undefined) {
+            setTimeout(() => {
+                onProgress(50);
+
+                setTimeout(() => {
+                    onProgress(100);
+                }, 1000);
+            }, 1000);
+        }
         // unimplemented
     }
 

@@ -38,3 +38,26 @@
     font-size: 95%;
     margin: 5px 0;
 }
+
+.popup-item-progress-bar {
+    background-color: var(--unselected-tab-color);
+    border-radius: 3px;
+    height: 20px;
+    position: relative;
+}
+
+.popup-item-progress-bar-filling {
+    background-color: #15196f;
+    border-radius: 3px;
+    height: 20px;
+    position: absolute;
+}
+
+.popup-item-progress-bar-text {
+    color: #cccccc;
+    font-size: 85%;
+    position: relative;
+    text-align: center;
+    width: 100%;
+    z-index: 10000;
+}

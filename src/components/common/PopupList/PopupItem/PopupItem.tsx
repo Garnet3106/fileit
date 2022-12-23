@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
-import { useDispatch } from 'react-redux';
-import { slices } from '../../../../common/redux';
+import { Popup } from '../../../../common/popup';
 import { generateUuid } from '../../../../common/utils';
 import './PopupItem.css';
 import PopupOperationButton, { PopupOperationButtonData } from './PopupOperationButton/PopupOperationButton';
@@ -8,6 +7,8 @@ import PopupOperationButton, { PopupOperationButtonData } from './PopupOperation
 export type PopupItemData = {
     title: string,
     description: string,
+    progress?: number,
+    timeout?: number,
     buttons?: PopupOperationButtonData[],
 };
 
@@ -16,19 +17,38 @@ export type PopupItemProps = {
     data: PopupItemData,
 };
 
-export const variables = {
-    closeTimeout: 3000,
-};
-
 export default function PopupItem(props: PopupItemProps) {
-    const dispatch = useDispatch();
+    const progressPercent = `${props.data.progress ?? 0}%`;
 
-    const buttons = props.data.buttons?.map((eachButton) => (
-        <PopupOperationButton data={eachButton} onClick={close} key={generateUuid()} />
-    ));
+    const styles = {
+        progressBar: {
+            marginBottom: props.data.buttons === undefined || props.data.buttons.length === 0 ? undefined : '10px',
+        },
+        progressBarFilling: {
+            width: progressPercent,
+        },
+    };
+
+    const renderers = {
+        buttons: () => (
+            props.data.buttons?.map((eachButton) => (
+                <PopupOperationButton data={eachButton} onClick={() => Popup.close(props.uuid)} key={generateUuid()} />
+            ))
+        ),
+        progress: () => props.data.progress !== undefined && (
+            <div className="popup-item-progress-bar" style={styles.progressBar} >
+                <div className="popup-item-progress-bar-filling" style={styles.progressBarFilling} />
+                <div className="popup-item-progress-bar-text">
+                    {progressPercent}
+                </div>
+            </div>
+        ),
+    };
 
     useEffect(() => {
-        setTimeout(close, variables.closeTimeout);
+        if (props.data.timeout !== undefined) {
+            setTimeout(() => Popup.close(props.uuid), props.data.timeout);
+        }
     }, []);
 
     return (
@@ -42,17 +62,14 @@ export default function PopupItem(props: PopupItemProps) {
             <div className="popup-item-description">
                 {props.data.description}
             </div>
+            {renderers.progress()}
             <div>
-                {buttons}
+                {renderers.buttons()}
             </div>
         </div>
     );
 
     function onClickCloseIcon() {
-        close();
-    }
-
-    function close() {
-        dispatch(slices.popups.actions.remove(props.uuid));
+        Popup.close(props.uuid);
     }
 }

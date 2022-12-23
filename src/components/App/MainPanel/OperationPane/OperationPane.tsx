@@ -12,6 +12,7 @@ import { ItemKind } from '../../../../common/fs/item';
 import { renameBarClassName } from '../ContentPane/ContentItem/ContentItem';
 import Dropdown, { DropdownRef } from '../../../common/Dropdown/Dropdown';
 import { DropdownItemData } from '../../../common/Dropdown/DropdownItem/DropdownItem';
+import { Popup } from '../../../../common/popup';
 
 export const operationIconIds = {
     window: {
@@ -273,6 +274,7 @@ export default function OperationPane() {
             dispatch(slices.popups.actions.add({
                 title: '操作ペイン',
                 description: popupDescriptionOnNotSelected,
+                timeout: Popup.defaultClosingTimeout,
             }));
 
             return;
@@ -284,11 +286,81 @@ export default function OperationPane() {
     }
 
     function compressItem(format: CompressionFormat, paths: ItemPath[]) {
-        Fs.compress(format, paths);
+        const popupId = generateUuid();
+        let hasFinishedPreparation = false;
+
+        dispatch(slices.popups.actions.add({
+            id: popupId,
+            title: 'ファイル圧縮',
+            description: '準備中...',
+            progress: 0,
+        }));
+
+        Fs.compress(format, paths, (progress) => {
+            if (!hasFinishedPreparation) {
+                dispatch(slices.popups.actions.changeDescription({
+                    id: popupId,
+                    value: '圧縮中...',
+                }));
+            }
+
+            hasFinishedPreparation = true;
+
+            dispatch(slices.popups.actions.changeProgress({
+                id: popupId,
+                value: progress,
+            }));
+
+            if (progress === 100) {
+                dispatch(slices.popups.actions.changeDescription({
+                    id: popupId,
+                    value: '圧縮が完了しました。',
+                }));
+
+                setTimeout(() => {
+                    Popup.close(popupId);
+                }, Popup.defaultClosingTimeout);
+            }
+        });
     }
 
     function extractFile(path: ItemPath) {
-        Fs.extract(path);
+        const popupId = generateUuid();
+        let hasFinishedPreparation = false;
+
+        dispatch(slices.popups.actions.add({
+            id: popupId,
+            title: 'ファイル解凍',
+            description: '準備中...',
+            progress: 0,
+        }));
+
+        Fs.extract(path, (progress) => {
+            if (!hasFinishedPreparation) {
+                dispatch(slices.popups.actions.changeDescription({
+                    id: popupId,
+                    value: '解凍中...',
+                }));
+            }
+
+            hasFinishedPreparation = true;
+
+            dispatch(slices.popups.actions.changeProgress({
+                id: popupId,
+                value: progress,
+            }));
+
+            if (progress === 100) {
+                dispatch(slices.popups.actions.changeDescription({
+                    id: popupId,
+                    value: '解凍が完了しました。',
+                }));
+
+                setTimeout(() => {
+                    Popup.close(popupId);
+                }, Popup.defaultClosingTimeout);
+            }
+        });
     }
 
     function onClickPathCopyIcon() {
@@ -300,6 +372,7 @@ export default function OperationPane() {
             dispatch(slices.popups.actions.add({
                 title: '操作ペイン',
                 description: '作業フォルダのパスをコピーしました。',
+                timeout: Popup.defaultClosingTimeout,
             }));
         } else {
             console.error('Failed to copy the working folder path to the clipboard due to it being null.');
@@ -336,9 +409,11 @@ export default function OperationPane() {
                 const payload = isFolder ? {
                     title: '新規フォルダ',
                     description: 'フォルダが作成されました。',
+                    timeout: Popup.defaultClosingTimeout,
                 } : {
                     title: '新規ファイル',
                     description: 'ファイルが作成されました。',
+                    timeout: Popup.defaultClosingTimeout,
                 };
 
                 dispatch(slices.popups.actions.add(payload));
@@ -360,6 +435,7 @@ export default function OperationPane() {
                 dispatch(slices.popups.actions.add({
                     title: '新規アイテム',
                     description: description,
+                    timeout: Popup.defaultClosingTimeout,
                 }));
             });
     }
@@ -385,6 +461,7 @@ export default function OperationPane() {
                             title: 'FileMe',
                             // fix
                             description: 'ペーストされたパスは存在しません。(' + trimmedValue + ')',
+                            timeout: Popup.defaultClosingTimeout,
                         }));
 
                         return;
@@ -396,6 +473,7 @@ export default function OperationPane() {
                                 dispatch(slices.popups.actions.add({
                                     title: 'FileMe',
                                     description: 'ペーストされたパスはフォルダではありません。',
+                                    timeout: Popup.defaultClosingTimeout,
                                 }));
 
                                 return;
@@ -497,6 +575,7 @@ export default function OperationPane() {
                     dispatch(slices.popups.actions.add({
                         title: 'エラー',
                         description: 'フォルダパスを指定してください。',
+                        timeout: Popup.defaultClosingTimeout,
                     }));
                 }
             })
@@ -505,6 +584,7 @@ export default function OperationPane() {
                     dispatch(slices.popups.actions.add({
                         title: 'エラー',
                         description: '指定されたパスが見つかりません。',
+                        timeout: Popup.defaultClosingTimeout,
                     }));
                 } else {
                     console.error(e);

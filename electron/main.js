@@ -69,7 +69,9 @@ ipcMain.on('compress-item', (event, id, src, dest) => {
 });
 
 ipcMain.on('extract-item', (event, id, src, dest) => {
-    const stream = sZip.extractFull(src, dest);
+    const stream = sZip.extractFull(src, dest, {
+        $progress: true,
+    });
 
     stream.on('progress', (progress) => event.reply('extract-item', {
         id: id,
