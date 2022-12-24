@@ -1,6 +1,8 @@
 .tab-pane-container {
+    -webkit-app-region: drag;
     display: flex;
     flex-direction: row;
+    justify-content: space-between;
     overflow-x: hidden;
     width: 100%;
 }
@@ -10,7 +12,6 @@
     flex-direction: row;
     overflow-x: scroll;
     scrollbar-width: 0;
-    -webkit-app-region: drag;
 }
 
 .tab-pane-items::-webkit-scrollbar {
@@ -18,6 +19,7 @@
 }
 
 .tab-pane-operations {
+    -webkit-app-region: no-drag;
     align-items: center;
     display: flex;
     flex-direction: row;

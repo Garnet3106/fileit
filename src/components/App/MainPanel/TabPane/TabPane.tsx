@@ -10,6 +10,7 @@ import TabPaneItem from './TabPaneItem/TabPaneItem';
 
 export const variables = {
     height: 30,
+    dragAreaWidth: 100,
 };
 
 export default function TabPane() {
@@ -41,7 +42,7 @@ export default function TabPane() {
             height: `${variables.height}px`,
         },
         items: {
-            width: `calc(100vw - ${150 + 1}px)`,
+            width: `calc(100vw - ${150 + 1 + variables.dragAreaWidth}px)`,
         },
     };
 
