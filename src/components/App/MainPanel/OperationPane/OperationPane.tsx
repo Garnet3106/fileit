@@ -26,6 +26,7 @@ export const operationIconIds = {
     },
     item: {
         create: 'create',
+        rename: 'rename',
         copy: 'copy',
         trash: 'trash',
         compress: 'compress',
@@ -193,6 +194,15 @@ export default function OperationPane() {
                             id={operationIconIds.item.create}
                             preventClick={false}
                             onClick={() => newFileDropdownRef.current?.switchVisibility()}
+                        />
+                        <OperationIcon
+                            id={operationIconIds.item.rename}
+                            preventClick={preventIconClick}
+                            onClick={() => {
+                                if (selectedItemPaths.length !== 0) {
+                                    dispatch(slices.renamingItemPath.actions.update(selectedItemPaths[0]));
+                                }
+                            }}
                         />
                         <OperationIcon
                             id={operationIconIds.item.copy}
