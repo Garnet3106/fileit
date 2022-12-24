@@ -80,8 +80,11 @@ export default function TabPane() {
         }
 
         if (event.ctrlKey && event.code === 'KeyW') {
-            if (tab.tabs.length !== 1) {
-                event.preventDefault();
+            event.preventDefault();
+
+            if (tab.tabs.length === 1) {
+                NativeWindow.close();
+                return;
             }
 
             if (tab.selected !== null) {
@@ -113,6 +116,11 @@ export default function TabPane() {
     function close(id: string) {
         if (findTabIndex(id) === undefined) {
             console.error(`Couldn't operate unknown or unopened tab ID \`${id}\`.`);
+            return;
+        }
+
+        if (tab.tabs.length === 1) {
+            NativeWindow.close();
             return;
         }
 
