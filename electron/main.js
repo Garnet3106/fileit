@@ -1,19 +1,15 @@
 const { BrowserWindow, app, ipcMain, shell } = require('electron');
-const electronReload = require('electron-reload');
-const isDev = require('electron-is-dev');
 const path = require('path');
-const sZip = require('node-7z');
 
-let mainWindow = null;
+app.whenReady().then(initializeApp);
 
-const createWindow = () => {
-    if (isDev) {
-        electronReload(path.resolve(__dirname, '../build'), {
-            electron: path.join(__dirname, '../node_modules/.bin/electron'),
-        });
-    }
+function initializeApp() {
+    const window = createWindow();
+    initializeWindow(window);
+}
 
-    mainWindow = new BrowserWindow({
+function createWindow() {
+    const window = new BrowserWindow({
         height: 600,
         width: 800,
         minHeight: 250,
@@ -26,71 +22,74 @@ const createWindow = () => {
         },
     });
 
-    mainWindow.setMenuBarVisibility(false);
-    mainWindow.loadFile(path.resolve(__dirname, '../build/index.html'));
-};
+    window.setMenuBarVisibility(false);
+    window.loadFile(path.resolve(__dirname, '../build/index.html'));
+    return window;
+}
 
-ipcMain.on('get-platform', (event) => event.reply('get-platform', process.platform));
+function initializeWindow(window) {
+    const sZip = require('node-7z');
 
-ipcMain.on('get-home-path', (event) => event.reply('get-home-path', process.env[process.platform === 'win32' ? 'USERPROFILE' : 'HOME']));
+    ipcMain.on('get-platform', (event) => event.reply('get-platform', process.platform));
 
-ipcMain.on('close-window', () => mainWindow?.close());
+    ipcMain.on('get-home-path', (event) => event.reply('get-home-path', process.env[process.platform === 'win32' ? 'USERPROFILE' : 'HOME']));
 
-ipcMain.on('minimize-window', () => mainWindow?.minimize());
+    ipcMain.on('close-window', () => window.close());
 
-ipcMain.on('run-file', (_event, targetPath) => shell.openPath(targetPath).catch(console.error));
+    ipcMain.on('minimize-window', () => window.minimize());
 
-// Use path.resolve() to convert received path separators for Windows.
-// See more: https://github.com/electron/electron/issues/28831
-ipcMain.on('trash-file', (_event, targetPath) => shell.trashItem(path.resolve(targetPath)).catch(console.error));
+    ipcMain.on('run-file', (_event, targetPath) => shell.openPath(targetPath).catch(console.error));
 
-ipcMain.on('compress-item', (event, id, src, dest) => {
-    const stream = sZip.add(dest, src, {
-        $progress: true,
-        recursive: true,
+    // Use path.resolve() to convert received path separators for Windows.
+    // See more: https://github.com/electron/electron/issues/28831
+    ipcMain.on('trash-file', (_event, targetPath) => shell.trashItem(path.resolve(targetPath)).catch(console.error));
+
+    ipcMain.on('compress-item', (event, id, src, dest) => {
+        const stream = sZip.add(dest, src, {
+            $progress: true,
+            recursive: true,
+        });
+
+        stream.on('progress', (progress) => event.reply('compress-item', {
+            id: id,
+            kind: 'progress',
+            value: progress.percent,
+        }));
+
+        stream.on('end', () => event.reply('compress-item', {
+            id: id,
+            kind: 'end',
+        }));
+
+        stream.on('error', (error) => event.reply('compress-item', {
+            id: id,
+            kind: 'error',
+            value: error,
+        }));
     });
 
-    stream.on('progress', (progress) => event.reply('compress-item', {
-        id: id,
-        kind: 'progress',
-        value: progress.percent,
-    }));
+    ipcMain.on('extract-item', (event, id, src, dest) => {
+        const stream = sZip.extractFull(src, dest, {
+            $progress: true,
+        });
 
-    stream.on('end', () => event.reply('compress-item', {
-        id: id,
-        kind: 'end',
-    }));
+        stream.on('progress', (progress) => event.reply('extract-item', {
+            id: id,
+            kind: 'progress',
+            value: progress.percent,
+        }));
 
-    stream.on('error', (error) => event.reply('compress-item', {
-        id: id,
-        kind: 'error',
-        value: error,
-    }));
-});
+        stream.on('end', () => event.reply('extract-item', {
+            id: id,
+            kind: 'end',
+        }));
 
-ipcMain.on('extract-item', (event, id, src, dest) => {
-    const stream = sZip.extractFull(src, dest, {
-        $progress: true,
+        stream.on('error', (error) => event.reply('extract-item', {
+            id: id,
+            kind: 'error',
+            value: error,
+        }));
     });
 
-    stream.on('progress', (progress) => event.reply('extract-item', {
-        id: id,
-        kind: 'progress',
-        value: progress.percent,
-    }));
-
-    stream.on('end', () => event.reply('extract-item', {
-        id: id,
-        kind: 'end',
-    }));
-
-    stream.on('error', (error) => event.reply('extract-item', {
-        id: id,
-        kind: 'error',
-        value: error,
-    }));
-});
-
-app.once('window-all-closed', () => app.quit());
-
-app.whenReady().then(createWindow);
+    app.once('window-all-closed', () => app.quit());
+}

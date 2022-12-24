@@ -12,6 +12,7 @@
 }
 
 body {
+    background-color: var(--panel1-color);
     color: var(--font-color);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
         'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
@@ -22,8 +23,4 @@ body {
     margin: 0;
     overflow: hidden;
     user-select: none;
-}
-
-code {
-    font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }
