@@ -178,7 +178,6 @@ export const slices = {
             }>) => {
                 const newState = new Map(state);
                 const target = newState.get(action.payload.id);
-                console.log(target)
 
                 if (target === undefined) {
                     return state;

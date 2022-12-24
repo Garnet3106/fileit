@@ -7,6 +7,7 @@
     margin-right: 3px;
     max-width: 150px;
     min-width: 150px;
+    -webkit-app-region: no-drag;
 }
 
 .tab-pane-item-container:last-of-type {

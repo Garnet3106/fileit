@@ -80,14 +80,14 @@ export default function DropdownItem(props: DropdownItemProps) {
     function onMouseDown(event: MouseEvent) {
         const target = event.target as HTMLElement;
 
-        if (props.data.inputField === true && dropdownDisplayed) {
+        if (dropdownDisplayed) {
             switch (target.className) {
                 case 'dropdown-item':
                 case 'dropdown-item-input':
                 break;
 
                 default:
-                closeDropdown(true);
+                closeDropdown(props.data.inputField === true);
                 break;
             }
         }
