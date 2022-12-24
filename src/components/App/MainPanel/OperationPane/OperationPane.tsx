@@ -285,82 +285,80 @@ export default function OperationPane() {
         }
     }
 
-    function compressItem(format: CompressionFormat, paths: ItemPath[]) {
-        const popupId = generateUuid();
+    function onItemProcedureProgress(popupId: string, popupTitle: string): (progress: number) => void {
         let hasFinishedPreparation = false;
 
-        dispatch(slices.popups.actions.add({
-            id: popupId,
-            title: 'ファイル圧縮',
-            description: '準備中...',
-            progress: 0,
-        }));
-
-        Fs.compress(format, paths, (progress) => {
+        return (progress) => {
             if (!hasFinishedPreparation) {
-                dispatch(slices.popups.actions.changeDescription({
+                dispatch(slices.popups.actions.change({
                     id: popupId,
-                    value: '圧縮中...',
+                    callback: (v) => {
+                        v.description = '処理中';
+                        return v;
+                    },
                 }));
             }
 
             hasFinishedPreparation = true;
 
-            dispatch(slices.popups.actions.changeProgress({
+            dispatch(slices.popups.actions.change({
                 id: popupId,
-                value: progress,
+                callback: (v) => {
+                    v.progress = progress
+                    return v;
+                },
             }));
 
             if (progress === 100) {
-                dispatch(slices.popups.actions.changeDescription({
-                    id: popupId,
-                    value: '圧縮が完了しました。',
-                }));
+                if (Popup.isOpen(popupId)) {
+                    dispatch(slices.popups.actions.change({
+                        id: popupId,
+                        callback: (v) => {
+                            v.description = '処理が完了しました。';
+                            return v;
+                        },
+                    }));
+                } else {
+                    dispatch(slices.popups.actions.add({
+                        id: popupId,
+                        title: popupTitle,
+                        description: '処理が完了しました。',
+                    }));
+                }
 
                 setTimeout(() => {
                     Popup.close(popupId);
                 }, Popup.defaultClosingTimeout);
             }
-        });
+        };
+    }
+
+    function compressItem(format: CompressionFormat, paths: ItemPath[]) {
+        const popupId = generateUuid();
+        const popupTitle = 'ファイル圧縮';
+
+        dispatch(slices.popups.actions.add({
+            id: popupId,
+            title: popupTitle,
+            description: '準備中...',
+            progress: 0,
+        }));
+
+        Fs.compress(format, paths, onItemProcedureProgress(popupId, popupTitle));
     }
 
     function extractFile(path: ItemPath) {
         const popupId = generateUuid();
-        let hasFinishedPreparation = false;
+        const popupTitle = 'ファイル解凍';
 
         dispatch(slices.popups.actions.add({
             id: popupId,
-            title: 'ファイル解凍',
+            title: popupTitle,
             description: '準備中...',
             progress: 0,
         }));
 
-        Fs.extract(path, (progress) => {
-            if (!hasFinishedPreparation) {
-                dispatch(slices.popups.actions.changeDescription({
-                    id: popupId,
-                    value: '解凍中...',
-                }));
-            }
-
-            hasFinishedPreparation = true;
-
-            dispatch(slices.popups.actions.changeProgress({
-                id: popupId,
-                value: progress,
-            }));
-
-            if (progress === 100) {
-                dispatch(slices.popups.actions.changeDescription({
-                    id: popupId,
-                    value: '解凍が完了しました。',
-                }));
-
-                setTimeout(() => {
-                    Popup.close(popupId);
-                }, Popup.defaultClosingTimeout);
-            }
-        });
+        Fs.extract(path, onItemProcedureProgress(popupId, popupTitle));
     }
 
     function onClickPathCopyIcon() {

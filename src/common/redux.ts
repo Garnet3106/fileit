@@ -58,7 +58,7 @@ export const slices = {
                 const targetIndex = state.tabs.findIndex((v) => v.id === action.payload);
 
                 if (targetIndex === -1) {
-                    console.error('Tab ID not found.');
+                    console.error('Provided tab ID not found.');
                     return state;
                 }
 
@@ -71,7 +71,7 @@ export const slices = {
                 const targetIndex = newState.tabs.findIndex((v) => v.id === state.selected?.id);
 
                 if (targetIndex === -1) {
-                    console.error('Tab ID not found.');
+                    console.error('Provided tab ID not found.');
                     return state;
                 }
 
@@ -172,32 +172,21 @@ export const slices = {
                 newState.delete(action.payload);
                 return newState;
             },
-            changeDescription: (state, action: PayloadAction<{
+            change: (state, action: PayloadAction<{
                 id: string,
-                value: string,
+                callback: (v: PopupItemData) => PopupItemData,
             }>) => {
                 const newState = new Map(state);
-                const target = Object.assign({}, newState.get(action.payload.id));
+                const target = newState.get(action.payload.id);
+                console.log(target)
 
-                if (target !== undefined) {
-                    target.description = action.payload.value;
+                if (target === undefined) {
+                    return state;
                 }
 
-                newState.set(action.payload.id, target);
-                return newState;
-            },
-            changeProgress: (state, action: PayloadAction<{
-                id: string,
-                value: number,
-            }>) => {
-                const newState = new Map(state);
-                const target = Object.assign({}, newState.get(action.payload.id));
-
-                if (target !== undefined) {
-                    target.progress = action.payload.value;
-                }
-
-                newState.set(action.payload.id, target);
+                const clonedTarget = Object.assign({}, target);
+                const changedTarget = action.payload.callback(clonedTarget);
+                newState.set(action.payload.id, changedTarget);
                 return newState;
             },
         },
