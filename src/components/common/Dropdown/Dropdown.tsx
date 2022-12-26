@@ -1,7 +1,6 @@
 import DropdownItem, { DropdownItemData } from "./DropdownItem/DropdownItem";
 import './Dropdown.css';
-import { preferences } from "../../../common/preferences";
-import { ForwardedRef, forwardRef, useEffect, useImperativeHandle, useState } from "react";
+import { ForwardedRef, forwardRef, useImperativeHandle, useState } from "react";
 
 export type DropdownProps = {
     pivot: [number, number],
@@ -21,7 +20,6 @@ function Dropdown(props: DropdownProps, ref: ForwardedRef<DropdownRef>) {
 
     const styles = {
         container: {
-            backgroundColor: preferences.appearance.background.panel1,
             display: displayed ? 'flex' : 'none',
             top: props.pivot[1],
             left: props.pivot[0],

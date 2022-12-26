@@ -1,3 +1,5 @@
 .main-panel-container {
+    border-left-color: var(--border-color);
+    border-left-style: solid;
     height: 100%;
 }

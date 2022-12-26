@@ -1,4 +1,3 @@
-import { preferences } from '../../../../common/preferences';
 import { generateUuid } from '../../../../common/utils';
 import './OperationPane.css';
 import OperationIcon from './OperationIcon/OperationIcon';
@@ -253,7 +252,6 @@ export default function OperationPane() {
 
     const styles = {
         container: {
-            backgroundColor: preferences.appearance.background.panel1,
             height: `${variables.height}px`,
         },
         pathBar: {

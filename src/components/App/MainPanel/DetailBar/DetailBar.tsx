@@ -1,4 +1,3 @@
-import { preferences } from '../../../../common/preferences';
 import './DetailBar.css';
 
 export const variables = {
@@ -8,7 +7,6 @@ export const variables = {
 export default function DetailBar() {
     const styles = {
         container: {
-            backgroundColor: preferences.appearance.background.panel1,
             height: variables.height,
         },
     };

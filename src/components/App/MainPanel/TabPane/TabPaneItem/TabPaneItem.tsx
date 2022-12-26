@@ -1,6 +1,7 @@
 import { MouseEvent } from 'react';
+import { useSelector } from 'react-redux';
 import { FileItemIdentifier } from '../../../../../common/fs/path';
-import { preferences } from '../../../../../common/preferences';
+import { RootState } from '../../../../../common/redux';
 import { Tab, TabIcon } from '../../../../../common/tab';
 import './TabPaneItem.css';
 
@@ -15,13 +16,14 @@ export default function TabPaneItem(props: TabPaneItemProps) {
     const path = props.item.path;
     const title = path.getIdentifier().toString();
     const icon = !path.isFolder() && (path.getIdentifier() as FileItemIdentifier).isCompressed() ? TabIcon.CompressedFolder : TabIcon.Folder;
+    const appearanceTheme = useSelector((state: RootState) => state.preferences.appearance.theme);
 
     const styles = {
         container: {
             backgroundColor: props.selected ? 'var(--selected-tab-color)' : 'var(--unselected-tab-color)',
         },
         icon: {
-            backgroundImage: `url('./lib/img/icons/${preferences.appearance.theme}/${icon}.svg')`,
+            backgroundImage: `url('./lib/img/icons/${appearanceTheme}/${icon}.svg')`,
         },
     };
 

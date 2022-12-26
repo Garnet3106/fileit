@@ -1,12 +1,11 @@
 .property-bar-item-container {
     align-items: center;
-    border-right: 1px solid var(--border-color1);
+    border-right: 1px solid var(--border-color);
     color: var(--dark-font-color);
     display: flex;
     font-size: 90%;
     justify-content: space-between;
     overflow-x: hidden;
-    padding: 2px var(--property-item-horizontal-margin);
     white-space: nowrap;
 }
 

@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { EventHandlerLayer, events, PropagationStopper } from '../../../../common/event';
 import { ItemPath } from '../../../../common/fs/path';
 import NativeWindow from '../../../../common/native_window';
-import { preferences } from '../../../../common/preferences';
 import { RootState, slices, store } from '../../../../common/redux';
 import { platform } from '../../../../common/utils';
 import './TabPane.css';
@@ -12,6 +11,7 @@ import TabPaneItem from './TabPaneItem/TabPaneItem';
 export const variables = {
     height: 30,
     dragAreaWidth: 100,
+    operationIconSize: 30,
 };
 
 export default function TabPane() {
@@ -39,11 +39,14 @@ export default function TabPane() {
 
     const styles = {
         container: {
-            backgroundColor: preferences.appearance.background.panel2,
             height: `${variables.height}px`,
         },
         items: {
             width: `calc(100vw - ${150 + 1 + variables.dragAreaWidth}px)`,
+        },
+        operationIcon: {
+            height: `${variables.operationIconSize}px`,
+            width: `${variables.operationIconSize}px`,
         },
     };
 
@@ -63,8 +66,16 @@ export default function TabPane() {
                 {tabItems}
             </div>
             <div className="tab-pane-operations">
-                <div className="tab-pane-operation-icon tab-pane-operation-icon-minimize" onClick={NativeWindow.minimize} />
-                <div className="tab-pane-operation-icon tab-pane-operation-icon-close" onClick={NativeWindow.close} />
+                <div
+                    className="tab-pane-operation-icon tab-pane-operation-icon-minimize"
+                    style={styles.operationIcon}
+                    onClick={NativeWindow.minimize}
+                />
+                <div
+                    className="tab-pane-operation-icon tab-pane-operation-icon-close"
+                    style={styles.operationIcon}
+                    onClick={NativeWindow.close}
+                />
             </div>
         </div>
     );

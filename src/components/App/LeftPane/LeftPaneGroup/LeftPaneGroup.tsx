@@ -1,4 +1,3 @@
-import { preferences } from '../../../../common/preferences';
 import './LeftPaneGroup.css';
 import LeftPaneItem, { LeftPaneItemData } from './LeftPaneItem/LeftPaneItem';
 
@@ -16,18 +15,12 @@ export const variables = {
 };
 
 export default function LeftPaneGroup(props: LeftPaneGroupProps) {
-    const styles = {
-        group: {
-            borderColor: preferences.appearance.border1,
-        },
-    };
-
     const items = props.items.map((eachItem, index) => (
         <LeftPaneItem data={eachItem} key={index} />
     ));
 
     return (
-        <div className="left-pane-group" style={styles.group}>
+        <div className="left-pane-group">
             {items}
         </div>
     );

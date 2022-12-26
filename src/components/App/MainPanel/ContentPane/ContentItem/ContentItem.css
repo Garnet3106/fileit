@@ -1,7 +1,6 @@
 .content-item-container {
     align-items: center;
     display: flex;
-    padding: calc(var(--property-item-horizontal-margin) / 2) 0;
 }
 
 .content-item-container:hover {
@@ -19,7 +18,6 @@
 
 .content-item-property {
     color: var(--dark-font-color);
-    margin-left: calc((var(--property-item-horizontal-margin) * 2) + 1px);
     overflow-x: hidden;
 }
 
@@ -27,9 +25,6 @@
     background-size: contain;
     background-position: center;
     background-repeat: no-repeat;
-    height: var(--content-item-icon-size);
-    min-width: var(--content-item-icon-size);
-    width: var(--content-item-icon-size);
 }
 
 .content-item-property-name {

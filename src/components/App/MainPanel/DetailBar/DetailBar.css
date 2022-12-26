@@ -1,3 +1,4 @@
 .detail-bar-container {
+    background-color: var(--panel1-color);
     width: 100%;
 }

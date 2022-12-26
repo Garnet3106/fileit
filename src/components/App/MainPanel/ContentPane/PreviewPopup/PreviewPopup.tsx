@@ -1,9 +1,9 @@
 import { createRef, Fragment, useEffect, useRef, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { EventHandlerLayer, events, PropagationStopper } from '../../../../../common/event';
 import Fs, { FileContent } from '../../../../../common/fs/fs';
 import { FileItemIdentifier, ItemPath } from '../../../../../common/fs/path';
-import { preferences } from '../../../../../common/preferences';
-import { store } from '../../../../../common/redux';
+import { RootState, store } from '../../../../../common/redux';
 import { variables as tabBarVariables } from '../../TabPane/TabPane';
 import './PreviewPopup.css';
 
@@ -108,6 +108,8 @@ export default function PreviewPopup() {
         }
     });
 
+    const appearanceTheme = useSelector((state: RootState) => state.preferences.appearance.theme);
+
     const styles = {
         container: {
             display: !hidden && content !== undefined ? 'block' : 'none',
@@ -115,20 +117,20 @@ export default function PreviewPopup() {
             top: containerPosition[1],
         },
         topIcon: {
-            backgroundImage: `url('./lib/img/icons/${preferences.appearance.theme}/preview.svg')`,
+            backgroundImage: `url('./lib/img/icons/${appearanceTheme}/preview.svg')`,
         },
         close: {
-            backgroundImage: `url('./lib/img/icons/${preferences.appearance.theme}/close.svg')`,
+            backgroundImage: `url('./lib/img/icons/${appearanceTheme}/close.svg')`,
         },
         content: {
             folder: {
-                backgroundImage: `url('./lib/img/icons/${preferences.appearance.theme}/folder.svg')`,
+                backgroundImage: `url('./lib/img/icons/${appearanceTheme}/folder.svg')`,
             },
             failedToRead: {
-                backgroundImage: `url('./lib/img/icons/${preferences.appearance.theme}/close.svg')`,
+                backgroundImage: `url('./lib/img/icons/${appearanceTheme}/close.svg')`,
             },
             binary: {
-                backgroundImage: `url('./lib/img/icons/${preferences.appearance.theme}/binary.svg')`,
+                backgroundImage: `url('./lib/img/icons/${appearanceTheme}/binary.svg')`,
             },
         },
     };

@@ -1,9 +1,11 @@
 .left-pane-container {
+    background-color: var(--panel1-color);
     overflow-x: hidden;
     height: 100%;
 }
 
 .left-pane-top {
-    border-bottom-width: 1px;
-    padding: 5px 0;
+    align-items: center;
+    display: flex;
+    justify-content: center;
 }

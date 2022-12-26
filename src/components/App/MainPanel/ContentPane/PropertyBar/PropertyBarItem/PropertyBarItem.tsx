@@ -1,4 +1,5 @@
 import { ItemPropertyKind } from '../../../../../../common/property';
+import { variables as contentItemVariables } from '../../ContentItem/ContentItem';
 import { PropertyBarItemData } from '../PropertyBar';
 import './PropertyBarItem.css';
 
@@ -11,6 +12,7 @@ export default function PropertyBarItem(props: PropertyBarItemProps) {
         container: {
             cursor: props.data.grabbable === false ? undefined : 'grab',
             minWidth: props.data.width - 1,
+            padding: `2px ${contentItemVariables.property.horizontalMargin}px`,
         },
     };
 

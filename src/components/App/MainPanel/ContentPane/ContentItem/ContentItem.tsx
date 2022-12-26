@@ -14,12 +14,28 @@ export type ContentItemProps = {
     isSelected: boolean,
 };
 
+export const variables = {
+    property: {
+        horizontalMargin: 5,
+        iconSize: 18,
+    },
+};
+
 export const renameBarClassName = 'content-item-property content-item-property-rename';
 
 export default function ContentItem(props: ContentItemProps) {
     const styles = {
-        icon: {
+        container: {
+            padding: `${variables.property.horizontalMargin / 2}px 0`,
+        },
+        property: {
+            marginLeft: `${(variables.property.horizontalMargin * 2) + 1}px`,
+        },
+        iconProperty: {
             backgroundImage: `url('../../../../../../lib/img/icons/dark/${props.item.isFile() ? 'file' : 'folder'}.svg')`,
+            height: `${variables.property.iconSize}px`,
+            minWidth: `${variables.property.iconSize}px`,
+            width: `${variables.property.iconSize}px`,
         },
     };
 
@@ -42,33 +58,50 @@ export default function ContentItem(props: ContentItemProps) {
     const properties = props.properties.map((eachProperty, index) => {
         const value = props.item.getPropertyValue(eachProperty.kind);
 
+        const fixedWidthStyle = Object.assign(
+            styles.property,
+            {
+                maxWidth: `${eachProperty.width}px`,
+                minWidth: `${eachProperty.width}px`,
+            },
+        );
+
         switch (eachProperty.kind) {
             case ItemPropertyKind.Icon:
             return (
-                <div className="content-item-property content-item-property-icon" style={styles.icon} key={index} />
+                <div
+                    className="content-item-property content-item-property-icon"
+                    style={Object.assign({}, styles.property, styles.iconProperty)}
+                    key={index}
+                />
             );
 
             case ItemPropertyKind.Name:
             return renamingItemPath?.isEqual(props.item.getPath()) !== true ? (
-                <div className="content-item-property content-item-property-name" style={{
-                    maxWidth: `${eachProperty.width}px`,
-                    minWidth: `${eachProperty.width}px`,
-                }} key={index}>
+                <div
+                    className="content-item-property content-item-property-name"
+                    style={fixedWidthStyle}
+                    key={index}
+                >
                     {value}
                 </div>
             ) : (
-                <input className={renameBarClassName} style={{
-                    maxWidth: `${eachProperty.width}px`,
-                    minWidth: `${eachProperty.width}px`,
-                }} value={renameBarValue} onChange={(e) => setRenameBarValue(e.target.value)} key={index} />
+                <input
+                    className={renameBarClassName}
+                    style={fixedWidthStyle}
+                    value={renameBarValue}
+                    onChange={(e) => setRenameBarValue(e.target.value)}
+                    key={index}
+                />
             );
 
             default:
             return (
-                <div className="content-item-property" style={{
-                    maxWidth: `${eachProperty.width}px`,
-                    minWidth: `${eachProperty.width}px`,
-                }} key={index}>
+                <div
+                    className="content-item-property"
+                    style={fixedWidthStyle}
+                    key={index}
+                >
                     {value}
                 </div>
             );
@@ -76,7 +109,12 @@ export default function ContentItem(props: ContentItemProps) {
     });
 
     return (
-        <div className={`content-item-container ${props.isSelected ? 'content-item-container-selected' : ''}`} onClick={onClick} onDoubleClick={onDoubleClick}>
+        <div
+            className={`content-item-container ${props.isSelected ? 'content-item-container-selected' : ''}`}
+            style={styles.container}
+            onClick={onClick}
+            onDoubleClick={onDoubleClick}
+        >
             {properties}
         </div>
     );

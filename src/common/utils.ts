@@ -1,5 +1,7 @@
 import UUIDClass from "uuidjs";
 import { ItemPath } from "./fs/path";
+import { PreferenceManager } from "./preferences";
+import { store } from "./redux";
 
 export type UuidString = string;
 
@@ -35,3 +37,12 @@ export class Lazy<T> {
 
 export const platform = new Lazy<Platform>();
 export const homeDirectoryPath = new Lazy<ItemPath>();
+
+export function applyPreferenceAppearance() {
+    const preferences = store.getState().preferences;
+    const cssVariableMap = Object.entries(PreferenceManager.toCssVariableMap(preferences));
+
+    cssVariableMap.forEach(([name, value]) => {
+        document.documentElement.style.setProperty(name, value);
+    });
+}

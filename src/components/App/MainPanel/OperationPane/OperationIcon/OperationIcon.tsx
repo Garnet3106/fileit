@@ -1,5 +1,6 @@
 import { MouseEvent } from 'react';
-import { preferences } from '../../../../../common/preferences';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../../../common/redux';
 import './OperationIcon.css';
 
 export type OperationIconProps = {
@@ -11,10 +12,11 @@ export type OperationIconProps = {
 
 export default function OperationIcon(props: OperationIconProps) {
     const miniClassName = props.mini === true ? 'operation-icon-container-mini' : '';
+    const appearanceTheme = useSelector((state: RootState) => state.preferences.appearance.theme);
 
     const styles = {
         container: {
-            backgroundImage: `url('./lib/img/icons/${preferences.appearance.theme}/operations/${props.id}.svg')`,
+            backgroundImage: `url('./lib/img/icons/${appearanceTheme}/operations/${props.id}.svg')`,
             opacity: props.preventClick === true ? 0.5 : 1,
         },
     };

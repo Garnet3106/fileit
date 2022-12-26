@@ -5,6 +5,7 @@ import { ItemPath } from './fs/path';
 import { generateUuid } from './utils';
 import { Item, ItemSortOrder } from './fs/item';
 import { Tab } from './tab';
+import { defaultPreferences, Preferences } from './preferences';
 
 export type TabState = {
     tabs: Tab[],
@@ -15,6 +16,13 @@ export type TabState = {
 enableMapSet();
 
 export const slices = {
+    preferences: createSlice({
+        name: 'preferences',
+        initialState: defaultPreferences,
+        reducers: {
+            update: (_state, action: PayloadAction<Preferences>) => action.payload,
+        },
+    }),
     tab: createSlice({
         name: 'tab',
         initialState: {
@@ -196,6 +204,7 @@ export type RootState = ReturnType<typeof store.getState>;
 
 export const store = configureStore({
     reducer: {
+        preferences: slices.preferences.reducer,
         tab: slices.tab.reducer,
         currentFolderChildren: slices.currentFolderChildren.reducer,
         itemSortOrder: slices.itemSortOrder.reducer,
