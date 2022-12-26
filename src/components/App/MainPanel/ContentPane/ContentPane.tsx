@@ -11,6 +11,7 @@ import Fs from '../../../../common/fs/fs';
 import PreviewPopup from './PreviewPopup/PreviewPopup';
 import { Item, ItemSortOrder } from '../../../../common/fs/item';
 import { ipcMessageSender } from '../../../../common/ipc';
+import { EventHandlerLayer, events, PropagationStopper } from '../../../../common/event';
 
 export const variables = {
     propertyItemHorizontalMargin: 5,
@@ -19,10 +20,10 @@ export const variables = {
 
 export default function ContentPane() {
     useEffect(() => {
-        document.addEventListener('keydown', onKeyDown);
+        events.keyDown.addHandler(onKeyDown, EventHandlerLayer.KeyDownLayer.ContentPane);
 
         return () => {
-            document.removeEventListener('keydown', onKeyDown);
+            events.keyDown.removeHandler(onKeyDown, EventHandlerLayer.KeyDownLayer.ContentPane);
         };
     }, [onKeyDown]);
 
@@ -128,7 +129,7 @@ export default function ContentPane() {
         }
     }
 
-    function onKeyDown(event: KeyboardEvent) {
+    function onKeyDown(event: KeyboardEvent, stopPropagation: PropagationStopper) {
         if (event.ctrlKey) {
             return;
         }
@@ -151,6 +152,9 @@ export default function ContentPane() {
         };
 
         if (!event.shiftKey && event.code === 'ArrowUp') {
+            event.preventDefault();
+            stopPropagation();
+
             const selectedItemIndex = getSelectedItemIndex();
             let newPaths = selectedItemPaths;
 
@@ -175,11 +179,13 @@ export default function ContentPane() {
             }
 
             dispatch(slices.selectedItemPaths.actions.update(newPaths));
-            event.preventDefault();
             return;
         }
 
         if (!event.shiftKey && event.code === 'ArrowDown') {
+            stopPropagation();
+            event.preventDefault();
+
             const selectedItemIndex = getSelectedItemIndex();
             let newPaths = selectedItemPaths;
 
@@ -204,11 +210,12 @@ export default function ContentPane() {
             }
 
             dispatch(slices.selectedItemPaths.actions.update(newPaths));
-            event.preventDefault();
             return;
         }
 
         if (event.code === 'Enter') {
+            stopPropagation();
+
             selectedItemPaths.forEach((eachPath) => {
                 if (eachPath.isFolder()) {
                     // fix: add new tabs
@@ -227,6 +234,7 @@ export default function ContentPane() {
             !showPathEditBar &&
             renamingItemPath === null
         ) {
+            stopPropagation();
             dispatch(slices.selectedItemPaths.actions.update([]));
             return;
         }

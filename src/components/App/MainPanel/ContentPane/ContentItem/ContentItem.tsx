@@ -6,6 +6,7 @@ import { ItemPropertyKind } from '../../../../../common/property';
 import { RootState, slices } from '../../../../../common/redux';
 import { PropertyBarItemData } from '../PropertyBar/PropertyBar';
 import './ContentItem.css';
+import { EventHandlerLayer, events } from '../../../../../common/event';
 
 export type ContentItemProps = {
     item: Item,
@@ -29,12 +30,12 @@ export default function ContentItem(props: ContentItemProps) {
     const isCtrlKeyDown = useRef(false);
 
     useEffect(() => {
-        document.addEventListener('keyup', onKeyUpOrDown);
-        document.addEventListener('keydown', onKeyUpOrDown);
+        events.keyUp.addHandler(onKeyUpOrDown);
+        events.keyDown.addHandler(onKeyUpOrDown, EventHandlerLayer.KeyDownLayer.KeyWatcher);
 
         return () => {
-            document.removeEventListener('keyup', onKeyUpOrDown);
-            document.removeEventListener('keydown', onKeyUpOrDown);
+            events.keyUp.removeHandler(onKeyUpOrDown);
+            events.keyDown.removeHandler(onKeyUpOrDown, EventHandlerLayer.KeyDownLayer.KeyWatcher);
         };
     }, [onKeyUpOrDown]);
 

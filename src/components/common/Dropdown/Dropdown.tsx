@@ -16,7 +16,7 @@ function Dropdown(props: DropdownProps, ref: ForwardedRef<DropdownRef>) {
     const [displayed, setDisplayed] = useState(false);
 
     useImperativeHandle(ref, () => ({
-        switchVisibility: () => setDisplayed(!displayed),
+        switchVisibility: () => setDisplayed(() => !displayed),
     }));
 
     const styles = {

@@ -13,6 +13,7 @@ import { renameBarClassName } from '../ContentPane/ContentItem/ContentItem';
 import Dropdown, { DropdownRef } from '../../../common/Dropdown/Dropdown';
 import { DropdownItemData } from '../../../common/Dropdown/DropdownItem/DropdownItem';
 import { Popup } from '../../../../common/popup';
+import { EventHandlerLayer, events, PropagationStopper } from '../../../../common/event';
 
 export const operationIconIds = {
     window: {
@@ -67,14 +68,14 @@ export default function OperationPane() {
     });
 
     useEffect(() => {
-        document.addEventListener('keydown', onKeyDown);
-        document.addEventListener('mousedown', onMouseDown);
+        events.keyDown.addHandler(onKeyDown, EventHandlerLayer.KeyDownLayer.OperationPane);
+        events.mouseDown.addHandler(onMouseDown);
 
         return () => {
-            document.removeEventListener('keydown', onKeyDown);
-            document.removeEventListener('mousedown', onMouseDown);
+            events.keyDown.removeHandler(onKeyDown, EventHandlerLayer.KeyDownLayer.OperationPane);
+            events.mouseDown.removeHandler(onMouseDown);
         };
-    }, [onKeyDown]);
+    }, [onKeyDown, onMouseDown]);
 
     const renderers = {
         dropdowns: () => {
@@ -221,9 +222,7 @@ export default function OperationPane() {
                         <OperationIcon
                             id={operationIconIds.item.compress}
                             preventClick={preventIconClick}
-                            onClick={() => {
-                                compressionDropdownRef.current?.switchVisibility();
-                            }}
+                            onClick={() => compressionDropdownRef.current?.switchVisibility()}
                         />
                         <OperationIcon
                             id={operationIconIds.item.extract}
@@ -448,12 +447,13 @@ export default function OperationPane() {
             });
     }
 
-    function onKeyDown(event: KeyboardEvent) {
+    function onKeyDown(event: KeyboardEvent, stopPropagation: PropagationStopper) {
         const target = event.target as HTMLElement;
 
         if (event.ctrlKey && event.shiftKey && event.code === 'KeyV') {
             // rm
             event.preventDefault();
+            stopPropagation();
 
             navigator.clipboard.readText()
                 .then((value) => {
@@ -500,6 +500,7 @@ export default function OperationPane() {
 
         // Start item renaming.
         if (event.code === 'F2' && selectedItemPaths.length !== 0) {
+            stopPropagation();
             dispatch(slices.renamingItemPath.actions.update(selectedItemPaths[0]));
             return;
         }
@@ -508,10 +509,12 @@ export default function OperationPane() {
         if (target.className === renameBarClassName && renamingItemPath !== null) {
             switch (event.code) {
                 case 'Enter':
+                stopPropagation();
                 confirmRenaming((target as HTMLInputElement).value);
                 return;
 
                 case 'Escape':
+                stopPropagation();
                 confirmRenaming();
                 return;
             }
@@ -521,17 +524,16 @@ export default function OperationPane() {
         if (target.id === pathEditBarRef.current?.id && showPathEditBar) {
             switch (event.code) {
                 case 'Enter':
+                stopPropagation();
                 confirmWorkingFolderPathOnEditBar();
                 return;
 
                 case 'Escape':
+                stopPropagation();
                 confirmWorkingFolderPathOnEditBar(false);
                 break;
             }
         }
-
-        // Run selected items.
-        // fix
     }
 
     function onMouseDown(event: MouseEvent) {

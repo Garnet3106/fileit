@@ -1,4 +1,5 @@
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import { EventHandlerLayer, events, PropagationStopper } from '../../../../common/event';
 import './DropdownItem.css';
 
 export type DropdownItemData = {
@@ -37,14 +38,14 @@ export default function DropdownItem(props: DropdownItemProps) {
     );
 
     useEffect(() => {
-        document.addEventListener('keydown', onKeyDown);
-        document.addEventListener('mousedown', onMouseDown);
+        events.keyDown.addHandler(onKeyDown, EventHandlerLayer.KeyDownLayer.DropdownItem);
+        events.mouseDown.addHandler(onMouseDown);
 
         return () => {
-            document.removeEventListener('keydown', onKeyDown);
-            document.removeEventListener('mousedown', onMouseDown);
+            events.keyDown.removeHandler(onKeyDown, EventHandlerLayer.KeyDownLayer.DropdownItem);
+            events.mouseDown.removeHandler(onMouseDown);
         };
-    }, [onKeyDown]);
+    }, [onKeyDown, onMouseDown]);
 
     return (
         <div className="dropdown-item" onClick={onClick}>
@@ -59,19 +60,22 @@ export default function DropdownItem(props: DropdownItemProps) {
         }
     }
 
-    function onKeyDown(event: KeyboardEvent) {
+    function onKeyDown(event: KeyboardEvent, stopPropagation: PropagationStopper) {
         if (props.data.inputField === true && dropdownDisplayed) {
             switch (event.code) {
                 case 'Escape':
+                stopPropagation();
                 closeDropdown(true);
                 break;
 
                 case 'Enter':
+                stopPropagation();
                 closeDropdown(true);
 
                 if (props.data.onConfirm !== undefined) {
                     props.data.onConfirm(props.data.id, value);
                 }
+
                 break;
             }
         }

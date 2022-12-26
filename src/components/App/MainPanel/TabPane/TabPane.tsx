@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { EventHandlerLayer, events, PropagationStopper } from '../../../../common/event';
 import { ItemPath } from '../../../../common/fs/path';
 import NativeWindow from '../../../../common/native_window';
 import { preferences } from '../../../../common/preferences';
@@ -15,12 +16,12 @@ export const variables = {
 
 export default function TabPane() {
     useEffect(() => {
-        document.addEventListener('keydown', onKeyDown);
+        events.keyDown.addHandler(onKeyDown, EventHandlerLayer.KeyDownLayer.TabPane);
 
         return () => {
-            document.removeEventListener('keydown', onKeyDown);
+            events.keyDown.removeHandler(onKeyDown, EventHandlerLayer.KeyDownLayer.TabPane);
         };
-    });
+    }, [onKeyDown]);
 
     const dispatch = useDispatch();
     const tab = useSelector((state: RootState) => state.tab);
@@ -68,10 +69,11 @@ export default function TabPane() {
         </div>
     );
 
-    function onKeyDown(event: KeyboardEvent) {
+    function onKeyDown(event: KeyboardEvent, stopPropagation: PropagationStopper) {
         if (event.ctrlKey && event.code === 'KeyT') {
             // rm
             event.preventDefault();
+            stopPropagation();
 
             platform.get((platform) => {
                 open(ItemPath.getRoot(platform));
@@ -82,6 +84,7 @@ export default function TabPane() {
 
         if (event.ctrlKey && event.code === 'KeyW') {
             event.preventDefault();
+            stopPropagation();
 
             if (tab.tabs.length === 1) {
                 NativeWindow.close();

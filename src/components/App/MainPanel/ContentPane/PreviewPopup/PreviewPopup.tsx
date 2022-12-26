@@ -1,11 +1,11 @@
 import { createRef, Fragment, useEffect, useRef, useState } from 'react';
+import { EventHandlerLayer, events, PropagationStopper } from '../../../../../common/event';
 import Fs, { FileContent } from '../../../../../common/fs/fs';
 import { FileItemIdentifier, ItemPath } from '../../../../../common/fs/path';
 import { preferences } from '../../../../../common/preferences';
 import { store } from '../../../../../common/redux';
 import { variables as tabBarVariables } from '../../TabPane/TabPane';
 import './PreviewPopup.css';
-
 
 export enum ItemPreviewContentKind {
     Folder,
@@ -24,18 +24,18 @@ export type ItemPreviewContent = {
 
 export default function PreviewPopup() {
     useEffect(() => {
-        document.addEventListener('keydown', onKeyDown);
-        document.addEventListener('mousedown', onMouseDown);
-        document.addEventListener('mouseup', onMouseUp);
-        document.addEventListener('mousemove', onMouseMove);
+        events.keyDown.addHandler(onKeyDown, EventHandlerLayer.KeyDownLayer.PreviewPopup);
+        events.mouseDown.addHandler(onMouseDown);
+        events.mouseUp.addHandler(onMouseUp);
+        events.mouseMove.addHandler(onMouseMove);
 
         return () => {
-            document.removeEventListener('keydown', onKeyDown);
-            document.removeEventListener('mousedown', onMouseDown);
-            document.removeEventListener('mouseup', onMouseUp);
-            document.removeEventListener('mousemove', onMouseMove);
+            events.keyDown.removeHandler(onKeyDown, EventHandlerLayer.KeyDownLayer.PreviewPopup);
+            events.mouseDown.removeHandler(onMouseDown);
+            events.mouseUp.removeHandler(onMouseUp);
+            events.mouseMove.removeHandler(onMouseMove);
         };
-    }, [onKeyDown]);
+    }, [onKeyDown, onMouseDown, onMouseUp, onMouseMove]);
 
     const [hidden, setHidden] = useState(true);
     const draggingTop = useRef(false);
@@ -196,11 +196,12 @@ export default function PreviewPopup() {
         </div>
     );
 
-    function onKeyDown(event: KeyboardEvent) {
+    function onKeyDown(event: KeyboardEvent, stopPropagation: PropagationStopper) {
         if (event.code === 'Space' && content !== undefined) {
-            setHidden((state) => !state);
             // Prevent from scrolling of content pane by space key.
             event.preventDefault();
+            stopPropagation();
+            setHidden((state) => !state);
         }
     }
 
