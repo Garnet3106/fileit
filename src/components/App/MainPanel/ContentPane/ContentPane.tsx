@@ -7,11 +7,12 @@ import './ContentPane.css';
 import PropertyBar, { ItemPropertyKind } from './PropertyBar/PropertyBar';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, slices, store } from '../../../../common/redux';
-import Fs from '../../../../common/fs/fs';
+import Fs, { FsErrorKind } from '../../../../common/fs/fs';
 import PreviewPopup from './PreviewPopup/PreviewPopup';
 import { Item, ItemSortOrder } from '../../../../common/fs/item';
 import { ipcMessageSender } from '../../../../common/ipc';
 import { EventHandlerLayer, events, PropagationStopper } from '../../../../common/event';
+import { Popup } from '../../../../common/popup';
 
 export const variables = {
     propertyItemHorizontalMargin: 5,
@@ -110,7 +111,27 @@ export default function ContentPane() {
 
         Fs.getChildren(workingFolderPath)
             .then((items) => dispatch(slices.currentFolderChildren.actions.update(items.sort(getItemSorter()))))
-            .catch(console.error);
+            .catch((error) => {
+                switch (error.message) {
+                    case FsErrorKind.NotExists:
+                    dispatch(slices.popups.actions.add({
+                        title: 'エラー',
+                        description: 'フォルダが見つかりませんでした。',
+                        timeout: Popup.defaultClosingTimeout,
+                        buttons: [
+                            {
+                                text: '再読み込み',
+                                onClick: updateItems,
+                            },
+                        ],
+                    }));
+                    break;
+
+                    default: 
+                    console.error(error);
+                    break;
+                }
+            });
 
         Fs.watch(workingFolderPath, updateItems);
     }

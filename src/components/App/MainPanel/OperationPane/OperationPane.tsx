@@ -425,16 +425,16 @@ export default function OperationPane() {
 
                 dispatch(slices.popups.actions.add(payload));
             })
-            .catch((e: any) => {
+            .catch((error: any) => {
                 let description;
 
-                switch (e.message) {
+                switch (error.message) {
                     case FsErrorKind.AlreadyExists:
                     description = 'すでに同じ名前のアイテムが存在します。';
                     break;
 
                     default:
-                    console.error(e);
+                    console.error(error);
                     description = '不明なエラーが発生しました。';
                     break;
                 }
